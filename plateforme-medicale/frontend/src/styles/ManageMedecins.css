@@ -1,0 +1,114 @@
+/* styles.css */
+
+/* General Box and Typography Styling */
+.container {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.success, .error {
+    margin-bottom: 20px;
+}
+
+.error {
+    color: red;
+}
+
+.success {
+    color: #4caf50;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+/* Button Styling */
+button {
+    margin: 5px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+button.primary {
+    background-color: #3f51b5;
+    color: white;
+}
+
+button.primary:hover {
+    background-color: #303f9f;
+}
+
+button.error {
+    background-color: #f44336;
+    color: white;
+}
+
+button.error:hover {
+    background-color: #d32f2f;
+}
+
+/* Dialog Styling */
+.dialog {
+    padding: 20px;
+}
+
+.dialog .dialogTitle {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.dialog .formField {
+    margin-bottom: 15px;
+}
+
+/* TextField Styling */
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+input:focus, select:focus {
+    border-color: #3f51b5;
+}
+
+/* Form Control Label */
+label {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Checkbox Styling */
+.checkbox {
+    margin-right: 10px;
+}
+
+/* Autocomplete Styling */
+.autocomplete {
+    margin-top: 10px;
+} 

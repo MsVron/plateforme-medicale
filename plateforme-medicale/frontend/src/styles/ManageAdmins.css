@@ -1,0 +1,109 @@
+/* ManageAdmins.css */
+
+.manage-admins-container {
+    margin-top: 2rem;
+    padding: 2rem;
+    background-color: #f9f9f9 ;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .manage-admins-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #3f51b5;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .manage-admins-table {
+    margin-top: 1.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .manage-admins-table th {
+    background-color: #3f51b5;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .manage-admins-table td, .manage-admins-table th {
+    padding: 0.8rem;
+    text-align: center;
+    font-size: 1rem;
+  }
+  
+  .manage-admins-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .manage-admins-buttons button {
+    padding: 0.5rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .manage-admins-buttons .edit-btn {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .manage-admins-buttons .edit-btn:hover {
+    background-color: #45a049;
+  }
+  
+  .manage-admins-buttons .delete-btn {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .manage-admins-buttons .delete-btn:hover {
+    background-color: #d32f2f;
+  }
+  
+  .dialog-form input {
+    margin-bottom: 1rem;
+  }
+  
+  .success-message {
+    color: #4caf50;
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: bold;
+  }
+  
+  .error-message {
+    color: #f44336;
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: bold;
+  }
+/* ManageAdmins.css */
+
+.table-bordered {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .table-bordered th,
+  .table-bordered td {
+    border: 1px solid #ccc;
+    padding: 8px;
+  }
+  
+  .table-bordered th {
+    background-color: #1976d2; /* primary color */
+    color: white;
+  }
+  
+  .table-row-hover:hover {
+    background-color: #f1f1f1;
+  } 

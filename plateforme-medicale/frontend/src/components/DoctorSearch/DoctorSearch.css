@@ -1,0 +1,63 @@
+/* DoctorSearch.css */
+
+/* Fix for Leaflet popup styles */
+.leaflet-popup-content {
+  margin: 13px 19px;
+  line-height: 1.4;
+  min-width: 200px;
+}
+
+.leaflet-popup-content h3 {
+  margin: 0 0 5px;
+  color: #4ca1af;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.leaflet-popup-content p {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+/* Animation for marker when clicked */
+.leaflet-marker-icon:hover {
+  transform: scale(1.2);
+  transition: transform 0.2s;
+}
+
+/* Make scrolling smoother */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Fix marker icon sizing issues */
+.leaflet-marker-icon {
+  width: 25px !important;
+  height: 41px !important;
+}
+
+/* Add box shadow to the map */
+.leaflet-container {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+/* Doctor card hover effect */
+.doctor-card {
+  transition: all 0.3s ease;
+}
+
+.doctor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(76, 161, 175, 0.2);
+}
+
+.doctor-card.selected {
+  border-left: 4px solid #4ca1af;
+}
+
+/* Selected doctor marker style (can be used with custom markers) */
+.doctor-marker-selected {
+  z-index: 1000 !important;
+} 
