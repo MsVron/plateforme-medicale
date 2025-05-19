@@ -20,6 +20,10 @@ router.get('/medecin/disponibilites', verifyToken, medecinController.getAvailabi
 router.post('/medecin/disponibilites', verifyToken, medecinController.addAvailability);
 router.put('/medecin/disponibilites/:id', verifyToken, medecinController.updateAvailability);
 router.delete('/medecin/disponibilites/:id', verifyToken, medecinController.deleteAvailability);
+
+// Route for updating doctor's consultation fee
+router.put('/medecin/profile/fee', verifyToken, medecinController.updateConsultationFee);
+
 router.get('/medecin/absences', verifyToken, medecinController.getEmergencyAbsences);
 router.post('/medecin/absences', verifyToken, medecinController.addEmergencyAbsence);
 router.delete('/medecin/absences/:id', verifyToken, medecinController.deleteEmergencyAbsence);

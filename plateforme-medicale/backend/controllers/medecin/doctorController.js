@@ -279,4 +279,26 @@ exports.getCurrentMedecin = async (req, res) => {
     console.error('Erreur lors de la récupération du médecin:', error);
     return res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
+};
+
+exports.updateConsultationFee = async (req, res) => {
+  try {
+    const { tarif_consultation } = req.body;
+    const medecin_id = req.user.id_specifique_role;
+
+    if (tarif_consultation === undefined || tarif_consultation === null) {
+      return res.status(400).json({ message: "Le tarif de consultation est requis" });
+    }
+
+    // Update the consultation fee
+    await db.execute(
+      'UPDATE medecins SET tarif_consultation = ? WHERE id = ?',
+      [tarif_consultation, medecin_id]
+    );
+
+    return res.status(200).json({ message: "Tarif de consultation mis à jour avec succès" });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du tarif de consultation:', error);
+    return res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
 }; 
