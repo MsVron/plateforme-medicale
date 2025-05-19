@@ -18,61 +18,78 @@ const SimpleMap = ({ doctors, selectedDoctor, mapCenter, zoom, userLocation }) =
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filter valid doctors with coordinates
+  // Filter valid doctors with coordinates and ensure they're within Morocco bounds
   const validDoctors = doctors.filter(doctor => {
-    if (!doctor.latitude || !doctor.longitude) return false;
     const lat = parseFloat(doctor.latitude);
     const lng = parseFloat(doctor.longitude);
-    return !isNaN(lat) && !isNaN(lng);
+    
+    if (isNaN(lat) || isNaN(lng)) return false;
+    
+    return (
+      lat >= MOROCCO_BOUNDS.minLat && 
+      lat <= MOROCCO_BOUNDS.maxLat &&
+      lng >= MOROCCO_BOUNDS.minLng && 
+      lng <= MOROCCO_BOUNDS.maxLng
+    );
   });
 
   // Generate the OpenStreetMap URL with proper bounds for Morocco
   const generateMapUrl = () => {
     let url = 'https://www.openstreetmap.org/export/embed.html';
     
-    // Set map center and zoom
-    const centerLat = mapCenter?.lat || 28.96;
-    const centerLng = mapCenter?.lng || -9.13;
-    const zoomLevel = zoom || 5;
+    // If we have a selected doctor with valid coordinates, center on them
+    let centerLat, centerLng;
+    
+    if (selectedDoctor?.latitude && selectedDoctor?.longitude) {
+      centerLat = parseFloat(selectedDoctor.latitude);
+      centerLng = parseFloat(selectedDoctor.longitude);
+    } else if (mapCenter?.lat && mapCenter?.lng) {
+      centerLat = parseFloat(mapCenter.lat);
+      centerLng = parseFloat(mapCenter.lng);
+    } else {
+      // Default center of Morocco if no valid coordinates
+      centerLat = 31.7917;
+      centerLng = -7.0926;
+    }
+    
+    // Ensure coordinates are within Morocco bounds
+    centerLat = Math.max(MOROCCO_BOUNDS.minLat, Math.min(MOROCCO_BOUNDS.maxLat, centerLat));
+    centerLng = Math.max(MOROCCO_BOUNDS.minLng, Math.min(MOROCCO_BOUNDS.maxLng, centerLng));
+    
+    // Set zoom level based on context
+    let zoomLevel = zoom;
+    if (selectedDoctor?.latitude && selectedDoctor?.longitude) {
+      zoomLevel = 13; // Closer zoom when doctor is selected
+    } else if (validDoctors.length === 1) {
+      zoomLevel = 11;
+    } else if (validDoctors.length > 1) {
+      zoomLevel = 8;
+    } else {
+      zoomLevel = 6; // Default zoom for Morocco
+    }
     
     // Add center and zoom parameters
-    url += `?lat=${centerLat}&lon=${centerLng}&zoom=${zoomLevel}`;
+    url += `?bbox=${centerLng - 0.1},${centerLat - 0.1},${centerLng + 0.1},${centerLat + 0.1}`;
+    url += `&layer=mapnik`;
     
-    // Add base layer
-    url += '&layer=mapnik';
-
     // Add markers for valid doctors
     validDoctors.forEach((doctor, index) => {
       const lat = parseFloat(doctor.latitude);
       const lng = parseFloat(doctor.longitude);
       
-      if (!isNaN(lat) && !isNaN(lng) &&
-          lat >= MOROCCO_BOUNDS.minLat && 
-          lat <= MOROCCO_BOUNDS.maxLat &&
-          lng >= MOROCCO_BOUNDS.minLng && 
-          lng <= MOROCCO_BOUNDS.maxLng) {
-        
-        // Add marker with a unique ID
-        url += `&mlat${index}=${lat}&mlon${index}=${lng}`;
-        
-        // Add marker name (doctor info)
-        const markerName = encodeURIComponent(`Dr. ${doctor.prenom} ${doctor.nom} - ${doctor.specialite_nom}`);
-        url += `&mtext${index}=${markerName}`;
-      }
+      // Add marker with doctor information
+      url += `&marker${index}=${lat},${lng},${encodeURIComponent(`Dr. ${doctor.prenom} ${doctor.nom}`)}`;
     });
 
-    // Add user location if available
-    if (userLocation && 
+    // Add user location if available and within Morocco
+    if (userLocation?.lat && userLocation?.lng &&
         userLocation.lat >= MOROCCO_BOUNDS.minLat && 
         userLocation.lat <= MOROCCO_BOUNDS.maxLat &&
         userLocation.lng >= MOROCCO_BOUNDS.minLng && 
         userLocation.lng <= MOROCCO_BOUNDS.maxLng) {
       const userIndex = validDoctors.length;
-      url += `&mlat${userIndex}=${userLocation.lat}&mlon${userIndex}=${userLocation.lng}&mtext${userIndex}=Votre position`;
+      url += `&marker${userIndex}=${userLocation.lat},${userLocation.lng},Votre position`;
     }
-
-    // Add layer controls and enable markers
-    url += '&layers=M&show_map_markers=1';
 
     return url;
   };
@@ -89,18 +106,11 @@ const SimpleMap = ({ doctors, selectedDoctor, mapCenter, zoom, userLocation }) =
 
   // Effect to update map when center or zoom changes
   useEffect(() => {
-    if (selectedDoctor?.latitude && selectedDoctor?.longitude) {
-      const lat = parseFloat(selectedDoctor.latitude);
-      const lng = parseFloat(selectedDoctor.longitude);
-      if (!isNaN(lat) && !isNaN(lng)) {
-        // Force iframe reload when selected doctor changes
-        const iframe = document.querySelector('iframe');
-        if (iframe) {
-          iframe.src = generateMapUrl();
-        }
-      }
+    const iframe = document.querySelector('iframe');
+    if (iframe) {
+      iframe.src = generateMapUrl();
     }
-  }, [selectedDoctor, mapCenter, zoom]);
+  }, [selectedDoctor, mapCenter, zoom, doctors]);
 
   return (
     <Box 
