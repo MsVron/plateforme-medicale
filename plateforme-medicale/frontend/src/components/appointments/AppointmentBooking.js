@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -10,7 +10,8 @@ import {
   TextField,
   Grid,
   Alert,
-  ButtonGroup
+  CircularProgress,
+  styled
 } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -19,6 +20,44 @@ import fr from 'date-fns/locale/fr';
 import axios from 'axios';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+
+// Styled components for time slots
+const TimeSlotList = styled('ul')({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '8px',
+  padding: 0,
+  margin: '16px 0',
+  listStyle: 'none',
+  '& li': {
+    display: 'inline-block'
+  }
+});
+
+const TimeSlotButton = styled(Button)(({ theme }) => ({
+  minWidth: '90px',
+  margin: '4px',
+  '&.selected': {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
+    '&:hover': {
+      backgroundColor: theme.palette.primary.dark,
+    }
+  }
+}));
+
+const TimeSlotSection = styled(Box)({
+  marginBottom: '24px',
+  '& .section-title': {
+    marginBottom: '12px',
+    color: 'primary.main',
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  }
+});
 
 const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -31,18 +70,16 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
   const [message, setMessage] = useState('');
   const [doctorSchedule, setDoctorSchedule] = useState(null);
 
-  useEffect(() => {
-    if (selectedDate) {
-      fetchAvailableSlots();
-    }
-  }, [selectedDate]);
-
-  const fetchAvailableSlots = async () => {
+  const fetchAvailableSlots = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
+      setMessage('');
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       const token = localStorage.getItem('token');
+      
+      console.log('Fetching slots for date:', formattedDate);
+      
       const response = await axios.get(`/api/appointments/slots`, {
         params: {
           medecin_id: doctor.id,
@@ -50,7 +87,19 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
         },
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAvailableSlots(response.data.slots);
+
+      console.log('API Response:', response.data);
+      
+      if (response.data.slots && Array.isArray(response.data.slots)) {
+        setAvailableSlots(response.data.slots);
+        if (response.data.slots.length === 0) {
+          setMessage('Aucun créneau disponible pour cette date');
+        }
+      } else {
+        console.error('Invalid slots data received:', response.data.slots);
+        setError('Format de données invalide pour les créneaux');
+      }
+
       if (response.data.schedule) {
         setDoctorSchedule(response.data.schedule);
       }
@@ -58,12 +107,18 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
         setMessage(response.data.message);
       }
     } catch (error) {
-      console.error('Erreur lors de la récupération des créneaux:', error);
+      console.error('Erreur détaillée:', error.response?.data || error);
       setError(error.response?.data?.message || 'Erreur lors de la récupération des créneaux');
     } finally {
       setLoading(false);
     }
-  };
+  }, [doctor.id]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchAvailableSlots();
+    }
+  }, [selectedDate, fetchAvailableSlots]);
 
   const handleBookAppointment = async () => {
     try {
@@ -111,10 +166,42 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
     return acc;
   }, { morning: [], afternoon: [] });
 
+  // Modified time slot display component
+  const TimeSlots = ({ title, slots }) => {
+    if (!slots || slots.length === 0) return null;
+    
+    return (
+      <TimeSlotSection>
+        <Typography variant="subtitle1" className="section-title">
+          <AccessTimeIcon fontSize="small" />
+          {title}
+        </Typography>
+        <TimeSlotList>
+          {slots.map((slot) => (
+            <li key={slot.debut}>
+              <TimeSlotButton
+                variant="outlined"
+                className={selectedSlot?.debut === slot.debut ? 'selected' : ''}
+                onClick={() => setSelectedSlot(slot)}
+              >
+                {format(parseISO(slot.debut), 'HH:mm')}
+              </TimeSlotButton>
+            </li>
+          ))}
+        </TimeSlotList>
+      </TimeSlotSection>
+    );
+  };
+
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        Prendre rendez-vous avec Dr. {doctor.prenom} {doctor.nom}
+        <Box display="flex" alignItems="center" gap={1}>
+          <EventAvailableIcon color="primary" />
+          <Typography>
+            Prendre rendez-vous avec Dr. {doctor.prenom} {doctor.nom}
+          </Typography>
+        </Box>
       </DialogTitle>
       <DialogContent>
         <Box sx={{ mt: 2 }}>
@@ -130,7 +217,10 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
                 <DatePicker
                   label="Date du rendez-vous"
                   value={selectedDate}
-                  onChange={(newValue) => setSelectedDate(newValue)}
+                  onChange={(newValue) => {
+                    setSelectedDate(newValue);
+                    setSelectedSlot(null);
+                  }}
                   minDate={minDate}
                   maxDate={maxDate}
                   slotProps={{ textField: { fullWidth: true } }}
@@ -140,30 +230,37 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
 
             {doctorSchedule && (
               <Grid item xs={12}>
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
                   <Typography variant="subtitle1" sx={{ mb: 1, color: 'primary.main', fontWeight: 'bold' }}>
-                    Horaires: {format(parseISO(doctorSchedule.heure_debut), 'HH:mm')} - {format(parseISO(doctorSchedule.heure_fin), 'HH:mm')}
+                    Horaires du médecin
                   </Typography>
-                  <ButtonGroup variant="outlined" sx={{ flexWrap: 'wrap', gap: 1 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     <Button
-                      variant="outlined"
                       startIcon={<AccessTimeIcon />}
                       size="small"
-                      sx={{ mb: 1 }}
+                      variant="outlined"
+                    >
+                      {format(parseISO(`2000-01-01T${doctorSchedule.heure_debut}`), 'HH:mm')} - 
+                      {format(parseISO(`2000-01-01T${doctorSchedule.heure_fin}`), 'HH:mm')}
+                    </Button>
+                    <Button
+                      startIcon={<AccessTimeIcon />}
+                      size="small"
+                      variant="outlined"
                     >
                       {`${doctorSchedule.intervalle_minutes} min par consultation`}
                     </Button>
                     {doctorSchedule.a_pause_dejeuner && (
                       <Button
-                        variant="outlined"
                         startIcon={<RestaurantIcon />}
                         size="small"
-                        sx={{ mb: 1 }}
+                        variant="outlined"
                       >
-                        {`Pause déjeuner: ${format(parseISO(doctorSchedule.heure_debut_pause), 'HH:mm')} - ${format(parseISO(doctorSchedule.heure_fin_pause), 'HH:mm')}`}
+                        {`Pause déjeuner: ${format(parseISO(`2000-01-01T${doctorSchedule.heure_debut_pause}`), 'HH:mm')} - 
+                         ${format(parseISO(`2000-01-01T${doctorSchedule.heure_fin_pause}`), 'HH:mm')}`}
                       </Button>
                     )}
-                  </ButtonGroup>
+                  </Box>
                 </Box>
               </Grid>
             )}
@@ -177,6 +274,8 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
                 required
                 multiline
                 rows={2}
+                error={!motif && selectedSlot}
+                helperText={!motif && selectedSlot ? "Le motif est requis" : ""}
               />
             </Grid>
 
@@ -194,56 +293,23 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
 
             {selectedDate && (
               <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AccessTimeIcon color="primary" />
                   Créneaux disponibles
                 </Typography>
+                
                 {loading ? (
-                  <Typography>Chargement des créneaux...</Typography>
+                  <Box display="flex" justifyContent="center" my={3}>
+                    <CircularProgress />
+                  </Box>
                 ) : message ? (
                   <Alert severity="info">{message}</Alert>
                 ) : availableSlots.length === 0 ? (
                   <Alert severity="info">Aucun créneau disponible pour cette date</Alert>
                 ) : (
-                  <Box>
-                    {groupedSlots.morning.length > 0 && (
-                      <Box sx={{ mb: 3 }}>
-                        <Typography variant="subtitle1" sx={{ mb: 1, color: 'primary.main', fontWeight: 'bold' }}>
-                          Matin
-                        </Typography>
-                        <ButtonGroup variant="outlined" sx={{ flexWrap: 'wrap', gap: 1 }}>
-                          {groupedSlots.morning.map((slot) => (
-                            <Button
-                              key={slot.debut}
-                              onClick={() => setSelectedSlot(slot)}
-                              variant={selectedSlot?.debut === slot.debut ? "contained" : "outlined"}
-                              sx={{ mb: 1 }}
-                            >
-                              {format(parseISO(slot.debut), 'HH:mm')}
-                            </Button>
-                          ))}
-                        </ButtonGroup>
-                      </Box>
-                    )}
-
-                    {groupedSlots.afternoon.length > 0 && (
-                      <Box>
-                        <Typography variant="subtitle1" sx={{ mb: 1, color: 'primary.main', fontWeight: 'bold' }}>
-                          Après-midi
-                        </Typography>
-                        <ButtonGroup variant="outlined" sx={{ flexWrap: 'wrap', gap: 1 }}>
-                          {groupedSlots.afternoon.map((slot) => (
-                            <Button
-                              key={slot.debut}
-                              onClick={() => setSelectedSlot(slot)}
-                              variant={selectedSlot?.debut === slot.debut ? "contained" : "outlined"}
-                              sx={{ mb: 1 }}
-                            >
-                              {format(parseISO(slot.debut), 'HH:mm')}
-                            </Button>
-                          ))}
-                        </ButtonGroup>
-                      </Box>
-                    )}
+                  <Box sx={{ mt: 2 }}>
+                    <TimeSlots title="Matin" slots={groupedSlots.morning} />
+                    <TimeSlots title="Après-midi" slots={groupedSlots.afternoon} />
                   </Box>
                 )}
               </Grid>
@@ -252,11 +318,14 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Annuler</Button>
+        <Button onClick={onClose} disabled={loading}>
+          Annuler
+        </Button>
         <Button
           onClick={handleBookAppointment}
           variant="contained"
           disabled={loading || !selectedSlot || !motif}
+          endIcon={loading && <CircularProgress size={20} />}
         >
           Confirmer le rendez-vous
         </Button>
