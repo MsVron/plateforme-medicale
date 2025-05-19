@@ -50,6 +50,7 @@ import SimpleMap from './SimpleMap';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { formatDateTime, formatTime, dateTimePickerProps } from '../../utils/dateUtils';
+import AppointmentBooking from '../appointments/AppointmentBooking';
 
 const MapBox = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -150,6 +151,8 @@ const DoctorSearchView = ({
   const [showDebug, setShowDebug] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [showAppointment, setShowAppointment] = useState(false);
+  const [selectedDoctorForAppointment, setSelectedDoctorForAppointment] = useState(null);
 
   // Reset search state when component unmounts or filters change significantly
   useEffect(() => {
@@ -194,6 +197,16 @@ const DoctorSearchView = ({
     const distance = R * c; // Distance in km
     
     return Math.round(distance);
+  };
+
+  const handleBookAppointment = (doctor, e) => {
+    e.stopPropagation();
+    setSelectedDoctorForAppointment(doctor);
+    setShowAppointment(true);
+  };
+
+  const handleAppointmentSuccess = () => {
+    // You can add any success handling here, like showing a notification
   };
 
   return (
@@ -425,6 +438,7 @@ const DoctorSearchView = ({
                               startIcon={<CalendarMonthIcon />}
                               className="action-button"
                               sx={{ mb: 1, whiteSpace: 'nowrap' }}
+                              onClick={(e) => handleBookAppointment(doctor, e)}
                             >
                               Prendre RDV
                             </Button>
@@ -573,6 +587,14 @@ const DoctorSearchView = ({
             </Grid>
           </DialogContent>
         </Dialog>
+      )}
+
+      {selectedDoctorForAppointment && showAppointment && (
+        <AppointmentBooking
+          doctor={selectedDoctorForAppointment}
+          onClose={() => setShowAppointment(false)}
+          onSuccess={handleAppointmentSuccess}
+        />
       )}
     </Box>
   );
