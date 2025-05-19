@@ -20,7 +20,6 @@ const DoctorSearchContainer = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [debug, setDebug] = useState(null);
   const [searchClicked, setSearchClicked] = useState(false); // Track if search button was clicked
-  const [nearestCity, setNearestCity] = useState(''); // Store nearest city from geolocation
   const [doctorReviews, setDoctorReviews] = useState({}); // Store reviews for doctors
 
   // Request user's location
@@ -35,9 +34,6 @@ const DoctorSearchContainer = () => {
           if (latitude >= 27.6 && latitude <= 35.9 && longitude >= -13.2 && longitude <= -1.0) {
             setMapCenter({ lat: latitude, lng: longitude });
             setZoom(9);
-            
-            // Find the nearest city to user's location
-            findNearestCity(latitude, longitude);
           }
         },
         (error) => {
@@ -47,18 +43,6 @@ const DoctorSearchContainer = () => {
       );
     }
   }, []);
-
-  // Find nearest city to user's coordinates
-  const findNearestCity = async (latitude, longitude) => {
-    try {
-      // This is a simple approach - in a real app you might want to use a geocoding service
-      // For demo purposes, set Casablanca as default city
-      // In a production app, you would use reverse geocoding API to get the city name
-      setNearestCity('Casablanca');
-    } catch (error) {
-      console.error('Error finding nearest city:', error);
-    }
-  };
 
   // Fetch reviews for doctors
   const fetchDoctorReviews = async (doctorIds) => {
@@ -276,14 +260,6 @@ const DoctorSearchContainer = () => {
   // Handle filter changes
   const handleFilterChange = (name, value) => {
     setFilters(prev => {
-      // Special handling for the "city" field when using geolocation
-      if (name === 'city' && value === 'current' && nearestCity) {
-        return {
-          ...prev,
-          city: nearestCity
-        };
-      }
-      
       // Make sure we handle empty and null values consistently
       const sanitizedValue = value === null || value === undefined ? '' : value;
       

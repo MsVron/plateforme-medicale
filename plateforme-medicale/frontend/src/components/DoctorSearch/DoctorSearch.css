@@ -1,5 +1,52 @@
 /* DoctorSearch.css */
 
+/* Make the doctor search container and filters container wider */
+.doctor-search-container {
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  width: 95% !important;
+}
+
+.filters-container {
+  width: 100% !important;
+  max-width: 1300px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 24px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Increase visibility of elements */
+.doctor-search-header {
+  font-size: 2rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.results-title {
+  font-size: 1.5rem !important;
+  padding: 12px 24px !important;
+}
+
+.doctor-card {
+  padding: 20px !important;
+  margin-bottom: 16px !important;
+}
+
+.doctor-avatar {
+  width: 70px !important;
+  height: 70px !important;
+  font-size: 1.4rem !important;
+}
+
+.price-tag {
+  font-size: 1rem !important;
+  padding: 8px 12px !important;
+}
+
+.action-button {
+  padding: 8px 16px !important;
+}
+
 /* Fix for Leaflet popup styles */
 .leaflet-popup-content {
   margin: 13px 19px;
@@ -60,4 +107,12 @@ html {
 /* Selected doctor marker style (can be used with custom markers) */
 .doctor-marker-selected {
   z-index: 1000 !important;
+} 
+
+/* Make the map container wider */
+#doctor-map {
+  width: 100% !important;
+  max-width: 1300px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 } 

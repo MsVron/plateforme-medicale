@@ -1,4 +1,5 @@
 import React, { useState, Suspense, lazy, useEffect } from 'react';
+import './DoctorSearch.css';
 import {
   Box, 
   Typography, 
@@ -143,7 +144,6 @@ const DoctorSearchView = ({
   resetSearch
 }) => {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [showLocationPrompt, setShowLocationPrompt] = useState(!userLocation);
   const [showDebug, setShowDebug] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -159,21 +159,6 @@ const DoctorSearchView = ({
     setSelectedDoctor(doctor);
     setShowDetails(true);
     setShowMap(true);
-  };
-
-  const requestLocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setShowLocationPrompt(false);
-          // The actual location handling is done in the container component
-        },
-        (error) => {
-          console.warn('Geolocation error:', error);
-          setShowLocationPrompt(false);
-        }
-      );
-    }
   };
 
   // Create specialty options with better wording
@@ -209,29 +194,10 @@ const DoctorSearchView = ({
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <HeaderTypography variant="h4" gutterBottom>
+    <Box sx={{ p: 3 }} className="doctor-search-container">
+      <HeaderTypography variant="h4" gutterBottom className="doctor-search-header">
         Rechercher un médecin
       </HeaderTypography>
-      
-      {showLocationPrompt && (
-        <Alert 
-          severity="info" 
-          sx={{ mb: 3 }}
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              startIcon={<MyLocationIcon />}
-              onClick={requestLocation}
-            >
-              Activer
-            </Button>
-          }
-        >
-          Activez la géolocalisation pour trouver les médecins près de chez vous
-        </Alert>
-      )}
       
       {error && (
         <Paper 
@@ -271,7 +237,7 @@ const DoctorSearchView = ({
         </Accordion>
       )}
       
-      <FiltersContainer>
+      <FiltersContainer className="filters-container">
         <Grid container spacing={2} alignItems="flex-end">
           <Grid item xs={12} sm={6} md={3}>
             <Autocomplete
@@ -302,24 +268,6 @@ const DoctorSearchView = ({
                   label="Ville"
                   placeholder="Toutes villes"
                   fullWidth
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {userLocation && (
-                          <Tooltip title="Utiliser ma position">
-                            <IconButton 
-                              size="small"
-                              onClick={() => handleFilterChange('city', 'current')}
-                            >
-                              <MyLocationIcon />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        {params.InputProps.endAdornment}
-                      </>
-                    )
-                  }}
                 />
               )}
             />
@@ -367,7 +315,7 @@ const DoctorSearchView = ({
             </Box>
           ) : (
             <>
-              <ResultsTitle variant="h6">
+              <ResultsTitle variant="h6" className="results-title">
                 {doctors.length} médecins trouvés
               </ResultsTitle>
               
@@ -392,12 +340,13 @@ const DoctorSearchView = ({
                       <DoctorListItem 
                         key={doctor.id} 
                         onClick={() => handleCardClick(doctor)}
+                        className={`doctor-card ${selectedDoctor?.id === doctor.id ? 'selected' : ''}`}
                         sx={{
                           borderLeft: selectedDoctor?.id === doctor.id ? '4px solid #4ca1af' : '4px solid transparent',
                         }}
                       >
                         <Box sx={{ display: 'flex', width: '100%' }}>
-                          <DoctorAvatar>
+                          <DoctorAvatar className="doctor-avatar">
                             {doctor.prenom[0]}{doctor.nom[0]}
                           </DoctorAvatar>
                           
@@ -409,6 +358,7 @@ const DoctorSearchView = ({
                               
                               {doctor.tarif_consultation && (
                                 <PriceTag 
+                                  className="price-tag"
                                   icon={<EuroIcon sx={{ fontSize: 16 }} />} 
                                   label={`${doctor.tarif_consultation} DH`}
                                 />
@@ -470,6 +420,7 @@ const DoctorSearchView = ({
                               variant="outlined" 
                               color="primary" 
                               startIcon={<CalendarMonthIcon />}
+                              className="action-button"
                               sx={{ mb: 1, whiteSpace: 'nowrap' }}
                             >
                               Prendre RDV

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress, Paper, Card, CardContent } from '@mui/material';
+import React, { useState, useEffect } from 'react';import { Box, Typography, CircularProgress, Paper, Card, CardContent } from '@mui/material';import '../DoctorSearch/DoctorSearch.css';
 
 // Morocco bounds - more accurate based on OpenStreetMap
 const MOROCCO_BOUNDS = {

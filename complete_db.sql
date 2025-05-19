@@ -126,9 +126,18 @@ CREATE TABLE disponibilites_medecin (
   heure_debut TIME NOT NULL,
   heure_fin TIME NOT NULL,
   intervalle_minutes INT DEFAULT 30, -- Durée de chaque créneau en minutes
+  a_pause_dejeuner BOOLEAN DEFAULT FALSE, -- Indique si le médecin prend une pause déjeuner ce jour
+  heure_debut_pause TIME, -- Heure de début de la pause déjeuner
+  heure_fin_pause TIME, -- Heure de fin de la pause déjeuner
   est_actif BOOLEAN DEFAULT TRUE,
   FOREIGN KEY (medecin_id) REFERENCES medecins(id),
-  FOREIGN KEY (institution_id) REFERENCES institutions(id)
+  FOREIGN KEY (institution_id) REFERENCES institutions(id),
+  CHECK (
+    (a_pause_dejeuner = FALSE AND heure_debut_pause IS NULL AND heure_fin_pause IS NULL) OR
+    (a_pause_dejeuner = TRUE AND heure_debut_pause IS NOT NULL AND heure_fin_pause IS NOT NULL AND
+     heure_debut_pause > heure_debut AND heure_fin_pause < heure_fin AND
+     heure_debut_pause < heure_fin_pause)
+  )
 );
 
 -- Table des jours d'indisponibilité exceptionnelle
