@@ -5,10 +5,11 @@ import {
   FormControl, InputLabel, Checkbox, FormControlLabel, Autocomplete, Chip, Divider
 } from '@mui/material';
 import axios from 'axios';
-import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
+import { LocalizationProvider, DateTimePicker, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format } from 'date-fns';
 import EditIcon from '@mui/icons-material/Edit';
+import { format } from 'date-fns';
+import { formatDate, formatDateTime, formatTime, dateTimePickerProps, timeInputProps, datePickerProps } from '../utils/dateUtils';
 
 const MedecinDashboard = () => {
   const [data, setData] = useState({ medecin: null, institutions: [], availabilities: [], absences: [], patients: [] });
@@ -510,9 +511,9 @@ const MedecinDashboard = () => {
                         {availability.institution_nom}
                       </Typography>
                       <Typography><strong>Jour:</strong> {availability.jour_semaine}</Typography>
-                      <Typography><strong>Horaire:</strong> {availability.heure_debut} - {availability.heure_fin}</Typography>
+                      <Typography><strong>Horaire:</strong> {formatTime(availability.heure_debut)} - {formatTime(availability.heure_fin)}</Typography>
                       {availability.a_pause_dejeuner && (
-                        <Typography><strong>Pause déjeuner:</strong> {availability.heure_debut_pause} - {availability.heure_fin_pause}</Typography>
+                        <Typography><strong>Pause déjeuner:</strong> {formatTime(availability.heure_debut_pause)} - {formatTime(availability.heure_fin_pause)}</Typography>
                       )}
                       <Typography><strong>Intervalle:</strong> {availability.intervalle_minutes} min</Typography>
                       <Typography><strong>Statut:</strong> {availability.est_actif ? 'Actif' : 'Inactif'}</Typography>
@@ -557,8 +558,8 @@ const MedecinDashboard = () => {
                       <Typography variant="h6" sx={{ mb: 1 }}>
                         Absence
                       </Typography>
-                      <Typography><strong>Début:</strong> {new Date(absence.date_debut).toLocaleString()}</Typography>
-                      <Typography><strong>Fin:</strong> {new Date(absence.date_fin).toLocaleString()}</Typography>
+                      <Typography><strong>Début:</strong> {formatDateTime(absence.date_debut)}</Typography>
+                      <Typography><strong>Fin:</strong> {formatDateTime(absence.date_fin)}</Typography>
                       <Typography><strong>Motif:</strong> {absence.motif || 'Non spécifié'}</Typography>
                     </CardContent>
                     <CardActions>
@@ -598,7 +599,7 @@ const MedecinDashboard = () => {
                       <Typography variant="h6" sx={{ mb: 1 }}>
                         {patient.prenom} {patient.nom}
                       </Typography>
-                      <Typography><strong>Date de naissance:</strong> {new Date(patient.date_naissance).toLocaleDateString()}</Typography>
+                      <Typography><strong>Date de naissance:</strong> {formatDate(patient.date_naissance)}</Typography>
                       <Typography><strong>Sexe:</strong> {patient.sexe}</Typography>
                       {patient.CNE && <Typography><strong>CNE:</strong> {patient.CNE}</Typography>}
                       {patient.email && <Typography><strong>Email:</strong> {patient.email}</Typography>}
@@ -675,7 +676,7 @@ const MedecinDashboard = () => {
             value={availabilityForm.heure_debut}
             onChange={(e) => setAvailabilityForm({ ...availabilityForm, heure_debut: e.target.value })}
             InputLabelProps={{ shrink: true }}
-            inputProps={{ step: 300 }}
+            {...timeInputProps}
           />
           <TextField
             margin="dense"
@@ -685,7 +686,7 @@ const MedecinDashboard = () => {
             value={availabilityForm.heure_fin}
             onChange={(e) => setAvailabilityForm({ ...availabilityForm, heure_fin: e.target.value })}
             InputLabelProps={{ shrink: true }}
-            inputProps={{ step: 300 }}
+            {...timeInputProps}
           />
           <TextField
             margin="dense"
@@ -713,12 +714,8 @@ const MedecinDashboard = () => {
                   fullWidth
                   value={availabilityForm.heure_debut_pause}
                   onChange={(e) => setAvailabilityForm({ ...availabilityForm, heure_debut_pause: e.target.value })}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  inputProps={{
-                    step: 300, // 5 minutes
-                  }}
+                  InputLabelProps={{ shrink: true }}
+                  {...timeInputProps}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -728,12 +725,8 @@ const MedecinDashboard = () => {
                   fullWidth
                   value={availabilityForm.heure_fin_pause}
                   onChange={(e) => setAvailabilityForm({ ...availabilityForm, heure_fin_pause: e.target.value })}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  inputProps={{
-                    step: 300, // 5 minutes
-                  }}
+                  InputLabelProps={{ shrink: true }}
+                  {...timeInputProps}
                 />
               </Grid>
             </Grid>
@@ -771,12 +764,14 @@ const MedecinDashboard = () => {
               value={absenceForm.date_debut}
               onChange={(newValue) => setAbsenceForm({ ...absenceForm, date_debut: newValue })}
               renderInput={(params) => <TextField {...params} margin="dense" fullWidth />}
+              {...dateTimePickerProps}
             />
             <DateTimePicker
               label="Date et heure de fin"
               value={absenceForm.date_fin}
               onChange={(newValue) => setAbsenceForm({ ...absenceForm, date_fin: newValue })}
               renderInput={(params) => <TextField {...params} margin="dense" fullWidth />}
+              {...dateTimePickerProps}
             />
             <TextField
               margin="dense"
@@ -827,12 +822,13 @@ const MedecinDashboard = () => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DateTimePicker
+                  <DatePicker
                     label="Date de naissance *"
                     value={patientForm.date_naissance}
                     onChange={(newValue) => setPatientForm({ ...patientForm, date_naissance: newValue })}
                     renderInput={(params) => <TextField {...params} margin="dense" fullWidth />}
                     maxDate={new Date()}
+                    {...datePickerProps}
                   />
                 </LocalizationProvider>
               </Grid>

@@ -30,6 +30,9 @@ import {
   validateCNE,
   isValidEmail,
 } from '../../utils/formValidation';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { datePickerProps } from '../../utils/dateUtils';
 
 const PatientRegistrationForm = () => {
   const navigate = useNavigate();
@@ -366,21 +369,32 @@ const PatientRegistrationForm = () => {
           />
           
           {/* Date de naissance */}
-          <TextField
-            required
-            fullWidth
-            id="date_naissance"
-            label="Date de naissance"
-            name="date_naissance"
-            type="date"
-            value={formData.date_naissance}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            InputLabelProps={{ shrink: true }}
-            error={shouldShowError('date_naissance')}
-            helperText={shouldShowError('date_naissance') ? errors.date_naissance : ''}
-            sx={{ mb: 3 }}
-          />
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label="Date de naissance *"
+              value={formData.date_naissance}
+              onChange={(newValue) => {
+                handleChange({
+                  target: {
+                    name: 'date_naissance',
+                    value: newValue
+                  }
+                });
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  required
+                  fullWidth
+                  error={shouldShowError('date_naissance')}
+                  helperText={shouldShowError('date_naissance') ? errors.date_naissance : ''}
+                  sx={{ mb: 3 }}
+                />
+              )}
+              {...datePickerProps}
+              maxDate={new Date()}
+            />
+          </LocalizationProvider>
           
           {/* Téléphone */}
           <TextField

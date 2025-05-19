@@ -1,12 +1,37 @@
-import React from 'react';
-import { Box, Typography, Container, Button, Grid, Paper } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Container, Button, Grid, Paper, Card, CardContent, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import axios from 'axios';
+import { formatDateTime, dateTimePickerProps } from '../utils/dateUtils';
 
 const PatientHome = () => {
   const navigate = useNavigate();
+  const [appointments, setAppointments] = useState([]);
+  const [appointmentForm, setAppointmentForm] = useState({
+    date_heure: null,
+    medecin_id: '',
+    duree: '',
+    statut: '',
+    medecin_nom: ''
+  });
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await axios.get('/api/patient/appointments');
+      setAppointments(response.data);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des rendez-vous:', error);
+    }
+  };
 
   return (
     <Container>
@@ -140,6 +165,37 @@ const PatientHome = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Update appointment display */}
+      {appointments.map((appointment) => (
+        <Card key={appointment.id} sx={{ mb: 2 }}>
+          <CardContent>
+            <Typography variant="h6">
+              Rendez-vous avec Dr. {appointment.medecin_nom}
+            </Typography>
+            <Typography>
+              <strong>Date et heure:</strong> {formatDateTime(appointment.date_heure_debut)}
+            </Typography>
+            <Typography>
+              <strong>Durée:</strong> {appointment.duree} minutes
+            </Typography>
+            <Typography>
+              <strong>Statut:</strong> {appointment.statut}
+            </Typography>
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* Update the appointment form */}
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <DateTimePicker
+          label="Date et heure du rendez-vous"
+          value={appointmentForm.date_heure}
+          onChange={(newValue) => setAppointmentForm({ ...appointmentForm, date_heure: newValue })}
+          renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
+          {...dateTimePickerProps}
+        />
+      </LocalizationProvider>
     </Container>
   );
 };

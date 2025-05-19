@@ -4,7 +4,10 @@ import {
   TextField, Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Checkbox,
   MenuItem, Select, FormControl, InputLabel
 } from '@mui/material';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import axios from 'axios';
+import { formatDate, datePickerProps } from '../utils/dateUtils';
 
 const validateUsername = (username) => {
   const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
@@ -180,7 +183,7 @@ const ManagePatients = () => {
             <TableRow key={patient.id}>
               <TableCell>{patient.prenom}</TableCell>
               <TableCell>{patient.nom}</TableCell>
-              <TableCell>{patient.date_naissance}</TableCell>
+              <TableCell>{formatDate(patient.date_naissance)}</TableCell>
               <TableCell>{patient.sexe}</TableCell>
               <TableCell>{patient.CNE || '-'}</TableCell>
               <TableCell>{patient.groupe_sanguin || '-'}</TableCell>
@@ -254,15 +257,15 @@ const ManagePatients = () => {
             value={formData.nom}
             onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
           />
-          <TextField
-            margin="dense"
-            label="Date de naissance"
-            type="date"
-            fullWidth
-            value={formData.date_naissance}
-            onChange={(e) => setFormData({ ...formData, date_naissance: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label="Date de naissance *"
+              value={formData.date_naissance}
+              onChange={(newValue) => setFormData({ ...formData, date_naissance: newValue })}
+              renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
+              {...datePickerProps}
+            />
+          </LocalizationProvider>
           <TextField
             margin="dense"
             label="Sexe"

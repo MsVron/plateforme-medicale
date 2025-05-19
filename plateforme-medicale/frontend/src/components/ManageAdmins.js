@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Table, TableBody, TableCell, TableHead, TableRow, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import axios from 'axios';
 import '../styles/ManageAdmins.css';
+import { formatDateTime } from '../utils/dateUtils';
 
 const validateUsername = (username) => {
   const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
@@ -164,6 +165,7 @@ const ManageAdmins = () => {
             <TableCell>Nom</TableCell>
             <TableCell>Email</TableCell>
             <TableCell>Téléphone</TableCell>
+            <TableCell>Date de création</TableCell>
             <TableCell>Actif</TableCell>
             <TableCell>Actions</TableCell>
           </TableRow>
@@ -175,6 +177,7 @@ const ManageAdmins = () => {
               <TableCell>{admin.nom}</TableCell>
               <TableCell>{admin.email}</TableCell>
               <TableCell>{admin.telephone}</TableCell>
+              <TableCell>{formatDateTime(admin.date_creation)}</TableCell>
               <TableCell>{admin.est_actif ? 'Oui' : 'Non'}</TableCell>
               <TableCell>
                 <Button color="primary" onClick={() => handleOpen(admin)}>
