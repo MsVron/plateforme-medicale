@@ -1,0 +1,82 @@
+/* Horizontal Time Slot Slider Styles */
+
+/* Display the time slots as a single list in a row */
+.time-select .md-headline + .md-layout.md-align-center {
+  display: block;
+}
+
+.time-selection-col-header {
+  display: none;
+}
+
+.time-listing-icon {
+  display: none;
+}
+
+ul.time-listing {
+  display: inline;
+  padding-bottom: 0;
+}
+
+ul.time-listing li {
+  display: inline-block;
+}
+
+.md-layout.md-column.md-column-center {
+  display: inline;
+}
+
+/* Scrollable container styles */
+.time-slot-container {
+  display: flex;
+  overflow-x: auto;
+  padding: 8px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #bbdefb #e3f2fd;
+}
+
+.time-slot-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.time-slot-container::-webkit-scrollbar-track {
+  background: #e3f2fd;
+  border-radius: 4px;
+}
+
+.time-slot-container::-webkit-scrollbar-thumb {
+  background-color: #bbdefb;
+  border-radius: 4px;
+}
+
+.time-slot-container::-webkit-scrollbar-thumb:hover {
+  background-color: #90caf9;
+}
+
+/* Time slot button styles */
+.time-slot-button {
+  min-width: 80px;
+  margin: 0 4px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.time-slot-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.time-slot-button.selected {
+  font-weight: bold;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 600px) {
+  .time-slot-button {
+    min-width: 70px;
+    font-size: 0.8rem;
+  }
+} 

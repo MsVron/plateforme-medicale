@@ -6,9 +6,11 @@ const { verifyToken, isAdmin, isSuperAdmin } = require('../middlewares/auth');
 // Public routes (no authentication required)
 router.get('/medecins/public', medecinController.getPublicMedecins);
 router.get('/specialites/public', medecinController.getPublicSpecialites);
+router.get('/medecins/public/:id', medecinController.getPublicMedecinById);
 
 // Protected routes
 router.get('/medecins', verifyToken, isAdmin, medecinController.getMedecins);
+router.get('/medecins/:id', verifyToken, medecinController.getMedecinById);
 router.post('/medecins', verifyToken, isAdmin, medecinController.addMedecin);
 router.put('/medecins/:id', verifyToken, isAdmin, medecinController.editMedecin);
 router.delete('/medecins/:id', verifyToken, isSuperAdmin, medecinController.deleteMedecin);

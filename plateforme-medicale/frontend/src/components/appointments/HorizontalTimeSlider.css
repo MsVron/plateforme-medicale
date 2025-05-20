@@ -1,0 +1,39 @@
+/* Horizontal Time Slider Styles */
+
+/* Display the time slots as a single list in a row */
+.time-select .md-headline + .md-layout.md-align-center {
+  display: block;
+}
+
+.time-selection-col-header {
+  display: none;
+}
+
+.time-listing-icon {
+  display: none;
+}
+
+ul.time-listing {
+  display: inline;
+  padding-bottom: 0;
+}
+
+ul.time-listing li {
+  display: inline-block;
+}
+
+.md-layout.md-column.md-column-center {
+  display: inline;
+}
+
+/* Additional responsive styles */
+@media (max-width: 600px) {
+  .horizontal-time-container {
+    padding: 8px 4px;
+  }
+  
+  .horizontal-time-button {
+    min-width: 70px;
+    font-size: 0.85rem;
+  }
+} 

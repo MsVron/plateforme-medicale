@@ -108,6 +108,25 @@ async function main() {
   
   if (connected) {
     await inspectVerificationTables();
+    
+    // Add doctor query here
+    console.log('\n--- CHECKING DOCTORS IN DATABASE ---');
+    try {
+      const [doctors] = await db.execute(`
+        SELECT m.id, m.prenom, m.nom, m.specialite_id, s.nom AS specialite, 
+        m.telephone, m.email_professionnel, m.institution_id, m.est_actif
+        FROM medecins m
+        LEFT JOIN specialites s ON m.specialite_id = s.id
+        ORDER BY m.id
+      `);
+      
+      console.log('Total doctors:', doctors.length);
+      for (const doctor of doctors) {
+        console.log(`ID: ${doctor.id}, Name: ${doctor.prenom} ${doctor.nom}, Active: ${doctor.est_actif ? 'Yes' : 'No'}, Specialty: ${doctor.specialite}`);
+      }
+    } catch (error) {
+      console.error('Failed to query doctors:', error);
+    }
   }
   
   // Always close the connection when done

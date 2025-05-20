@@ -1,5 +1,6 @@
 const db = require('../../config/db');
 const { addDays, format, parse, isWithinInterval, addMinutes, isBefore } = require('date-fns');
+const slotUtils = require('./slotGeneratorUtils');
 
 exports.getAvailableSlots = async (req, res) => {
   try {
@@ -76,45 +77,160 @@ exports.getAvailableSlots = async (req, res) => {
       [medecin_id, date]
     );
 
-    // Generate all possible time slots
-    const slots = [];
-    const startTime = parse(availability.heure_debut, 'HH:mm:ss', new Date(date));
-    const endTime = parse(availability.heure_fin, 'HH:mm:ss', new Date(date));
-    let currentSlot = startTime;
+    // Convert existing appointments to the format expected by slot generator
+    const bookedSlots = existingAppointments.map(appointment => ({
+      start: appointment.date_heure_debut,
+      end: appointment.date_heure_fin
+    }));
 
-    while (isBefore(currentSlot, endTime)) {
-      const slotEnd = addMinutes(currentSlot, availability.intervalle_minutes);
-      
-      // Check if slot is during lunch break
-      let isDuringLunch = false;
-      if (availability.a_pause_dejeuner) {
-        const lunchStart = parse(availability.heure_debut_pause, 'HH:mm:ss', new Date(date));
-        const lunchEnd = parse(availability.heure_fin_pause, 'HH:mm:ss', new Date(date));
-        isDuringLunch = isWithinInterval(currentSlot, { start: lunchStart, end: lunchEnd });
-      }
+    // Use the utility function to generate available slots with 24-hour format
+    const availableSlots = slotUtils.generateAvailableSlots(schedule, bookedSlots, 'HH:mm');
+    
+    // Format slots for response
+    const formattedSlots = availableSlots.map(slot => ({
+      debut: format(slot.start, 'yyyy-MM-dd\'T\'HH:mm:ss'),
+      fin: format(slot.end, 'yyyy-MM-dd\'T\'HH:mm:ss'),
+      time: slot.time
+    }));
 
-      // Check if slot conflicts with existing appointments
-      const isBooked = existingAppointments.some(appointment => {
-        const appointmentStart = new Date(appointment.date_heure_debut);
-        const appointmentEnd = new Date(appointment.date_heure_fin);
-        return isWithinInterval(currentSlot, { start: appointmentStart, end: appointmentEnd }) ||
-               isWithinInterval(slotEnd, { start: appointmentStart, end: appointmentEnd });
-      });
-
-      if (!isDuringLunch && !isBooked) {
-        slots.push({
-          debut: format(currentSlot, 'yyyy-MM-dd\'T\'HH:mm:ss'),
-          fin: format(slotEnd, 'yyyy-MM-dd\'T\'HH:mm:ss')
-        });
-      }
-
-      currentSlot = slotEnd;
-    }
-
-    return res.status(200).json({ slots, schedule });
+    return res.status(200).json({ 
+      slots: formattedSlots, 
+      schedule,
+      formattedDate: slotUtils.formatDate(date)
+    });
   } catch (error) {
     console.error('Erreur lors de la récupération des créneaux disponibles:', error);
     return res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
+exports.getFormattedAvailableSlots = async (req, res) => {
+  try {
+    const { medecin_id, date } = req.query;
+    
+    console.log('DEBUG: getFormattedAvailableSlots called with:', { medecin_id, date });
+    
+    if (!medecin_id || !date) {
+      return res.status(400).json({ message: "L'ID du médecin et la date sont requis" });
+    }
+
+    // Get doctor's institution first
+    const [medecins] = await db.execute(
+      'SELECT institution_id FROM medecins WHERE id = ?',
+      [medecin_id]
+    );
+
+    if (medecins.length === 0) {
+      console.log('DEBUG: Médecin non trouvé:', medecin_id);
+      return res.status(404).json({ message: "Médecin non trouvé" });
+    }
+
+    const institution_id = medecins[0].institution_id;
+    console.log('DEBUG: Found institution_id:', institution_id);
+
+    // Get doctor's regular availability for the day of week
+    const dayOfWeek = format(new Date(date), 'EEEE').toLowerCase();
+    console.log('DEBUG: Day of week:', dayOfWeek);
+    
+    const [availabilities] = await db.execute(
+      `SELECT 
+        heure_debut, heure_fin, intervalle_minutes,
+        a_pause_dejeuner, heure_debut_pause, heure_fin_pause
+       FROM disponibilites_medecin 
+       WHERE medecin_id = ? AND jour_semaine = ? AND institution_id = ? AND est_actif = true`,
+      [medecin_id, dayOfWeek, institution_id]
+    );
+
+    if (availabilities.length === 0) {
+      console.log('DEBUG: No availability for this day');
+      return res.status(200).json({ 
+        slots: [],
+        message: "Le médecin n'a pas de disponibilité ce jour-là" 
+      });
+    }
+
+    const availability = availabilities[0];
+    console.log('DEBUG: Found availability:', availability);
+
+    // Format schedule information
+    const schedule = {
+      heure_debut: `${date}T${availability.heure_debut}`,
+      heure_fin: `${date}T${availability.heure_fin}`,
+      intervalle_minutes: availability.intervalle_minutes,
+      a_pause_dejeuner: availability.a_pause_dejeuner,
+      heure_debut_pause: availability.a_pause_dejeuner ? `${date}T${availability.heure_debut_pause}` : null,
+      heure_fin_pause: availability.a_pause_dejeuner ? `${date}T${availability.heure_fin_pause}` : null
+    };
+    
+    console.log('DEBUG: Formatted schedule:', schedule);
+    
+    // Check for emergency absences
+    const [absences] = await db.execute(
+      `SELECT date_debut, date_fin 
+       FROM indisponibilites_exceptionnelles 
+       WHERE medecin_id = ? AND date_debut <= ? AND date_fin >= ?`,
+      [medecin_id, date, date]
+    );
+
+    if (absences.length > 0) {
+      console.log('DEBUG: Doctor is absent on this day');
+      return res.status(200).json({ 
+        slots: [],
+        schedule,
+        message: "Le médecin est absent ce jour-là" 
+      });
+    }
+
+    // Get existing appointments for the day
+    const [existingAppointments] = await db.execute(
+      `SELECT date_heure_debut, date_heure_fin 
+       FROM rendez_vous 
+       WHERE medecin_id = ? AND DATE(date_heure_debut) = ? 
+       AND statut NOT IN ('annulé', 'patient absent')`,
+      [medecin_id, date]
+    );
+
+    console.log('DEBUG: Found existing appointments:', existingAppointments.length);
+
+    // Convert existing appointments to the format expected by slot generator
+    const bookedSlots = existingAppointments.map(appointment => ({
+      start: appointment.date_heure_debut,
+      end: appointment.date_heure_fin
+    }));
+
+    // Generate available slots using utility function with 24-hour format
+    console.log('DEBUG: Generating available slots');
+    const availableSlots = slotUtils.generateAvailableSlots(schedule, bookedSlots, 'HH:mm');
+    console.log('DEBUG: Generated available slots:', availableSlots.length);
+
+    // Format slots for slider display according to requirements
+    const formattedSlots = slotUtils.formatSlotsForDisplay(availableSlots);
+    console.log('DEBUG: Formatted slots for display:', formattedSlots.length);
+
+    // Add debug information in the response during development
+    return res.status(200).json({ 
+      slots: formattedSlots.map(slot => ({
+        debut: slot.debut || availableSlots.find(s => s.slotNumber === slot.slot)?.start,
+        fin: slot.fin || availableSlots.find(s => s.slotNumber === slot.slot)?.end,
+        time: slot.time,
+        slot: slot.slot
+      })),
+      schedule,
+      totalSlots: formattedSlots.length,
+      formattedDate: slotUtils.formatDate(date),
+      debug: {
+        availableSlotsCount: availableSlots.length,
+        formattedSlotsCount: formattedSlots.length,
+        firstFewSlots: formattedSlots.slice(0, 3)
+      }
+    });
+  } catch (error) {
+    console.error('Error getting formatted available slots:', error);
+    return res.status(500).json({ 
+      message: "Server error", 
+      error: error.message,
+      stack: error.stack 
+    });
   }
 };
 

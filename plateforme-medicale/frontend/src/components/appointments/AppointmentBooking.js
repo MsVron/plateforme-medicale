@@ -21,6 +21,10 @@ import axios from 'axios';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import HorizontalTimeSlider from './HorizontalTimeSlider';
+import { formatDate, formatTime, formatDateTime } from '../../utils/dateUtils';
+import './HorizontalTimeSlider.css';
+import useTimeSlots from '../../hooks/useTimeSlots';
 
 // Styled components for time slots
 const TimeSlotList = styled('ul')({
@@ -78,9 +82,10 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       const token = localStorage.getItem('token');
       
-      console.log('Fetching slots for date:', formattedDate);
+      console.log('DEBUG: Fetching slots for date:', formattedDate);
+      console.log('DEBUG: Doctor ID:', doctor.id);
       
-      const response = await axios.get(`/api/appointments/slots`, {
+      const response = await axios.get(`/api/appointments/formatted-slots`, {
         params: {
           medecin_id: doctor.id,
           date: formattedDate
@@ -88,31 +93,38 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      console.log('API Response:', response.data);
+      console.log('DEBUG: API Response:', JSON.stringify(response.data, null, 2));
       
       if (response.data.slots && Array.isArray(response.data.slots)) {
+        // Add debugging for the returned slots
+        console.log('DEBUG: Received slots:', response.data.slots.length);
+        console.log('DEBUG: First few slots:', response.data.slots.slice(0, 3));
+        
         setAvailableSlots(response.data.slots);
         if (response.data.slots.length === 0) {
           setMessage('Aucun créneau disponible pour cette date');
         }
       } else {
-        console.error('Invalid slots data received:', response.data.slots);
+        console.error('DEBUG: Invalid slots data received:', response.data.slots);
         setError('Format de données invalide pour les créneaux');
       }
 
       if (response.data.schedule) {
+        console.log('DEBUG: Received schedule:', response.data.schedule);
         setDoctorSchedule(response.data.schedule);
       }
+      
       if (response.data.message) {
         setMessage(response.data.message);
       }
     } catch (error) {
-      console.error('Erreur détaillée:', error.response?.data || error);
+      console.error('DEBUG: Error fetching slots:', error);
+      console.error('DEBUG: Error response data:', error.response?.data);
       setError(error.response?.data?.message || 'Erreur lors de la récupération des créneaux');
     } finally {
       setLoading(false);
     }
-  }, [doctor.id]);
+  }, [doctor.id, selectedDate]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -130,6 +142,8 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
       setLoading(true);
       setError('');
 
+      console.log('DEBUG: Booking appointment with slot:', selectedSlot);
+
       const token = localStorage.getItem('token');
       await axios.post('/api/appointments', {
         medecin_id: doctor.id,
@@ -145,7 +159,8 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Erreur lors de la prise de rendez-vous:', error);
+      console.error('DEBUG: Error booking appointment:', error);
+      console.error('DEBUG: Error response data:', error.response?.data);
       setError(error.response?.data?.message || 'Erreur lors de la prise de rendez-vous');
     } finally {
       setLoading(false);
@@ -155,43 +170,17 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
   const minDate = addDays(new Date(), 1);
   const maxDate = addDays(new Date(), 90);
 
-  // Group slots by morning/afternoon
-  const groupedSlots = availableSlots.reduce((acc, slot) => {
-    const hour = getHours(parseISO(slot.debut));
-    if (hour < 12) {
-      acc.morning.push(slot);
-    } else {
-      acc.afternoon.push(slot);
-    }
-    return acc;
-  }, { morning: [], afternoon: [] });
+  // Convert the availableSlots to the format expected by the HorizontalTimeSlider
+  const formattedAvailableSlots = availableSlots.map(slot => ({
+    debut: slot.debut,
+    fin: slot.fin,
+    time: slot.time || formatTime(slot.debut)
+  }));
 
-  // Modified time slot display component
-  const TimeSlots = ({ title, slots }) => {
-    if (!slots || slots.length === 0) return null;
-    
-    return (
-      <TimeSlotSection>
-        <Typography variant="subtitle1" className="section-title">
-          <AccessTimeIcon fontSize="small" />
-          {title}
-        </Typography>
-        <TimeSlotList>
-          {slots.map((slot) => (
-            <li key={slot.debut}>
-              <TimeSlotButton
-                variant="outlined"
-                className={selectedSlot?.debut === slot.debut ? 'selected' : ''}
-                onClick={() => setSelectedSlot(slot)}
-              >
-                {format(parseISO(slot.debut), 'HH:mm')}
-              </TimeSlotButton>
-            </li>
-          ))}
-        </TimeSlotList>
-      </TimeSlotSection>
-    );
-  };
+  // Debug display of formatted slots
+  useEffect(() => {
+    console.log('DEBUG: Formatted slots for display:', formattedAvailableSlots);
+  }, [formattedAvailableSlots]);
 
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
@@ -224,6 +213,7 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
                   minDate={minDate}
                   maxDate={maxDate}
                   slotProps={{ textField: { fullWidth: true } }}
+                  format="dd/MM/yyyy"
                 />
               </LocalizationProvider>
             </Grid>
@@ -240,8 +230,8 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
                       size="small"
                       variant="outlined"
                     >
-                      {format(parseISO(`2000-01-01T${doctorSchedule.heure_debut}`), 'HH:mm')} - 
-                      {format(parseISO(`2000-01-01T${doctorSchedule.heure_fin}`), 'HH:mm')}
+                      {formatTime(doctorSchedule.heure_debut)} - 
+                      {formatTime(doctorSchedule.heure_fin)}
                     </Button>
                     <Button
                       startIcon={<AccessTimeIcon />}
@@ -256,8 +246,8 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
                         size="small"
                         variant="outlined"
                       >
-                        {`Pause déjeuner: ${format(parseISO(`2000-01-01T${doctorSchedule.heure_debut_pause}`), 'HH:mm')} - 
-                         ${format(parseISO(`2000-01-01T${doctorSchedule.heure_fin_pause}`), 'HH:mm')}`}
+                        {`Pause déjeuner: ${formatTime(doctorSchedule.heure_debut_pause)} - 
+                         ${formatTime(doctorSchedule.heure_fin_pause)}`}
                       </Button>
                     )}
                   </Box>
@@ -304,12 +294,17 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
                   </Box>
                 ) : message ? (
                   <Alert severity="info">{message}</Alert>
-                ) : availableSlots.length === 0 ? (
+                ) : formattedAvailableSlots.length === 0 ? (
                   <Alert severity="info">Aucun créneau disponible pour cette date</Alert>
                 ) : (
                   <Box sx={{ mt: 2 }}>
-                    <TimeSlots title="Matin" slots={groupedSlots.morning} />
-                    <TimeSlots title="Après-midi" slots={groupedSlots.afternoon} />
+                    <HorizontalTimeSlider
+                      slots={formattedAvailableSlots}
+                      selectedDate={selectedDate}
+                      selectedSlot={selectedSlot}
+                      onSelectSlot={setSelectedSlot}
+                      loading={loading}
+                    />
                   </Box>
                 )}
               </Grid>
