@@ -16,6 +16,7 @@ import MedecinDashboard from './components/MedecinDashboard';
 import PatientRegistrationForm from './components/auth/PatientRegistrationForm';
 import EmailVerification from './components/EmailVerification';
 import DoctorSearch from './components/DoctorSearch/DoctorSearch';
+import AppointmentBookingPage from './components/appointments/AppointmentBookingPage';
 import medicalTheme from './styles/theme';
 
 // Admin-specific pages
@@ -196,6 +197,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['patient', 'super_admin']}>
                   <PatientFavorites />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patient/book-appointment/:doctorId"
+              element={
+                <ProtectedRoute allowedRoles={['patient', 'super_admin']}>
+                  <AppointmentBookingPage />
                 </ProtectedRoute>
               }
             />

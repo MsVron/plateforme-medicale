@@ -50,7 +50,7 @@ import SimpleMap from './SimpleMap';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { formatDateTime, formatTime, dateTimePickerProps } from '../../utils/dateUtils';
-import AppointmentBooking from '../appointments/AppointmentBooking';
+import { useNavigate } from 'react-router-dom';
 
 const MapBox = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -153,6 +153,7 @@ const DoctorSearchView = ({
   const [showMap, setShowMap] = useState(false);
   const [showAppointment, setShowAppointment] = useState(false);
   const [selectedDoctorForAppointment, setSelectedDoctorForAppointment] = useState(null);
+  const navigate = useNavigate();
 
   // Reset search state when component unmounts or filters change significantly
   useEffect(() => {
@@ -201,8 +202,7 @@ const DoctorSearchView = ({
 
   const handleBookAppointment = (doctor, e) => {
     e.stopPropagation();
-    setSelectedDoctorForAppointment(doctor);
-    setShowAppointment(true);
+    navigate(`/patient/book-appointment/${doctor.id}`);
   };
 
   const handleAppointmentSuccess = () => {
@@ -579,6 +579,10 @@ const DoctorSearchView = ({
                     startIcon={<CalendarMonthIcon />}
                     size="large"
                     sx={{ px: 4 }}
+                    onClick={() => {
+                      setShowDetails(false);
+                      navigate(`/patient/book-appointment/${selectedDoctor.id}`);
+                    }}
                   >
                     Prendre rendez-vous
                   </Button>
@@ -587,14 +591,6 @@ const DoctorSearchView = ({
             </Grid>
           </DialogContent>
         </Dialog>
-      )}
-
-      {selectedDoctorForAppointment && showAppointment && (
-        <AppointmentBooking
-          doctor={selectedDoctorForAppointment}
-          onClose={() => setShowAppointment(false)}
-          onSuccess={handleAppointmentSuccess}
-        />
       )}
     </Box>
   );
