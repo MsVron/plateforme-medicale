@@ -17,6 +17,7 @@ const patientRoutes = require('./routes/patientRoutes');
 const medecinRoutes = require('./routes/medecinRoutes');
 const institutionRoutes = require('./routes/institutionRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', adminRoutes);
@@ -24,6 +25,7 @@ app.use('/api', patientRoutes);
 app.use('/api', medecinRoutes);
 app.use('/api', institutionRoutes);
 app.use('/api/evaluations', evaluationRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Route de test
 app.get('/', (req, res) => {

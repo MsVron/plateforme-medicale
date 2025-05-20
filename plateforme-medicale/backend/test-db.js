@@ -124,6 +124,33 @@ async function main() {
       for (const doctor of doctors) {
         console.log(`ID: ${doctor.id}, Name: ${doctor.prenom} ${doctor.nom}, Active: ${doctor.est_actif ? 'Yes' : 'No'}, Specialty: ${doctor.specialite}`);
       }
+      
+      // Check doctor 4's availability
+      console.log('\n--- CHECKING AVAILABILITY FOR DOCTOR ID 4 ---');
+      const [availabilities] = await db.execute(`
+        SELECT id, medecin_id, institution_id, jour_semaine, heure_debut, heure_fin, 
+        intervalle_minutes, a_pause_dejeuner, est_actif
+        FROM disponibilites_medecin
+        WHERE medecin_id = 4
+      `);
+      
+      console.log('Number of availability records:', availabilities.length);
+      for (const avail of availabilities) {
+        console.log(`ID: ${avail.id}, Day: "${avail.jour_semaine}", Start: ${avail.heure_debut}, End: ${avail.heure_fin}, Active: ${avail.est_actif ? 'Yes' : 'No'}`);
+      }
+      
+      // Test date-fns localization
+      const testDate = new Date('2025-05-21');
+      const { format } = require('date-fns');
+      try {
+        const { fr } = require('date-fns/locale');
+        console.log('\n--- TESTING DATE FORMATTING ---');
+        console.log('Date: 2025-05-21');
+        console.log('Day of week (default):', format(testDate, 'EEEE').toLowerCase());
+        console.log('Day of week (with fr locale):', format(testDate, 'EEEE', { locale: fr }).toLowerCase());
+      } catch (e) {
+        console.error('Error testing date formatting:', e.message);
+      }
     } catch (error) {
       console.error('Failed to query doctors:', error);
     }

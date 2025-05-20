@@ -1,6 +1,26 @@
 const db = require('../../config/db');
 const { addDays, format, parse, isWithinInterval, addMinutes, isBefore } = require('date-fns');
+const { fr } = require('date-fns/locale');
 const slotUtils = require('./slotGeneratorUtils');
+
+// Helper function to get day of week in both French and English
+function debugDayOfWeek(dateStr) {
+  const date = new Date(dateStr);
+  const englishDay = format(date, 'EEEE', { locale: undefined }).toLowerCase();
+  const frenchDay = format(date, 'EEEE', { locale: fr }).toLowerCase();
+  return { englishDay, frenchDay };
+}
+
+// Map English day names to French day names for database lookup
+const dayNameMap = {
+  'monday': 'lundi',
+  'tuesday': 'mardi',
+  'wednesday': 'mercredi',
+  'thursday': 'jeudi',
+  'friday': 'vendredi',
+  'saturday': 'samedi',
+  'sunday': 'dimanche'
+};
 
 exports.getAvailableSlots = async (req, res) => {
   try {
@@ -23,7 +43,9 @@ exports.getAvailableSlots = async (req, res) => {
     const institution_id = medecins[0].institution_id;
 
     // Get doctor's regular availability for the day of week
-    const dayOfWeek = format(new Date(date), 'EEEE').toLowerCase();
+    const englishDayOfWeek = format(new Date(date), 'EEEE', { locale: undefined }).toLowerCase();
+    const dayOfWeek = dayNameMap[englishDayOfWeek] || englishDayOfWeek;
+    
     const [availabilities] = await db.execute(
       `SELECT 
         heure_debut, heure_fin, intervalle_minutes,
@@ -129,8 +151,19 @@ exports.getFormattedAvailableSlots = async (req, res) => {
     console.log('DEBUG: Found institution_id:', institution_id);
 
     // Get doctor's regular availability for the day of week
-    const dayOfWeek = format(new Date(date), 'EEEE').toLowerCase();
-    console.log('DEBUG: Day of week:', dayOfWeek);
+    // Use the helper to find both English and French versions of the day
+    const days = debugDayOfWeek(date);
+    console.log('DEBUG: Day of week (English):', days.englishDay);
+    console.log('DEBUG: Day of week (French):', days.frenchDay);
+    
+    // Map the English day name to French for database lookup
+    const dayOfWeek = dayNameMap[days.englishDay] || days.englishDay;
+    console.log('DEBUG: Using day of week for DB query:', dayOfWeek);
+    
+    // Output the SQL query to see exactly what we're searching for
+    const dayQuery = `SELECT medecin_id, jour_semaine, institution_id FROM disponibilites_medecin WHERE medecin_id = ${medecin_id} AND institution_id = ${institution_id}`;
+    const [allDays] = await db.execute(dayQuery);
+    console.log('DEBUG: Available days from DB:', allDays.map(d => d.jour_semaine));
     
     const [availabilities] = await db.execute(
       `SELECT 
