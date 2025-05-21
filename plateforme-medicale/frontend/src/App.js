@@ -8,6 +8,7 @@ import PatientHome from './components/PatientHome';
 import InstitutionHome from './components/InstitutionHome';
 import Unauthorized from './components/Unauthorized';
 import ProtectedRoute from './components/ProtectedRoute';
+import AuthRedirect from './components/AuthRedirect';
 import DashboardLayout from './components/DashboardLayout';
 import ManageAdmins from './components/ManageAdmins';
 import DoctorManagement from './components/doctors/DoctorManagement';
@@ -90,9 +91,17 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={
+            <AuthRedirect>
+              <Login />
+            </AuthRedirect>
+          } />
           <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="/register/patient" element={<PatientRegistrationForm />} />
+          <Route path="/register/patient" element={
+            <AuthRedirect>
+              <PatientRegistrationForm />
+            </AuthRedirect>
+          } />
           <Route path="/verify-email" element={<EmailVerification />} />
 
           <Route element={<DashboardLayout />}>
