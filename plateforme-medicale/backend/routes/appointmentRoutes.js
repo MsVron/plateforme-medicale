@@ -9,6 +9,9 @@ router.get('/slots', verifyToken, appointmentController.getAvailableSlots);
 // Get formatted available slots for a doctor according to requirements
 router.get('/formatted-slots', verifyToken, appointmentController.getFormattedAvailableSlots);
 
+// Check if patient already has an appointment with a doctor or specialty
+router.get('/check-patient-appointments', verifyToken, appointmentController.checkPatientAppointments);
+
 // Create a new appointment (requires patient authentication)
 router.post('/', verifyToken, appointmentController.createAppointment);
 

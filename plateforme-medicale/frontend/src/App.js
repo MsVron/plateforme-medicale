@@ -66,7 +66,7 @@ const Statistics = () => (
   </Box>
 );
 
-// Patient-specific pages
+// spécifique au patient
 const PatientAppointments = () => (
   <Box sx={{ mt: 4, p: 3, bgcolor: '#fff', borderRadius: 2 }}>
     <Typography variant="h4" gutterBottom>

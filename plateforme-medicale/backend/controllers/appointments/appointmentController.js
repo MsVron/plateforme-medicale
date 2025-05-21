@@ -340,4 +340,83 @@ exports.createAppointment = async (req, res) => {
     console.error('Erreur lors de la création du rendez-vous:', error);
     return res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
+};
+
+// Add new controller function for checking patient appointments
+exports.checkPatientAppointments = async (req, res) => {
+  try {
+    const { medecin_id } = req.query;
+    const patient_id = req.user.id_specifique_role;
+
+    if (!medecin_id) {
+      return res.status(400).json({ message: "L'ID du médecin est requis" });
+    }
+
+    // Get the doctor's specialty
+    const [doctorInfo] = await db.execute(
+      `SELECT specialite FROM medecins WHERE id = ?`,
+      [medecin_id]
+    );
+
+    if (doctorInfo.length === 0) {
+      return res.status(404).json({ message: "Médecin non trouvé" });
+    }
+
+    const specialty = doctorInfo[0].specialite;
+
+    // Check if patient already has an appointment with this specific doctor
+    const [existingAppointmentsWithDoctor] = await db.execute(
+      `SELECT rv.id, rv.date_heure_debut, rv.date_heure_fin, 
+              m.prenom as medecin_prenom, m.nom as medecin_nom
+       FROM rendez_vous rv
+       JOIN medecins m ON rv.medecin_id = m.id
+       WHERE rv.patient_id = ? 
+       AND rv.medecin_id = ? 
+       AND rv.date_heure_debut > NOW() 
+       AND rv.statut NOT IN ('annulé', 'patient absent')
+       ORDER BY rv.date_heure_debut ASC`,
+      [patient_id, medecin_id]
+    );
+
+    // Check if patient has an appointment with another doctor of the same specialty
+    const [existingAppointmentsWithSpecialty] = await db.execute(
+      `SELECT rv.id, rv.date_heure_debut, rv.date_heure_fin, 
+              m.prenom as medecin_prenom, m.nom as medecin_nom,
+              m.id as medecin_id, m.specialite
+       FROM rendez_vous rv
+       JOIN medecins m ON rv.medecin_id = m.id
+       WHERE rv.patient_id = ? 
+       AND m.id != ?
+       AND m.specialite = ?
+       AND rv.date_heure_debut > NOW() 
+       AND rv.statut NOT IN ('annulé', 'patient absent')
+       ORDER BY rv.date_heure_debut ASC`,
+      [patient_id, medecin_id, specialty]
+    );
+
+    return res.status(200).json({
+      hasSameDoctorAppointment: existingAppointmentsWithDoctor.length > 0,
+      hasSameSpecialtyAppointment: existingAppointmentsWithSpecialty.length > 0,
+      sameDoctorAppointment: existingAppointmentsWithDoctor.length > 0 ? {
+        id: existingAppointmentsWithDoctor[0].id,
+        date_heure_debut: existingAppointmentsWithDoctor[0].date_heure_debut,
+        date_heure_fin: existingAppointmentsWithDoctor[0].date_heure_fin,
+        medecin_nom: `Dr. ${existingAppointmentsWithDoctor[0].medecin_prenom} ${existingAppointmentsWithDoctor[0].medecin_nom}`
+      } : null,
+      sameSpecialtyAppointment: existingAppointmentsWithSpecialty.length > 0 ? {
+        id: existingAppointmentsWithSpecialty[0].id,
+        date_heure_debut: existingAppointmentsWithSpecialty[0].date_heure_debut,
+        date_heure_fin: existingAppointmentsWithSpecialty[0].date_heure_fin,
+        medecin_nom: `Dr. ${existingAppointmentsWithSpecialty[0].medecin_prenom} ${existingAppointmentsWithSpecialty[0].medecin_nom}`,
+        specialite: existingAppointmentsWithSpecialty[0].specialite
+      } : null
+    });
+  } catch (error) {
+    console.error('Error checking patient appointments:', error);
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
 }; 

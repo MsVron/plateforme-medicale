@@ -21,6 +21,7 @@ import axios from 'axios';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import HorizontalTimeSlider from './HorizontalTimeSlider';
 import { formatDate, formatTime, formatDateTime } from '../../utils/dateUtils';
 import './HorizontalTimeSlider.css';
@@ -73,6 +74,39 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [doctorSchedule, setDoctorSchedule] = useState(null);
+  const [existingAppointments, setExistingAppointments] = useState({
+    hasSameDoctorAppointment: false,
+    hasSameSpecialtyAppointment: false,
+    sameDoctorAppointment: null,
+    sameSpecialtyAppointment: null
+  });
+  const [appointmentsChecked, setAppointmentsChecked] = useState(false);
+
+  // Check for existing appointments when component mounts
+  useEffect(() => {
+    const checkExistingAppointments = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        const response = await axios.get('/api/appointments/check-patient-appointments', {
+          params: {
+            medecin_id: doctor.id
+          },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('DEBUG: Existing appointments check:', response.data);
+        
+        setExistingAppointments(response.data);
+        setAppointmentsChecked(true);
+      } catch (error) {
+        console.error('DEBUG: Error checking existing appointments:', error);
+        // Don't show an error to the user, just continue with the booking process
+      }
+    };
+    
+    checkExistingAppointments();
+  }, [doctor.id]);
 
   const fetchAvailableSlots = useCallback(async () => {
     try {
@@ -197,6 +231,21 @@ const AppointmentBooking = ({ doctor, onClose, onSuccess }) => {
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
+            </Alert>
+          )}
+          
+          {appointmentsChecked && existingAppointments.hasSameDoctorAppointment && (
+            <Alert severity="warning" sx={{ mb: 2 }} icon={<WarningAmberIcon />}>
+              Vous avez déjà un rendez-vous avec Dr. {doctor.prenom} {doctor.nom} le {' '}
+              {formatDateTime(existingAppointments.sameDoctorAppointment.date_heure_debut)}.
+            </Alert>
+          )}
+          
+          {appointmentsChecked && existingAppointments.hasSameSpecialtyAppointment && (
+            <Alert severity="warning" sx={{ mb: 2 }} icon={<WarningAmberIcon />}>
+              Vous avez déjà un rendez-vous avec {existingAppointments.sameSpecialtyAppointment.medecin_nom} 
+              ({existingAppointments.sameSpecialtyAppointment.specialite}) le{' '}
+              {formatDateTime(existingAppointments.sameSpecialtyAppointment.date_heure_debut)}.
             </Alert>
           )}
 

@@ -26,6 +26,7 @@ import RestaurantIcon from '@mui/icons-material/Restaurant';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import HomeIcon from '@mui/icons-material/Home';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import HorizontalTimeSlider from './HorizontalTimeSlider';
 import { formatDate, formatTime, formatDateTime } from '../../utils/dateUtils';
 import './HorizontalTimeSlider.css';
@@ -37,23 +38,6 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(1)
-}));
-
-const DebugSection = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(2),
-  marginTop: theme.spacing(2),
-  marginBottom: theme.spacing(2),
-  backgroundColor: '#f5f5f5',
-  borderLeft: `4px solid ${theme.palette.info.main}`,
-  '& pre': {
-    overflowX: 'auto',
-    whiteSpace: 'pre-wrap',
-    wordWrap: 'break-word',
-    padding: theme.spacing(1),
-    backgroundColor: '#e0e0e0',
-    borderRadius: theme.spacing(0.5),
-    fontSize: '0.85rem'
-  }
 }));
 
 const AppointmentBookingPage = () => {
@@ -71,8 +55,14 @@ const AppointmentBookingPage = () => {
   const [doctorLoading, setDoctorLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [doctorSchedule, setDoctorSchedule] = useState(null);
-  const [debugInfo, setDebugInfo] = useState({});
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [existingAppointments, setExistingAppointments] = useState({
+    hasSameDoctorAppointment: false,
+    hasSameSpecialtyAppointment: false,
+    sameDoctorAppointment: null,
+    sameSpecialtyAppointment: null
+  });
+  const [appointmentsChecked, setAppointmentsChecked] = useState(false);
 
   // Check if user is logged in
   useEffect(() => {
@@ -87,23 +77,16 @@ const AppointmentBookingPage = () => {
       try {
         setDoctorLoading(true);
         
-        console.log('DEBUG: Fetching doctor with ID:', doctorId);
-        
         // Always try the public endpoint first
         const response = await axios.get(`/medecins/public/${doctorId}`);
         
         if (response.data) {
-          console.log('DEBUG: Doctor data retrieved successfully:', response.data);
           setDoctor(response.data);
-          setDebugInfo(prev => ({ ...prev, doctor: response.data }));
         } else {
           throw new Error('No doctor data returned');
         }
       } catch (error) {
-        console.error('DEBUG: Error fetching doctor:', error);
-        console.error('DEBUG: Error response:', error.response);
         setError("Médecin non trouvé. Veuillez vérifier l'URL ou retourner à la page de recherche.");
-        setDebugInfo(prev => ({ ...prev, doctorError: error.response?.data || error.message }));
       } finally {
         setDoctorLoading(false);
       }
@@ -114,6 +97,28 @@ const AppointmentBookingPage = () => {
     }
   }, [doctorId]);
 
+  // Check for existing appointments when doctor data is loaded and user is authenticated
+  useEffect(() => {
+    const checkExistingAppointments = async () => {
+      if (!doctor || !isAuthenticated) return;
+      
+      try {
+        const response = await axios.get('/appointments/check-patient-appointments', {
+          params: {
+            medecin_id: doctor.id
+          }
+        });
+        
+        setExistingAppointments(response.data);
+        setAppointmentsChecked(true);
+      } catch (error) {
+        // Don't show an error to the user, just continue with the booking process
+      }
+    };
+    
+    checkExistingAppointments();
+  }, [doctor, isAuthenticated]);
+
   const fetchAvailableSlots = useCallback(async () => {
     if (!selectedDate || !doctor) return;
     
@@ -123,17 +128,6 @@ const AppointmentBookingPage = () => {
       setMessage('');
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       
-      console.log('DEBUG: Fetching slots for date:', formattedDate);
-      console.log('DEBUG: Doctor ID:', doctor.id);
-      
-      setDebugInfo(prev => ({ 
-        ...prev, 
-        fetchRequest: { 
-          doctorId: doctor.id, 
-          date: formattedDate 
-        } 
-      }));
-      
       // The token will be added by axios interceptors automatically
       const response = await axios.get(`/appointments/formatted-slots`, {
         params: {
@@ -141,25 +135,17 @@ const AppointmentBookingPage = () => {
           date: formattedDate
         }
       });
-
-      console.log('DEBUG: API Response:', JSON.stringify(response.data, null, 2));
-      setDebugInfo(prev => ({ ...prev, apiResponse: response.data }));
       
       if (response.data.slots && Array.isArray(response.data.slots)) {
-        console.log('DEBUG: Received slots:', response.data.slots.length);
-        console.log('DEBUG: First few slots:', response.data.slots.slice(0, 3));
-        
         setAvailableSlots(response.data.slots);
         if (response.data.slots.length === 0) {
           setMessage('Aucun créneau disponible pour cette date');
         }
       } else {
-        console.error('DEBUG: Invalid slots data received:', response.data.slots);
         setError('Format de données invalide pour les créneaux');
       }
 
       if (response.data.schedule) {
-        console.log('DEBUG: Received schedule:', response.data.schedule);
         setDoctorSchedule(response.data.schedule);
       }
       
@@ -167,16 +153,11 @@ const AppointmentBookingPage = () => {
         setMessage(response.data.message);
       }
     } catch (error) {
-      console.error('DEBUG: Error fetching slots:', error);
-      console.error('DEBUG: Error response data:', error.response?.data);
-      
       if (error.response?.status === 401) {
         setError('Veuillez vous connecter pour accéder à cette fonctionnalité');
       } else {
         setError(error.response?.data?.message || 'Erreur lors de la récupération des créneaux');
       }
-      
-      setDebugInfo(prev => ({ ...prev, fetchError: error.response?.data || error.message }));
     } finally {
       setLoading(false);
     }
@@ -198,14 +179,6 @@ const AppointmentBookingPage = () => {
       setLoading(true);
       setError('');
 
-      console.log('DEBUG: Booking appointment with slot:', selectedSlot);
-      setDebugInfo(prev => ({ ...prev, bookingData: {
-        doctor_id: doctor.id,
-        selectedSlot,
-        motif,
-        notes
-      }}));
-
       // The token will be added by axios interceptors automatically
       const response = await axios.post('/appointments', {
         medecin_id: doctor.id,
@@ -215,8 +188,6 @@ const AppointmentBookingPage = () => {
         mode: 'présentiel',
         notes_patient: notes
       });
-
-      setDebugInfo(prev => ({ ...prev, bookingResponse: response.data }));
       
       // Show success message
       setMessage('Rendez-vous pris avec succès');
@@ -227,16 +198,11 @@ const AppointmentBookingPage = () => {
       }, 2000);
       
     } catch (error) {
-      console.error('DEBUG: Error booking appointment:', error);
-      console.error('DEBUG: Error response data:', error.response?.data);
-      
       if (error.response?.status === 401) {
         setError('Veuillez vous connecter pour prendre rendez-vous');
       } else {
         setError(error.response?.data?.message || 'Erreur lors de la prise de rendez-vous');
       }
-      
-      setDebugInfo(prev => ({ ...prev, bookingError: error.response?.data || error.message }));
     } finally {
       setLoading(false);
     }
@@ -253,12 +219,6 @@ const AppointmentBookingPage = () => {
     time: slot.time || formatTime(slot.debut),
     slot: slot.slot
   }));
-
-  // Debug display of formatted slots
-  useEffect(() => {
-    console.log('DEBUG: Formatted slots for display:', formattedAvailableSlots);
-    setDebugInfo(prev => ({ ...prev, formattedSlots: formattedAvailableSlots }));
-  }, [formattedAvailableSlots]);
 
   if (doctorLoading) {
     return (
@@ -350,6 +310,21 @@ const AppointmentBookingPage = () => {
         {message && (
           <Alert severity="info" sx={{ mb: 3 }}>
             {message}
+          </Alert>
+        )}
+        
+        {isAuthenticated && appointmentsChecked && existingAppointments.hasSameDoctorAppointment && (
+          <Alert severity="warning" sx={{ mb: 3 }} icon={<WarningAmberIcon />}>
+            Vous avez déjà un rendez-vous avec {doctor && `Dr. ${doctor.prenom} ${doctor.nom}`} le {' '}
+            {formatDateTime(existingAppointments.sameDoctorAppointment.date_heure_debut)}.
+          </Alert>
+        )}
+        
+        {isAuthenticated && appointmentsChecked && existingAppointments.hasSameSpecialtyAppointment && (
+          <Alert severity="warning" sx={{ mb: 3 }} icon={<WarningAmberIcon />}>
+            Vous avez déjà un rendez-vous avec {existingAppointments.sameSpecialtyAppointment.medecin_nom} 
+            ({existingAppointments.sameSpecialtyAppointment.specialite}) le{' '}
+            {formatDateTime(existingAppointments.sameSpecialtyAppointment.date_heure_debut)}.
           </Alert>
         )}
 
@@ -511,17 +486,6 @@ const AppointmentBookingPage = () => {
             )}
           </Grid>
         </Grid>
-        
-        {/* Debug section - only shown in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <DebugSection>
-            <Typography variant="h6" gutterBottom>Débogage</Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Information de débogage pour le développement uniquement
-            </Typography>
-            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-          </DebugSection>
-        )}
       </Box>
     </Container>
   );
