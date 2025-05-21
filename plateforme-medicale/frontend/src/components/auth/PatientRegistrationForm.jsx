@@ -270,10 +270,27 @@ const PatientRegistrationForm = () => {
             boxShadow: '0 4px 20px rgba(44, 62, 80, 0.1)',
           }}
         >
-          <div className="text-center">
-            <svg className="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+          <div className="text-center" style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+              <div style={{ 
+                position: 'relative',
+                background: '#00B01D',
+                borderRadius: '100%',
+                height: '120px',
+                width: '120px'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  transform: 'rotate(50deg) translate(-50%, -50%)',
+                  left: '27%',
+                  top: '43%',
+                  height: '60px',
+                  width: '25px',
+                  borderBottom: '5px solid #fff',
+                  borderRight: '5px solid #fff'
+                }}></div>
+              </div>
+            </div>
             <Typography component="h2" variant="h4" sx={{ mt: 2, fontWeight: 'bold' }}>
               Inscription réussie!
             </Typography>

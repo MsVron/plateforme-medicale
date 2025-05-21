@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Container, Typography, Box, Button, CircularProgress, Alert } from '@mui/material';
+import { Container, Typography, Box, Button, CircularProgress, Alert, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+
+// Get API URL from environment or use default
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const EmailVerification = () => {
   const [searchParams] = useSearchParams();
@@ -10,6 +13,11 @@ const EmailVerification = () => {
   const [verificationStatus, setVerificationStatus] = useState('pending'); // pending, success, error
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isResending, setIsResending] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [resendMessage, setResendMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     // If we already have a status from the URL, use it directly
@@ -34,12 +42,13 @@ const EmailVerification = () => {
       }
 
       try {
-        // Send verification request to backend
-        const response = await axios.post('/api/auth/verify-email', { token });
+        // Send verification request to backend with full API URL
+        const response = await axios.post(`${API_URL}/auth/verify-email`, { token });
         setVerificationStatus('success');
         setMessage(response.data.message || 'Email vérifié avec succès. Vous pouvez maintenant vous connecter.');
         setLoading(false);
       } catch (error) {
+        console.error('Verification error:', error);
         setVerificationStatus('error');
         setMessage(
           error.response?.data?.message || 
@@ -51,6 +60,81 @@ const EmailVerification = () => {
 
     verifyEmail();
   }, [token, status]);
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+    // Reset previous messages when opening dialog
+    setResendMessage({ type: '', text: '' });
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEmail('');
+    setEmailError('');
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError('L\'email est requis');
+      return false;
+    } else if (!emailRegex.test(email)) {
+      setEmailError('Format d\'email invalide');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const handleResendVerification = async () => {
+    if (!validateEmail(email)) {
+      return;
+    }
+
+    setIsResending(true);
+    setResendMessage({ type: '', text: '' });
+    
+    try {
+      console.log('Sending resend verification request to:', `${API_URL}/auth/resend-verification`);
+      
+      const response = await axios.post(`${API_URL}/auth/resend-verification`, { email });
+      console.log('Resend verification response:', response);
+      
+      setResendMessage({
+        type: 'success',
+        text: response.data.message || 'Un nouvel email de vérification a été envoyé à votre adresse.'
+      });
+      
+      setTimeout(handleCloseDialog, 3000); // Close dialog after 3 seconds on success
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      
+      let errorMessage = 'Erreur lors du renvoi de l\'email de vérification.';
+      
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+        
+        if (error.response.status === 404) {
+          errorMessage = error.response.data.message || 'Aucun utilisateur non vérifié trouvé avec cet email.';
+        } else if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        errorMessage = 'Erreur de connexion au serveur. Veuillez vérifier votre connexion internet.';
+      } else {
+        console.error('Error message:', error.message);
+      }
+      
+      setResendMessage({
+        type: 'error',
+        text: errorMessage
+      });
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   return (
     <Container maxWidth="sm">
@@ -109,6 +193,28 @@ const EmailVerification = () => {
               {message}
             </Alert>
             
+            {verificationStatus === 'error' && (
+              <Button 
+                variant="outlined"
+                color="primary"
+                onClick={handleOpenDialog}
+                sx={{ 
+                  mt: 3,
+                  borderColor: '#4ca1af',
+                  color: '#4ca1af',
+                  '&:hover': { 
+                    borderColor: '#2c3e50',
+                    backgroundColor: 'rgba(44, 62, 80, 0.04)'
+                  },
+                  transition: 'all 0.3s ease',
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                }}
+              >
+                Renvoyer un email de vérification
+              </Button>
+            )}
+            
             <Button 
               component={Link} 
               to="/login" 
@@ -129,6 +235,65 @@ const EmailVerification = () => {
           </>
         )}
       </Box>
+
+      {/* Dialog for email verification resend */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Renvoyer un email de vérification</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Veuillez entrer l'adresse email associée à votre compte pour recevoir un nouveau lien de vérification.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="email"
+            label="Email"
+            type="email"
+            fullWidth
+            variant="outlined"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={!!emailError}
+            helperText={emailError}
+            disabled={isResending}
+            sx={{ mt: 2 }}
+          />
+          {resendMessage.text && (
+            <Alert 
+              severity={resendMessage.type} 
+              sx={{ mt: 2 }}
+            >
+              {resendMessage.text}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button 
+            onClick={handleCloseDialog} 
+            disabled={isResending}
+            sx={{ color: '#f44336' }}
+          >
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleResendVerification} 
+            variant="contained"
+            disabled={isResending}
+            sx={{ 
+              bgcolor: '#4ca1af', 
+              '&:hover': { bgcolor: '#2c3e50' },
+              transition: 'all 0.3s ease',
+            }}
+          >
+            {isResending ? (
+              <>
+                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                Envoi...
+              </>
+            ) : 'Envoyer'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
