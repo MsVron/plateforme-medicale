@@ -244,7 +244,7 @@ exports.addWalkInPatient = async (req, res) => {
       });
     }
 
-        // Validate CNE format (required for walk-in patients)    const cneValidation = validateCNE(CNE);    if (!cneValidation.isValid) {      return res.status(400).json({         message: cneValidation.message,        field: "CNE"      });    }
+        // Validate CNE format (required for patients directs)    const cneValidation = validateCNE(CNE);    if (!cneValidation.isValid) {      return res.status(400).json({         message: cneValidation.message,        field: "CNE"      });    }
 
     // Validate date of birth
     const birthDate = new Date(date_naissance);
@@ -332,7 +332,7 @@ exports.addWalkInPatient = async (req, res) => {
 
       const patientId = patientResult.insertId;
 
-      // Create user account (verified by default for walk-in patients)
+      // Create user account (verified by default for patients directs)
       await conn.execute(
         'INSERT INTO utilisateurs (nom_utilisateur, mot_de_passe, email, role, id_specifique_role, est_actif, est_verifie) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [username, hashedPassword, email || null, 'patient', patientId, true, true]
@@ -342,7 +342,7 @@ exports.addWalkInPatient = async (req, res) => {
       await conn.commit();
 
       return res.status(201).json({ 
-        message: "Patient walk-in ajouté avec succès",
+        message: "Patient direct ajouté avec succès",
         patient: {
           id: patientId,
           prenom,
@@ -362,7 +362,7 @@ exports.addWalkInPatient = async (req, res) => {
       conn.release();
     }
   } catch (error) {
-    console.error('Erreur lors de l\'ajout d\'un patient walk-in:', error);
+    console.error('Erreur lors de l\'ajout d\'un patient direct:', error);
     
     // Provide more specific error messages for common database errors
     if (error.code === 'ER_DUP_ENTRY') {

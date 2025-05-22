@@ -11,7 +11,7 @@ router.delete('/patients/:id', verifyToken, isSuperAdmin, patientController.dele
 // Route pour récupérer les patients (protégée)
 router.get('/', verifyToken, patientController.getPatients);
 
-// Route pour ajouter un patient walk-in (réservée aux médecins)
-router.post('/walk-in', verifyToken, isMedecin, patientController.addWalkInPatient);
+// Route pour ajouter un patient direct (réservée aux médecins)
+router.post('/direct', verifyToken, isMedecin, patientController.addWalkInPatient);
 
 module.exports = router;

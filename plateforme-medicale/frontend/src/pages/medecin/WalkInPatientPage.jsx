@@ -153,7 +153,7 @@ const WalkInPatientPage = () => {
         break;
         
       case 'CNE':
-        // CNE is mandatory for walk-in patients
+        // CNE is mandatory for patients directs
         const cneValidation = validateCNERequired(value);
         if (!cneValidation.isValid) {
           error = cneValidation.errorMessage;
@@ -280,7 +280,7 @@ const WalkInPatientPage = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/patient/walk-in`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/patient/direct`,
         {
           ...formData,
           date_naissance: formData.date_naissance ? formData.date_naissance.toISOString().split('T')[0] : null
@@ -299,7 +299,7 @@ const WalkInPatientPage = () => {
       }, 100);
       
     } catch (error) {
-      console.error('Erreur lors de l\'inscription du patient walk-in:', error);
+      console.error('Erreur lors de l\'inscription du patient direct:', error);
       
       if (error.response) {
         console.error('Error response:', error.response.data);

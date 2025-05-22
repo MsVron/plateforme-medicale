@@ -88,7 +88,7 @@ const WalkInPatientRegistration = ({ open, onClose, onSuccess }) => {
         }
         break;
         
-            case 'CNE':        // CNE is mandatory for walk-in patients        const cneValidation = validateCNERequired(value);        if (!cneValidation.isValid) {          error = cneValidation.errorMessage;        }        // Also validate CNE confirmation if it exists        if (formData.CNE_confirm) {          const confirmValidation = validateCNEConfirmation(value, formData.CNE_confirm);          if (!confirmValidation.isValid) {            setErrors(prevErrors => ({              ...prevErrors,              CNE_confirm: confirmValidation.errorMessage            }));          } else {            setErrors(prevErrors => ({              ...prevErrors,              CNE_confirm: ''            }));          }        }        break;              case 'CNE_confirm':        const cneConfirmValidation = validateCNEConfirmation(formData.CNE, value);        error = cneConfirmValidation.errorMessage;        break;
+            case 'CNE':        // CNE is mandatory for patients directs        const cneValidation = validateCNERequired(value);        if (!cneValidation.isValid) {          error = cneValidation.errorMessage;        }        // Also validate CNE confirmation if it exists        if (formData.CNE_confirm) {          const confirmValidation = validateCNEConfirmation(value, formData.CNE_confirm);          if (!confirmValidation.isValid) {            setErrors(prevErrors => ({              ...prevErrors,              CNE_confirm: confirmValidation.errorMessage            }));          } else {            setErrors(prevErrors => ({              ...prevErrors,              CNE_confirm: ''            }));          }        }        break;              case 'CNE_confirm':        const cneConfirmValidation = validateCNEConfirmation(formData.CNE, value);        error = cneConfirmValidation.errorMessage;        break;
         
       case 'date_naissance':
         if (!value) {
@@ -190,7 +190,7 @@ const WalkInPatientRegistration = ({ open, onClose, onSuccess }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/patient/walk-in`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/patient/direct`,
         {
           ...formData,
           date_naissance: formData.date_naissance ? formData.date_naissance.toISOString().split('T')[0] : null
@@ -207,7 +207,7 @@ const WalkInPatientRegistration = ({ open, onClose, onSuccess }) => {
         onSuccess(response.data);
       }
     } catch (error) {
-      console.error('Erreur lors de l\'inscription du patient walk-in:', error);
+      console.error('Erreur lors de l\'inscription du patient direct:', error);
       
       if (error.response) {
         console.error('Error response:', error.response.data);
@@ -318,7 +318,7 @@ const WalkInPatientRegistration = ({ open, onClose, onSuccess }) => {
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>
         <Typography variant="h5" component="div" sx={{ color: 'primary.main' }}>
-          Inscription Patient Walk-in
+          Inscription Patient Direct
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Inscrire un nouveau patient présent au cabinet

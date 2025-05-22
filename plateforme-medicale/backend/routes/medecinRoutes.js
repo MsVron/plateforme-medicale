@@ -28,6 +28,10 @@ router.delete('/medecin/disponibilites/:id', verifyToken, medecinController.dele
 // Route for updating doctor's consultation fee
 router.put('/medecin/profile/fee', verifyToken, medecinController.updateConsultationFee);
 
+// Patients directs preference routes
+router.get('/medecin/walk-in-preference', verifyToken, medecinController.getWalkInPreference);
+router.put('/medecin/walk-in-preference', verifyToken, medecinController.updateWalkInPreference);
+
 router.get('/medecin/absences', verifyToken, medecinController.getEmergencyAbsences);
 router.post('/medecin/absences', verifyToken, medecinController.addEmergencyAbsence);
 router.delete('/medecin/absences/:id', verifyToken, medecinController.deleteEmergencyAbsence);

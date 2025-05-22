@@ -4,27 +4,70 @@ import axios from 'axios';
 import {
   Container, Typography, TextField, Button, Box, Paper, 
   Table, TableBody, TableCell, TableContainer, TableHead, 
-  TableRow, CircularProgress, Alert, IconButton
+  TableRow, CircularProgress, Alert, IconButton, Grid,
+  Chip, Divider
 } from '@mui/material';
 import {
   Search as SearchIcon,
   MedicalServices as MedicalIcon,
   Edit as EditIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  Clear as ClearIcon,
+  Badge as BadgeIcon
 } from '@mui/icons-material';
 
 const PatientSearch = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCriteria, setSearchCriteria] = useState({
+    prenom: '',
+    nom: '',
+    cne: ''
+  });
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searched, setSearched] = useState(false);
 
+  const handleInputChange = (field, value) => {
+    setSearchCriteria(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setError(null);
+  };
+
+  const clearSearch = () => {
+    setSearchCriteria({
+      prenom: '',
+      nom: '',
+      cne: ''
+    });
+    setPatients([]);
+    setSearched(false);
+    setError(null);
+  };
+
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (searchQuery.length < 2) {
-      setError('Veuillez entrer au moins 2 caractères pour la recherche');
+    
+    // Validate that at least one field is filled
+    const { prenom, nom, cne } = searchCriteria;
+    if (!prenom.trim() && !nom.trim() && !cne.trim()) {
+      setError('Veuillez remplir au moins un critère de recherche');
+      return;
+    }
+
+    // Validate field lengths
+    if (prenom.trim() && prenom.trim().length < 2) {
+      setError('Le prénom doit contenir au moins 2 caractères');
+      return;
+    }
+    if (nom.trim() && nom.trim().length < 2) {
+      setError('Le nom doit contenir au moins 2 caractères');
+      return;
+    }
+    if (cne.trim() && cne.trim().length < 3) {
+      setError('Le CNE doit contenir au moins 3 caractères');
       return;
     }
 
@@ -33,16 +76,26 @@ const PatientSearch = () => {
     
     try {
       const token = localStorage.getItem('token');
+      const params = {};
+      
+      if (prenom.trim()) params.prenom = prenom.trim();
+      if (nom.trim()) params.nom = nom.trim();
+      if (cne.trim()) params.cne = cne.trim();
+      
       const response = await axios.get(`/api/medecin/patients/search`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { query: searchQuery }
+        params
       });
       
       setPatients(response.data.patients);
       setSearched(true);
     } catch (err) {
       console.error('Error searching patients:', err);
-      setError('Erreur lors de la recherche. Veuillez réessayer.');
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError('Erreur lors de la recherche. Veuillez réessayer.');
+      }
     } finally {
       setLoading(false);
     }
@@ -63,6 +116,14 @@ const PatientSearch = () => {
     navigate(`/medecin/patients/${patientId}/medical-record`);
   };
 
+  const getActiveSearchCriteria = () => {
+    const criteria = [];
+    if (searchCriteria.prenom.trim()) criteria.push(`Prénom: "${searchCriteria.prenom.trim()}"`);
+    if (searchCriteria.nom.trim()) criteria.push(`Nom: "${searchCriteria.nom.trim()}"`);
+    if (searchCriteria.cne.trim()) criteria.push(`CNE: "${searchCriteria.cne.trim()}"`);
+    return criteria;
+  };
+
   return (
     <Container maxWidth="lg">
       <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
@@ -70,23 +131,71 @@ const PatientSearch = () => {
       </Typography>
       
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Box component="form" onSubmit={handleSearch} sx={{ display: 'flex', alignItems: 'center' }}>
-          <TextField
-            variant="outlined"
-            fullWidth
-            placeholder="Rechercher par nom, prénom, CNE ou email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            sx={{ mr: 2 }}
-          />
-          <Button 
-            type="submit" 
-            variant="contained" 
-            startIcon={<SearchIcon />}
-            disabled={loading}
-          >
-            Rechercher
-          </Button>
+        <Typography variant="h6" gutterBottom>
+          Recherche exacte par critères
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Recherche par correspondance exacte. Remplissez au moins un critère.
+        </Typography>
+        
+        <Box component="form" onSubmit={handleSearch}>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Prénom exact"
+                variant="outlined"
+                value={searchCriteria.prenom}
+                onChange={(e) => handleInputChange('prenom', e.target.value)}
+                placeholder="ex: Mohamed"
+                helperText="Correspondance exacte requise"
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Nom exact"
+                variant="outlined"
+                value={searchCriteria.nom}
+                onChange={(e) => handleInputChange('nom', e.target.value)}
+                placeholder="ex: Alami"
+                helperText="Correspondance exacte requise"
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="CNE exact"
+                variant="outlined"
+                value={searchCriteria.cne}
+                onChange={(e) => handleInputChange('cne', e.target.value)}
+                placeholder="ex: AB123456"
+                helperText="Correspondance exacte requise"
+                InputProps={{
+                  startAdornment: <BadgeIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                }}
+              />
+            </Grid>
+          </Grid>
+          
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Button 
+              type="submit" 
+              variant="contained" 
+              startIcon={<SearchIcon />}
+              disabled={loading}
+            >
+              Rechercher
+            </Button>
+            <Button 
+              variant="outlined" 
+              startIcon={<ClearIcon />}
+              onClick={clearSearch}
+              disabled={loading}
+            >
+              Effacer
+            </Button>
+          </Box>
         </Box>
         
         {error && (
@@ -104,20 +213,42 @@ const PatientSearch = () => {
         <>
           {searched && (
             <>
-              <Typography variant="h6" gutterBottom>
-                {patients.length} résultat{patients.length !== 1 ? 's' : ''} trouvé{patients.length !== 1 ? 's' : ''}
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  {patients.length} résultat{patients.length !== 1 ? 's' : ''} trouvé{patients.length !== 1 ? 's' : ''}
+                </Typography>
+                
+                {getActiveSearchCriteria().length > 0 && (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                    <Typography variant="body2" sx={{ mr: 1, alignSelf: 'center' }}>
+                      Critères de recherche:
+                    </Typography>
+                    {getActiveSearchCriteria().map((criterion, index) => (
+                      <Chip 
+                        key={index}
+                        label={criterion} 
+                        size="small" 
+                        variant="outlined" 
+                        color="primary"
+                      />
+                    ))}
+                  </Box>
+                )}
+                
+                <Divider />
+              </Box>
               
               {patients.length > 0 ? (
                 <TableContainer component={Paper}>
                   <Table sx={{ minWidth: 650 }} aria-label="patients table">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Nom</TableCell>
+                        <TableCell>Patient</TableCell>
                         <TableCell>Âge</TableCell>
                         <TableCell>Sexe</TableCell>
                         <TableCell>CNE</TableCell>
                         <TableCell>Contact</TableCell>
+                        <TableCell>Statut</TableCell>
                         <TableCell align="center">Actions</TableCell>
                       </TableRow>
                     </TableHead>
@@ -127,17 +258,42 @@ const PatientSearch = () => {
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
-                              {patient.prenom} {patient.nom}
+                              <Box>
+                                <Typography variant="body1" fontWeight="medium">
+                                  {patient.prenom} {patient.nom}
+                                </Typography>
+                                {patient.est_inscrit_par_medecin && (
+                                  <Chip 
+                                    label="Patient direct" 
+                                    size="small" 
+                                    color="secondary" 
+                                    variant="outlined"
+                                  />
+                                )}
+                              </Box>
                             </Box>
                           </TableCell>
                           <TableCell>{calculateAge(patient.date_naissance)} ans</TableCell>
                           <TableCell>
                             {patient.sexe === 'M' ? 'Homme' : patient.sexe === 'F' ? 'Femme' : 'Autre'}
                           </TableCell>
-                          <TableCell>{patient.CNE || 'N/A'}</TableCell>
                           <TableCell>
-                            {patient.email}<br />
-                            {patient.telephone || 'Pas de téléphone'}
+                            <Typography variant="body2" fontFamily="monospace">
+                              {patient.CNE || 'N/A'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {patient.email || 'Pas d\'email'}<br />
+                              {patient.telephone || 'Pas de téléphone'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            {patient.a_rendez_vous_avec_medecin ? (
+                              <Chip label="Patient suivi" color="success" size="small" />
+                            ) : (
+                              <Chip label="Nouveau patient" color="info" size="small" />
+                            )}
                           </TableCell>
                           <TableCell align="center">
                             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -164,7 +320,9 @@ const PatientSearch = () => {
                 </TableContainer>
               ) : (
                 <Alert severity="info">
-                  Aucun patient trouvé pour cette recherche.
+                  Aucun patient trouvé avec ces critères de recherche exacts.
+                  <br />
+                  <strong>Rappel:</strong> La recherche nécessite une correspondance exacte pour les noms et le CNE.
                 </Alert>
               )}
             </>

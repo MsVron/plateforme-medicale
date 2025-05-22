@@ -174,7 +174,7 @@ export const validateCNE = (cne) => {
 };
 
 /**
- * Validates a CNE (Carte Nationale d'Étudiant) - Required for walk-in patients
+ * Validates a CNE (Carte Nationale d'Étudiant) - Required for patients directs
  * @param {string} cne - The CNE to validate
  * @returns {Object} - Contains whether the CNE is valid and any error message
  */

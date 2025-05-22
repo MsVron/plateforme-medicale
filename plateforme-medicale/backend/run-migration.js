@@ -10,9 +10,9 @@ async function runMigration() {
       database: 'plateforme_medicale'
     });
     
-    console.log('🔄 Running walk-in patient migration...');
+    console.log('🔄 Running walk-in preference migration...');
     
-    const migrationSQL = fs.readFileSync('./migrations/add_walkin_patient_enhancements.sql', 'utf8');
+    const migrationSQL = fs.readFileSync('./migrations/add_walk_in_preference.sql', 'utf8');
     const statements = migrationSQL.split(';').filter(stmt => stmt.trim());
     
     for (const statement of statements) {

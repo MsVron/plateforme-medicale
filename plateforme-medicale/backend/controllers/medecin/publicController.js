@@ -6,7 +6,8 @@ exports.getPublicMedecins = async (req, res) => {
       SELECT m.id, m.prenom, m.nom, m.specialite_id, m.telephone, 
       m.adresse, m.ville, m.code_postal, m.pays, m.photo_url, 
       m.biographie, m.institution_id, m.est_actif, m.accepte_nouveaux_patients,
-      m.tarif_consultation, m.latitude, m.longitude, m.temps_consultation_moyen
+      m.tarif_consultation, m.latitude, m.longitude, m.temps_consultation_moyen,
+      m.accepte_patients_walk_in
       FROM medecins m 
       WHERE m.est_actif = true
       ORDER BY m.nom, m.prenom
@@ -36,7 +37,8 @@ exports.getPublicMedecinById = async (req, res) => {
         m.biographie, m.institution_id, i.nom AS institution_nom, 
         m.est_actif, m.adresse, m.ville, m.code_postal, m.pays,
         m.tarif_consultation, m.latitude, m.longitude, 
-        m.accepte_nouveaux_patients, m.temps_consultation_moyen
+        m.accepte_nouveaux_patients, m.temps_consultation_moyen,
+        m.accepte_patients_walk_in
       FROM medecins m
       LEFT JOIN specialites s ON m.specialite_id = s.id
       LEFT JOIN institutions i ON m.institution_id = i.id

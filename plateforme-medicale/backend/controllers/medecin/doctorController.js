@@ -338,4 +338,115 @@ exports.updateConsultationFee = async (req, res) => {
     console.error('Erreur lors de la mise à jour du tarif de consultation:', error);
     return res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
+};
+
+// Get doctor's patients directs preference
+exports.getWalkInPreference = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    
+    console.log('Getting patients directs preference for doctor ID:', medecinId);
+
+    const [result] = await db.execute(
+      'SELECT accepte_patients_walk_in FROM medecins WHERE id = ?',
+      [medecinId]
+    );
+
+    if (result.length === 0) {
+      console.log('Doctor not found with ID:', medecinId);
+      return res.status(404).json({ message: 'Médecin non trouvé' });
+    }
+
+    console.log('Patients directs preference result:', result[0]);
+    return res.status(200).json({ 
+      accepte_patients_walk_in: result[0].accepte_patients_walk_in 
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération de la préférence patients directs:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message,
+      details: error.code || 'Unknown error'
+    });
+  }
+};
+
+// Update doctor's patients directs preference
+exports.updateWalkInPreference = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { accepte_patients_walk_in } = req.body;
+
+    console.log('Updating patients directs preference for doctor ID:', medecinId);
+    console.log('New preference value:', accepte_patients_walk_in);
+
+    // Validate input
+    if (typeof accepte_patients_walk_in !== 'boolean') {
+      console.log('Invalid input type:', typeof accepte_patients_walk_in);
+      return res.status(400).json({ 
+        message: 'La préférence patients directs doit être un booléen (true ou false)' 
+      });
+    }
+
+    // First check if the column exists
+    try {
+      const [columnCheck] = await db.execute(
+        'SHOW COLUMNS FROM medecins LIKE "accepte_patients_walk_in"'
+      );
+      
+      if (columnCheck.length === 0) {
+        console.log('Column accepte_patients_walk_in does not exist');
+        return res.status(500).json({ 
+          message: 'La base de données n\'est pas à jour. Veuillez exécuter les migrations.' 
+        });
+      }
+    } catch (columnError) {
+      console.error('Error checking column existence:', columnError);
+    }
+
+    // Update the preference
+    const [result] = await db.execute(
+      'UPDATE medecins SET accepte_patients_walk_in = ? WHERE id = ?',
+      [accepte_patients_walk_in, medecinId]
+    );
+
+    console.log('Update result:', result);
+
+    if (result.affectedRows === 0) {
+      console.log('No rows affected - doctor not found with ID:', medecinId);
+      return res.status(404).json({ message: 'Médecin non trouvé' });
+    }
+
+    // Log the change for audit purposes
+    try {
+      await db.execute(`
+        INSERT INTO historique_actions (
+          utilisateur_id, action_type, table_concernee, 
+          enregistrement_id, description
+        ) VALUES (?, ?, ?, ?, ?)
+      `, [
+        req.user.id, 
+        'UPDATE_WALK_IN_PREFERENCE', 
+        'medecins', 
+        medecinId, 
+        `Préférence patients directs changée à: ${accepte_patients_walk_in ? 'Accepte' : 'N\'accepte pas'}`
+      ]);
+    } catch (auditError) {
+      console.error('Error logging audit trail:', auditError);
+      // Don't fail the request if audit logging fails
+    }
+
+    console.log('Patients directs preference updated successfully');
+    return res.status(200).json({ 
+      message: 'Préférence patients directs mise à jour avec succès',
+      accepte_patients_walk_in 
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de la préférence patients directs:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message,
+      details: error.code || 'Unknown error'
+    });
+  }
 }; 

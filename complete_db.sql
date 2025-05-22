@@ -93,6 +93,7 @@ CREATE TABLE medecins (
   accepte_nouveaux_patients BOOLEAN DEFAULT TRUE, -- Ajout: indique si le médecin accepte de nouveaux patients
   temps_consultation_moyen INT DEFAULT 30, -- Ajout: durée moyenne d'une consultation en minutes
   langues_parlees VARCHAR(255) DEFAULT NULL, -- Ajout: langues parlées par le médecin, séparées par des virgules
+  accepte_patients_walk_in BOOLEAN DEFAULT TRUE, -- Add walk-in preference field
   PRIMARY KEY (id),
   UNIQUE KEY numero_ordre (numero_ordre),
   KEY specialite_id (specialite_id),
@@ -621,4 +622,15 @@ ALTER TABLE patients ADD COLUMN medecin_inscripteur_id INT DEFAULT NULL;
 ALTER TABLE patients ADD FOREIGN KEY (medecin_inscripteur_id) REFERENCES medecins(id);
 
 -- Add index for better performance on walk-in patient queries
-CREATE INDEX idx_patients_inscrit_par_medecin ON patients(est_inscrit_par_medecin); 
+CREATE INDEX idx_patients_inscrit_par_medecin ON patients(est_inscrit_par_medecin);
+
+-- Add walk-in preference field to medecins table
+ALTER TABLE medecins ADD COLUMN accepte_patients_walk_in BOOLEAN DEFAULT TRUE;
+
+-- Add index for walk-in preference queries
+CREATE INDEX idx_medecins_walk_in ON medecins(accepte_patients_walk_in);
+
+-- Add indexes for exact name searches
+CREATE INDEX idx_patients_prenom ON patients(prenom);
+CREATE INDEX idx_patients_nom ON patients(nom);
+CREATE INDEX idx_patients_prenom_nom ON patients(prenom, nom); 

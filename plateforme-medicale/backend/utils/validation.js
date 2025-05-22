@@ -85,7 +85,46 @@ exports.generateUniqueUsername = async (prenom, nom, db) => {
   }
 };
 
-// Validate CNE format (required version for walk-in patients)exports.validateCNE = (cne) => {  if (!cne || cne.trim().length === 0) {    return {      isValid: false,      message: "Le CNE est requis"    };  }    // CNE format: 1-2 letters followed by 6+ alphanumeric characters  const cneRegex = /^[A-Za-z]{1,2}[A-Za-z0-9]{6,}$/;    if (!cneRegex.test(cne.trim())) {    return {      isValid: false,      message: "Format CNE invalide. Doit contenir 1-2 lettres suivies d'au moins 6 caractères alphanumériques"    };  }    return { isValid: true };};// Validate CNE format (optional version for regular registration)exports.validateCNEOptional = (cne) => {  if (!cne) {    return { isValid: true }; // CNE is optional for regular registration  }    // CNE format: 1-2 letters followed by 6+ alphanumeric characters  const cneRegex = /^[A-Za-z]{1,2}[A-Za-z0-9]{6,}$/;    if (!cneRegex.test(cne.trim())) {    return {      isValid: false,      message: "Format CNE invalide. Doit contenir 1-2 lettres suivies d'au moins 6 caractères alphanumériques"    };  }    return { isValid: true };};
+// Validate CNE format (required version for patients directs)
+exports.validateCNE = (cne) => {
+  if (!cne || cne.trim().length === 0) {
+    return {
+      isValid: false,
+      message: "Le CNE est requis"
+    };
+  }
+  
+  // CNE format: 1-2 letters followed by 6+ alphanumeric characters
+  const cneRegex = /^[A-Za-z]{1,2}[A-Za-z0-9]{6,}$/;
+  
+  if (!cneRegex.test(cne.trim())) {
+    return {
+      isValid: false,
+      message: "Format CNE invalide. Doit contenir 1-2 lettres suivies d'au moins 6 caractères alphanumériques"
+    };
+  }
+  
+  return { isValid: true };
+};
+
+// Validate CNE format (optional version for regular registration)
+exports.validateCNEOptional = (cne) => {
+  if (!cne) {
+    return { isValid: true }; // CNE is optional for regular registration
+  }
+  
+  // CNE format: 1-2 letters followed by 6+ alphanumeric characters
+  const cneRegex = /^[A-Za-z]{1,2}[A-Za-z0-9]{6,}$/;
+  
+  if (!cneRegex.test(cne.trim())) {
+    return {
+      isValid: false,
+      message: "Format CNE invalide. Doit contenir 1-2 lettres suivies d'au moins 6 caractères alphanumériques"
+    };
+  }
+  
+  return { isValid: true };
+};
 
 // Validate name (first name or last name)
 exports.validateName = (name, fieldName = 'nom') => {

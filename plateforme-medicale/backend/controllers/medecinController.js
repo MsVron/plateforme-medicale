@@ -4,6 +4,7 @@ module.exports = require('./medecin');
 // Import the medical record controller
 const medicalRecordController = require('./medecin/medicalRecordController');
 const appointmentController = require('./medecin/appointmentController');
+const doctorController = require('./medecin/doctorController');
 
 // Re-export functions from the medical record controller
 exports.searchPatients = medicalRecordController.searchPatients;
@@ -27,3 +28,7 @@ exports.getPatientMeasurements = medicalRecordController.getPatientMeasurements;
 exports.getUpcomingAppointments = appointmentController.getUpcomingAppointments;
 exports.getAppointmentById = appointmentController.getAppointmentById;
 exports.updateAppointmentStatus = appointmentController.updateAppointmentStatus;
+
+// Re-export functions from the doctor controller
+exports.getWalkInPreference = doctorController.getWalkInPreference;
+exports.updateWalkInPreference = doctorController.updateWalkInPreference;
