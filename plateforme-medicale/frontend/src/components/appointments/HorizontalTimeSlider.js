@@ -102,15 +102,6 @@ const HorizontalTimeSlider = ({
 }) => {
   // Format the selected date using dateUtils
   const formattedDate = selectedDate ? formatDate(selectedDate) : '';
-  
-  // Debug to check what data is coming in
-  console.log('DEBUG: HorizontalTimeSlider rendering with:', {
-    slotsLength: slots.length,
-    firstFewSlots: slots.slice(0, 3),
-    selectedDate: selectedDate,
-    formattedDate: formattedDate,
-    selectedSlot: selectedSlot
-  });
 
   if (loading) {
     return (
@@ -157,11 +148,9 @@ const HorizontalTimeSlider = ({
               }
               
               if (!timeDisplay) {
-                console.error('DEBUG: Could not format time for slot:', slot);
                 timeDisplay = 'Invalid Time';
               }
             } catch (error) {
-              console.error('DEBUG: Error formatting time for slot:', slot, error);
               timeDisplay = 'Error';
             }
 
@@ -191,7 +180,7 @@ const HorizontalTimeSlider = ({
                 }
               }
             } catch (error) {
-              console.error('DEBUG: Error determining if slot is selected:', { selectedSlot, slot, error });
+              // Handle error silently
             }
 
             return (
@@ -200,10 +189,7 @@ const HorizontalTimeSlider = ({
                   variant={isSelected ? "contained" : "outlined"}
                   color="primary"
                   selected={isSelected}
-                  onClick={() => {
-                    console.log('DEBUG: Selected slot:', slot);
-                    onSelectSlot(slot);
-                  }}
+                  onClick={() => onSelectSlot(slot)}
                 >
                   {timeDisplay}
                 </TimeSlotButton>

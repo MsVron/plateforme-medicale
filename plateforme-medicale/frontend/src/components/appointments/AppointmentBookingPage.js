@@ -13,11 +13,36 @@ import {
   Link,
   Card,
   CardContent,
-  styled
+  styled,
+  Divider,
+  Avatar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format, addDays, parseISO } from 'date-fns';
+import { 
+  format, 
+  addDays, 
+  parseISO, 
+  startOfMonth, 
+  endOfMonth, 
+  eachDayOfInterval, 
+  isSameMonth, 
+  isSameDay, 
+  isWeekend,
+  getDay,
+  subMonths,
+  addMonths,
+  getDate,
+  startOfWeek,
+  endOfWeek,
+  isToday
+} from 'date-fns';
 import fr from 'date-fns/locale/fr';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -27,11 +52,12 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import HomeIcon from '@mui/icons-material/Home';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import HorizontalTimeSlider from './HorizontalTimeSlider';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { formatDate, formatTime, formatDateTime } from '../../utils/dateUtils';
-import './HorizontalTimeSlider.css';
 
-// Styled components for time slots
+// Styled components
 const SectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(2),
   fontWeight: 'bold',
@@ -40,12 +66,107 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
   gap: theme.spacing(1)
 }));
 
+const PageTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1.75rem',
+  fontWeight: 600,
+  marginBottom: theme.spacing(3),
+  color: theme.palette.text.primary
+}));
+
+const InfoLabel = styled(Typography)(({ theme }) => ({
+  color: theme.palette.text.secondary,
+  fontWeight: 500,
+  fontSize: '0.875rem',
+  marginBottom: theme.spacing(0.5)
+}));
+
+const InfoValue = styled(Typography)(({ theme }) => ({
+  color: theme.palette.text.primary,
+  fontWeight: 400,
+  fontSize: '1rem',
+  marginBottom: theme.spacing(1.5)
+}));
+
+const TimeSlotButton = styled(Button)(({ theme, selected }) => ({
+  minWidth: '70px',
+  borderRadius: '8px',
+  margin: '4px',
+  ...(selected && {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
+    '&:hover': {
+      backgroundColor: theme.palette.primary.dark,
+    },
+  }),
+}));
+
+const CalendarDayCell = styled(TableCell)(({ theme, isSelected, isCurrentMonth, isDisabled, isWeekend, isToday }) => ({
+  padding: theme.spacing(0.5),
+  textAlign: 'center',
+  cursor: isDisabled ? 'default' : 'pointer',
+  color: isDisabled 
+    ? theme.palette.text.disabled 
+    : isWeekend && !isSelected
+      ? theme.palette.text.secondary
+      : theme.palette.text.primary,
+  backgroundColor: isSelected 
+    ? theme.palette.primary.main 
+    : isToday && !isSelected
+      ? theme.palette.grey[200]
+      : 'transparent',
+  borderRadius: isSelected ? '50%' : 0,
+  width: '32px',
+  height: '32px',
+  position: 'relative',
+  '&:hover': {
+    backgroundColor: isDisabled 
+      ? 'transparent' 
+      : isSelected 
+        ? theme.palette.primary.main 
+        : theme.palette.action.hover,
+  },
+  '& > div': {
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+    fontWeight: isSelected || isToday ? 600 : 400,
+    color: isSelected ? theme.palette.primary.contrastText : 'inherit',
+    fontSize: '0.85rem',
+  }
+}));
+
+const CalendarHeader = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: theme.spacing(1),
+}));
+
+const NavButton = styled(Button)(({ theme }) => ({
+  minWidth: 'auto',
+  padding: theme.spacing(0.5),
+}));
+
+const DayLabel = styled(Typography)(({ theme }) => ({
+  textAlign: 'center',
+  fontWeight: 500,
+  fontSize: '0.75rem',
+  color: theme.palette.text.secondary,
+}));
+
+// Week day headers in French
+const weekDays = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+
 const AppointmentBookingPage = () => {
   const { doctorId } = useParams();
   const navigate = useNavigate();
   
   const [doctor, setDoctor] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [motif, setMotif] = useState('');
@@ -208,17 +329,139 @@ const AppointmentBookingPage = () => {
     }
   };
 
-  // Date constraints
-  const minDate = addDays(new Date(), 1);
+  // Update date constraints - allow selecting today
+  const minDate = new Date(); // Start from today
   const maxDate = addDays(new Date(), 90);
 
-  // Convert the availableSlots to the format expected by the HorizontalTimeSlider
+  // Convert the availableSlots to the format expected by the time slot buttons
   const formattedAvailableSlots = availableSlots.map(slot => ({
     debut: slot.debut,
     fin: slot.fin,
     time: slot.time || formatTime(slot.debut),
     slot: slot.slot
   }));
+
+  // Calendar navigation functions
+  const nextMonth = () => {
+    setCurrentMonth(addMonths(currentMonth, 1));
+  };
+
+  const prevMonth = () => {
+    setCurrentMonth(subMonths(currentMonth, 1));
+  };
+
+  // Update the generateCalendar function to use a wider container
+  const generateCalendar = () => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+
+    const rows = [];
+    let days = [];
+    let day = startDate;
+
+    // Add week day headers
+    const dayHeaders = weekDays.map((weekDay, index) => (
+      <TableCell key={`header-${index}`} align="center" sx={{ padding: '4px' }}>
+        <DayLabel>{weekDay}</DayLabel>
+      </TableCell>
+    ));
+
+    rows.push(
+      <TableRow key="header">
+        {dayHeaders}
+      </TableRow>
+    );
+
+    // Create calendar rows
+    while (day <= endDate) {
+      for (let i = 0; i < 7; i++) {
+        const cloneDay = day;
+        const isCurrentMonthDay = isSameMonth(day, monthStart);
+        const isSelectedDay = isSameDay(day, selectedDate);
+        
+        // Only disable past days and weekends
+        const isPastDay = day < new Date().setHours(0, 0, 0, 0);
+        const isDisabledDay = isPastDay || day > maxDate || isWeekend(day);
+        
+        const isTodayDay = isToday(day);
+        
+        days.push(
+          <CalendarDayCell 
+            key={day.toString()} 
+            isSelected={isSelectedDay}
+            isCurrentMonth={isCurrentMonthDay}
+            isDisabled={isDisabledDay}
+            isWeekend={isWeekend(day)}
+            isToday={isTodayDay}
+            onClick={() => {
+              if (!isDisabledDay) {
+                setSelectedDate(cloneDay);
+                setSelectedSlot(null);
+              }
+            }}
+          >
+            <div>
+              {getDate(day)}
+            </div>
+          </CalendarDayCell>
+        );
+        day = addDays(day, 1);
+      }
+      rows.push(
+        <TableRow key={day.toString()} sx={{ height: '32px' }}>
+          {days}
+        </TableRow>
+      );
+      days = [];
+    }
+
+    return (
+      <TableContainer component={Paper} sx={{ boxShadow: 'none', mb: 3, width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+        <Table size="small" sx={{ tableLayout: 'fixed' }}>
+          <TableBody>
+            {rows}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  };
+
+  // Update the renderTimeSlots function for wider layout
+  const renderTimeSlots = () => {
+    if (loading) {
+      return (
+        <Box display="flex" justifyContent="center" alignItems="center" my={3} minHeight="60px" width="100%">
+          <CircularProgress size={24} />
+        </Box>
+      );
+    }
+
+    if (formattedAvailableSlots.length === 0) {
+      return (
+        <Alert severity="info" sx={{ my: 2, minHeight: "60px", width: "100%" }}>
+          Aucun créneau disponible pour cette date
+        </Alert>
+      );
+    }
+
+    return (
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2, minHeight: "60px", width: "100%" }}>
+        {formattedAvailableSlots.map((slot, index) => (
+          <TimeSlotButton
+            key={index}
+            variant={selectedSlot && selectedSlot.debut === slot.debut ? "contained" : "outlined"}
+            color="primary"
+            selected={selectedSlot && selectedSlot.debut === slot.debut}
+            onClick={() => setSelectedSlot(slot)}
+          >
+            {slot.time}
+          </TimeSlotButton>
+        ))}
+      </Box>
+    );
+  };
 
   if (doctorLoading) {
     return (
@@ -278,10 +521,9 @@ const AppointmentBookingPage = () => {
           <Typography color="text.primary">Prise de rendez-vous</Typography>
         </Breadcrumbs>
 
-        <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <EventAvailableIcon color="primary" fontSize="large" />
-          Prise de rendez-vous
-        </Typography>
+        <PageTitle>
+          Réserver un rendez-vous
+        </PageTitle>
 
         {!isAuthenticated && (
           <Alert 
@@ -328,164 +570,169 @@ const AppointmentBookingPage = () => {
           </Alert>
         )}
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Informations du médecin
-                </Typography>
-                {doctor && (
-                  <>
-                    <Typography variant="body1">
-                      <strong>Dr. {doctor.prenom} {doctor.nom}</strong>
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {doctor.specialite}
-                    </Typography>
-                    {doctor.adresse && (
-                      <Typography variant="body2">
-                        {doctor.adresse}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Grid container spacing={3}>
+            {/* Informations sur le médecin */}
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                Informations sur le médecin
+              </Typography>
+              {doctor && (
+                <>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Avatar 
+                      src={doctor.photo || ''} 
+                      alt={`Dr. ${doctor.prenom} ${doctor.nom}`}
+                      sx={{ width: 60, height: 60, mr: 2 }}
+                    >
+                      {doctor.prenom?.[0]}{doctor.nom?.[0]}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        Dr. {doctor.prenom} {doctor.nom}
                       </Typography>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            <Paper sx={{ p: 2, mb: 3 }}>
-              <SectionTitle variant="h6">
-                <AccessTimeIcon color="primary" />
-                Date du rendez-vous
-              </SectionTitle>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
-                <DatePicker
-                  label="Sélectionnez une date"
-                  value={selectedDate}
-                  onChange={(newValue) => {
-                    setSelectedDate(newValue);
-                    setSelectedSlot(null);
-                  }}
-                  minDate={minDate}
-                  maxDate={maxDate}
-                  slotProps={{ textField: { fullWidth: true } }}
-                  format="dd/MM/yyyy"
-                />
-              </LocalizationProvider>
-            </Paper>
-            
-            {selectedDate && doctorSchedule && (
-              <Paper sx={{ p: 2, mb: 3 }}>
-                <SectionTitle variant="h6">
-                  <ScheduleIcon color="primary" />
-                  Horaires du médecin
-                </SectionTitle>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <Typography variant="body2">
-                    <strong>Horaires:</strong> {formatTime(doctorSchedule.heure_debut)} - {formatTime(doctorSchedule.heure_fin)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Durée de consultation:</strong> {doctorSchedule.intervalle_minutes} minutes
-                  </Typography>
-                  {doctorSchedule.a_pause_dejeuner && (
-                    <Typography variant="body2">
-                      <strong>Pause déjeuner:</strong> {formatTime(doctorSchedule.heure_debut_pause)} - {formatTime(doctorSchedule.heure_fin_pause)}
-                    </Typography>
-                  )}
-                </Box>
-              </Paper>
-            )}
-          </Grid>
-          
-          <Grid item xs={12} md={8}>
-            <Paper sx={{ p: 3, mb: 3 }}>
-              <SectionTitle variant="h6">
-                <EventAvailableIcon color="primary" />
-                Détails de la consultation
-              </SectionTitle>
-              
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Motif de la consultation"
-                    value={motif}
-                    onChange={(e) => setMotif(e.target.value)}
-                    required
-                    multiline
-                    rows={2}
-                    error={!motif && selectedSlot}
-                    helperText={!motif && selectedSlot ? "Le motif est requis" : ""}
-                  />
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Notes additionnelles (facultatif)"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    multiline
-                    rows={2}
-                    helperText="Informations supplémentaires pour le médecin"
-                  />
-                </Grid>
-              </Grid>
-            </Paper>
-            
-            {selectedDate && (
-              <Paper sx={{ p: 3 }}>
-                <SectionTitle variant="h6">
-                  <AccessTimeIcon color="primary" />
-                  Créneaux disponibles
-                </SectionTitle>
-                
-                {loading ? (
-                  <Box display="flex" justifyContent="center" my={3}>
-                    <CircularProgress />
-                  </Box>
-                ) : message && availableSlots.length === 0 ? (
-                  <Alert severity="info">{message}</Alert>
-                ) : formattedAvailableSlots.length === 0 ? (
-                  <Alert severity="info">Aucun créneau disponible pour cette date</Alert>
-                ) : (
-                  <Box sx={{ mt: 2 }}>
-                    <HorizontalTimeSlider
-                      slots={formattedAvailableSlots}
-                      selectedDate={selectedDate}
-                      selectedSlot={selectedSlot}
-                      onSelectSlot={setSelectedSlot}
-                      loading={loading}
-                    />
-                    
-                    {selectedSlot && (
-                      <Alert severity="success" sx={{ mt: 2 }}>
-                        Créneau sélectionné: {selectedSlot.time} le {selectedDate ? formatDate(selectedDate) : ''}
-                      </Alert>
-                    )}
-                    
-                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button
-                        onClick={() => navigate(-1)}
-                        sx={{ mr: 2 }}
-                      >
-                        Annuler
-                      </Button>
-                      <Button
-                        onClick={handleBookAppointment}
-                        variant="contained"
-                        disabled={loading || !selectedSlot || !motif}
-                        endIcon={loading && <CircularProgress size={20} />}
-                      >
-                        Confirmer le rendez-vous
-                      </Button>
+                      <Typography variant="body2" color="text.secondary">
+                        {doctor.specialite}
+                      </Typography>
                     </Box>
                   </Box>
-                )}
-              </Paper>
-            )}
+                  <Divider sx={{ my: 2 }} />
+                  
+                  <Box sx={{ mt: 2 }}>
+                    <InfoLabel>Spécialité</InfoLabel>
+                    <InfoValue>{doctor.specialite}</InfoValue>
+                    
+                    <InfoLabel>Localisation</InfoLabel>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.5 }}>
+                      <LocationOnIcon color="action" sx={{ mt: 0.5, mr: 1, fontSize: '1.2rem' }} />
+                      <InfoValue>{doctor.adresse || 'Clinique Médicale de Paris'}</InfoValue>
+                    </Box>
+                    
+                    <InfoLabel>Expérience</InfoLabel>
+                    <InfoValue>{doctor.experience || '15 ans'}</InfoValue>
+                  </Box>
+
+                  {doctorSchedule && (
+                    <>
+                      <Divider sx={{ my: 2 }} />
+                      <Box sx={{ mt: 2 }}>
+                        <InfoLabel>Horaires du médecin</InfoLabel>
+                        <Typography variant="body2" sx={{ mb: 0.5 }}>
+                          <strong>Horaires:</strong> {formatTime(doctorSchedule.heure_debut)} - {formatTime(doctorSchedule.heure_fin)}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 0.5 }}>
+                          <strong>Durée de consultation:</strong> {doctorSchedule.intervalle_minutes} minutes
+                        </Typography>
+                        {doctorSchedule.a_pause_dejeuner && (
+                          <Typography variant="body2" sx={{ mb: 0.5 }}>
+                            <strong>Pause déjeuner:</strong> {formatTime(doctorSchedule.heure_debut_pause)} - {formatTime(doctorSchedule.heure_fin_pause)}
+                          </Typography>
+                        )}
+                      </Box>
+                    </>
+                  )}
+                </>
+              )}
+            </Grid>
+
+            {/* Sélection de la date */}
+            <Grid item xs={12} md={8}>
+              <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                Sélection de la date et de l'heure
+              </Typography>
+              
+              {/* This container maintains consistent height and now wider */}
+              <Box sx={{ width: '100%', maxWidth: '500px', margin: '0 auto', minHeight: '300px' }}>
+                <CalendarHeader>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 500, fontSize: '0.95rem' }}>
+                    {format(currentMonth, 'MMMM yyyy', { locale: fr })}
+                  </Typography>
+                  <Box>
+                    <NavButton onClick={prevMonth}>
+                      <ArrowBackIosNewIcon fontSize="small" sx={{ fontSize: '0.85rem' }} />
+                    </NavButton>
+                    <NavButton onClick={nextMonth}>
+                      <ArrowForwardIosIcon fontSize="small" sx={{ fontSize: '0.85rem' }} />
+                    </NavButton>
+                  </Box>
+                </CalendarHeader>
+                
+                {generateCalendar()}
+              
+                {/* Time slots section with fixed height and proper width */}
+                <Box sx={{ minHeight: '100px', width: '100%' }}>
+                  {selectedDate && (
+                    <>
+                      <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                        Créneaux disponibles
+                      </Typography>
+                      {renderTimeSlots()}
+                    </>
+                  )}
+                </Box>
+              </Box>
+            </Grid>
           </Grid>
-        </Grid>
+        </Paper>
+        
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+            Détails du rendez-vous
+          </Typography>
+          
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Motif de la consultation"
+                value={motif}
+                onChange={(e) => setMotif(e.target.value)}
+                required
+                multiline
+                rows={2}
+                error={!motif && selectedSlot}
+                helperText={!motif && selectedSlot ? "Le motif est requis" : ""}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Notes supplémentaires"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                multiline
+                rows={2}
+                helperText="Informations supplémentaires pour le médecin"
+              />
+            </Grid>
+          </Grid>
+          
+          {selectedSlot && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              Créneau sélectionné: {selectedSlot.time} le {selectedDate ? formatDate(selectedDate) : ''}
+            </Alert>
+          )}
+          
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              onClick={() => navigate(-1)}
+              sx={{ mr: 2 }}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleBookAppointment}
+              variant="contained"
+              color="primary"
+              disabled={loading || !selectedSlot || !motif}
+              endIcon={loading && <CircularProgress size={20} />}
+              sx={{ px: 4, py: 1 }}
+            >
+              Confirmer le rendez-vous
+            </Button>
+          </Box>
+        </Paper>
       </Box>
     </Container>
   );
