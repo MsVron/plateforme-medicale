@@ -79,7 +79,7 @@ const PatientHome = () => {
               color="primary" 
               size="large"
               endIcon={<SearchIcon />}
-              onClick={() => navigate('/patient/doctor-search')}
+              onClick={() => navigate('/patient/search-doctors')}
               fullWidth
             >
               Rechercher

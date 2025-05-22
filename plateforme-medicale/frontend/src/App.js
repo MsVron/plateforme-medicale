@@ -22,6 +22,8 @@ import ManageAdmins from './components/ManageAdmins';
 import DoctorManagement from './components/doctors/DoctorManagement';
 import DoctorSearch from './components/DoctorSearch/DoctorSearch';
 import AppointmentBookingPage from './components/appointments/AppointmentBookingPage';
+import PatientAppointments from './components/patient/PatientAppointments';
+import PatientFavorites from './components/patient/PatientFavorites';
 import medicalTheme from './styles/theme';
 
 // Import the doctor components
@@ -160,6 +162,30 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['patient']}>
                   <DoctorSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patient/doctor-search"
+              element={
+                <ProtectedRoute allowedRoles={['patient']}>
+                  <DoctorSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patient/appointments"
+              element={
+                <ProtectedRoute allowedRoles={['patient']}>
+                  <PatientAppointments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patient/favorites"
+              element={
+                <ProtectedRoute allowedRoles={['patient']}>
+                  <PatientFavorites />
                 </ProtectedRoute>
               }
             />
