@@ -34,10 +34,7 @@ const MedecinDashboard = () => {
     heure_fin_pause: ''
   });
   const [absenceForm, setAbsenceForm] = useState({ date_debut: null, date_fin: null, motif: '' });
-  const [patientForm, setPatientForm] = useState({
-    prenom: '', nom: '', date_naissance: null, sexe: '', CNE: '', email: '',
-    telephone: '', adresse: '', ville: '', code_postal: '', pays: 'Maroc'
-  });
+    const [patientForm, setPatientForm] = useState({    prenom: '',     nom: '',     date_naissance: null,     sexe: '',     CNE: '',     CNE_confirm: '',     email: '',    telephone: '',     adresse: '',     ville: '',     code_postal: '',     pays: 'Maroc'  });
   const [success, setSuccess] = useState('');
 
   const joursSemaine = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
@@ -237,15 +234,7 @@ const MedecinDashboard = () => {
     }
   };
 
-  const handleOpenPatient = () => {
-    setPatientForm({
-      prenom: '', nom: '', date_naissance: null, sexe: '', CNE: '', email: '',
-      telephone: '', adresse: '', ville: '', code_postal: '', pays: 'Maroc'
-    });
-    setError('');
-    setSuccess('');
-    setOpenPatient(true);
-  };
+    const handleOpenPatient = () => {    setPatientForm({      prenom: '',       nom: '',       date_naissance: null,       sexe: '',       CNE: '',       CNE_confirm: '',       email: '',      telephone: '',       adresse: '',       ville: '',       code_postal: '',       pays: 'Maroc'    });    setError('');    setSuccess('');    setOpenPatient(true);  };
 
   const handleClosePatient = () => {
     setOpenPatient(false);
@@ -578,14 +567,7 @@ const MedecinDashboard = () => {
       {/* Patients Section */}
       {tabValue === 3 && (
         <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h5" sx={{ fontWeight: 'medium' }}>
-              Mes Patients
-            </Typography>
-            <Button variant="contained" color="primary" onClick={handleOpenPatient}>
-              Ajouter un patient
-            </Button>
-          </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>            <Typography variant="h5" sx={{ fontWeight: 'medium' }}>              Mes Patients            </Typography>          </Box>
           <Grid container spacing={2}>
             {data.patients.length === 0 ? (
               <Typography sx={{ mt: 2, color: 'text.secondary' }}>
@@ -846,15 +828,7 @@ const MedecinDashboard = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  margin="dense"
-                  label="CNE"
-                  fullWidth
-                  value={patientForm.CNE}
-                  onChange={(e) => setPatientForm({ ...patientForm, CNE: e.target.value })}
-                />
-              </Grid>
+                            <Grid item xs={12} sm={6}>                <TextField                  margin="dense"                  label="CNE"                  fullWidth                  value={patientForm.CNE}                  onChange={(e) => setPatientForm({ ...patientForm, CNE: e.target.value })}                />              </Grid>              <Grid item xs={12} sm={6}>                <TextField                  margin="dense"                  label="Confirmer le CNE"                  fullWidth                  value={patientForm.CNE_confirm}                  onChange={(e) => setPatientForm({ ...patientForm, CNE_confirm: e.target.value })}                  onPaste={(e) => e.preventDefault()}                  helperText="Saisissez à nouveau le CNE (copier-coller désactivé)"                />              </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   margin="dense"

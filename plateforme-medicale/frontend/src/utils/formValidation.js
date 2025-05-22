@@ -151,13 +151,13 @@ export const validatePostalCode = (postalCode) => {
 };
 
 /**
- * Validates a CNE (Carte Nationale d'Étudiant)
+ * Validates a CNE (Carte Nationale d'Étudiant) - Optional for regular registration
  * @param {string} cne - The CNE to validate
  * @returns {Object} - Contains whether the CNE is valid and any error message
  */
 export const validateCNE = (cne) => {
   if (!cne) {
-    return { isValid: true, errorMessage: "" }; // CNE is optional
+    return { isValid: true, errorMessage: "" }; // CNE is optional for regular registration
   }
   
   // CNE can be 1-2 letters followed by at least 6 characters
@@ -168,6 +168,71 @@ export const validateCNE = (cne) => {
       isValid: false, 
       errorMessage: "Le CNE doit comporter 1 ou 2 lettres suivies d'au moins 6 caractères" 
     };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates a CNE (Carte Nationale d'Étudiant) - Required for walk-in patients
+ * @param {string} cne - The CNE to validate
+ * @returns {Object} - Contains whether the CNE is valid and any error message
+ */
+export const validateCNERequired = (cne) => {
+  if (!cne || cne.trim().length === 0) {
+    return { isValid: false, errorMessage: "Le CNE est requis" };
+  }
+  
+  // CNE can be 1-2 letters followed by at least 6 characters
+  const cneRegex = /^[A-Za-z]{1,2}[A-Za-z0-9]{6,}$/;
+  
+  if (!cneRegex.test(cne.trim())) {
+    return { 
+      isValid: false, 
+      errorMessage: "Le CNE doit comporter 1 ou 2 lettres suivies d'au moins 6 caractères alphanumériques" 
+    };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates CNE confirmation field
+ * @param {string} cne - The original CNE
+ * @param {string} cneConfirm - The CNE confirmation
+ * @returns {Object} - Contains whether the confirmation is valid and any error message
+ */
+export const validateCNEConfirmation = (cne, cneConfirm) => {
+  if (!cneConfirm || cneConfirm.trim().length === 0) {
+    return { isValid: false, errorMessage: "La confirmation du CNE est requise" };
+  }
+  
+  if (cne !== cneConfirm) {
+    return { isValid: false, errorMessage: "Les CNE ne correspondent pas" };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates CNE confirmation field (optional version)
+ * @param {string} cne - The original CNE
+ * @param {string} cneConfirm - The CNE confirmation
+ * @returns {Object} - Contains whether the confirmation is valid and any error message
+ */
+export const validateCNEConfirmationOptional = (cne, cneConfirm) => {
+  // If no CNE is provided, confirmation is not needed
+  if (!cne || cne.trim().length === 0) {
+    return { isValid: true, errorMessage: "" };
+  }
+  
+  // If CNE is provided but confirmation is empty
+  if (!cneConfirm || cneConfirm.trim().length === 0) {
+    return { isValid: false, errorMessage: "La confirmation du CNE est requise" };
+  }
+  
+  if (cne !== cneConfirm) {
+    return { isValid: false, errorMessage: "Les CNE ne correspondent pas" };
   }
   
   return { isValid: true, errorMessage: "" };

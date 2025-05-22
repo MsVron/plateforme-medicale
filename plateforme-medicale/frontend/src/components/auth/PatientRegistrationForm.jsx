@@ -28,6 +28,7 @@ import {
   validatePhoneNumber,
   validatePostalCode,
   validateCNE,
+  validateCNEConfirmationOptional,
   isValidEmail,
 } from '../../utils/formValidation';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
@@ -36,6 +37,7 @@ import { datePickerProps } from '../../utils/dateUtils';
 
 const PatientRegistrationForm = () => {
   const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     prenom: '',
     nom: '',
@@ -49,6 +51,7 @@ const PatientRegistrationForm = () => {
     ville: '',
     code_postal: '',
     CNE: '',
+    CNE_confirm: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -93,6 +96,43 @@ const PatientRegistrationForm = () => {
     if (!touchedFields.ville) {
       setTouchedFields({ ...touchedFields, ville: true });
     }
+  };
+
+  // Function to prevent pasting in CNE confirmation field
+  const handleCNEConfirmPaste = (e) => {
+    e.preventDefault();
+    return false;
+  };
+
+  // Function to get field color based on validation state
+  const getCNEFieldColor = (fieldName) => {
+    if (!touchedFields[fieldName] || !formData[fieldName]) {
+      return {};
+    }
+    
+    if (fieldName === 'CNE_confirm') {
+      const isValid = formData.CNE && formData.CNE_confirm && formData.CNE === formData.CNE_confirm;
+      return isValid ? {
+        '& .MuiOutlinedInput-root': {
+          '& fieldset': { borderColor: '#4caf50' },
+          '&:hover fieldset': { borderColor: '#4caf50' },
+          '&.Mui-focused fieldset': { borderColor: '#4caf50' }
+        }
+      } : {};
+    }
+    
+    if (fieldName === 'CNE' && formData.CNE_confirm) {
+      const isValid = formData.CNE && formData.CNE_confirm && formData.CNE === formData.CNE_confirm;
+      return isValid ? {
+        '& .MuiOutlinedInput-root': {
+          '& fieldset': { borderColor: '#4caf50' },
+          '&:hover fieldset': { borderColor: '#4caf50' },
+          '&.Mui-focused fieldset': { borderColor: '#4caf50' }
+        }
+      } : {};
+    }
+    
+    return {};
   };
 
   const validateField = (name, value) => {
@@ -158,6 +198,26 @@ const PatientRegistrationForm = () => {
       case 'CNE':
         const cneValidation = validateCNE(value);
         error = cneValidation.errorMessage;
+        // Also validate CNE confirmation if it exists
+        if (formData.CNE_confirm) {
+          const confirmValidation = validateCNEConfirmationOptional(value, formData.CNE_confirm);
+          if (!confirmValidation.isValid) {
+            setErrors(prevErrors => ({
+              ...prevErrors,
+              CNE_confirm: confirmValidation.errorMessage
+            }));
+          } else {
+            setErrors(prevErrors => ({
+              ...prevErrors,
+              CNE_confirm: ''
+            }));
+          }
+        }
+        break;
+        
+      case 'CNE_confirm':
+        const cneConfirmValidation = validateCNEConfirmationOptional(formData.CNE, value);
+        error = cneConfirmValidation.errorMessage;
         break;
         
       default:
@@ -488,8 +548,25 @@ const PatientRegistrationForm = () => {
             onBlur={handleBlur}
             error={shouldShowError('CNE')}
             helperText={shouldShowError('CNE') ? errors.CNE : "Format: 1 ou 2 lettres suivies d'au moins 6 caractères"}
-            sx={{ mb: 3 }}
+            sx={{ mb: 3, ...getCNEFieldColor('CNE') }}
           />
+          
+          {/* CNE Confirmation - Only show if CNE is filled */}
+          {formData.CNE && (
+            <TextField
+              fullWidth
+              id="CNE_confirm"
+              label="Confirmer le CNE"
+              name="CNE_confirm"
+              value={formData.CNE_confirm}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              onPaste={handleCNEConfirmPaste}
+              error={shouldShowError('CNE_confirm')}
+              helperText={shouldShowError('CNE_confirm') ? errors.CNE_confirm : "Saisissez à nouveau votre CNE pour confirmation (copier-coller désactivé)"}
+              sx={{ mb: 3, ...getCNEFieldColor('CNE_confirm') }}
+            />
+          )}
           
           {/* Sexe */}
           <FormControl 

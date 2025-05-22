@@ -523,3 +523,102 @@ INSERT INTO institutions (nom, adresse, ville, code_postal, pays, telephone, ema
 ('Hôpital Central', '15 Avenue de la République', 'Paris', '75011', 'France', '+33 1 45 67 89 10', 'contact@hopital-central.fr', '48.8566,2.3522', 48.8566, 2.3522, 'hôpital'),
 ('Clinique Nord', '8 Rue du Nord', 'Lyon', '69001', 'France', '+33 4 72 10 20 30', 'contact@clinique-nord.fr', '45.7640,4.8357', 45.7640, 4.8357, 'clinique');
 
+ALTER TABLE consultations
+DROP COLUMN is_teleconsultation; 
+
+-- Add enhancements to consultations table
+ALTER TABLE consultations
+ADD COLUMN follow_up_date DATE DEFAULT NULL,
+ADD COLUMN is_teleconsultation BOOLEAN DEFAULT FALSE;
+
+-- Add enhancements to patients table
+ALTER TABLE patients
+ADD COLUMN allergies_notes TEXT DEFAULT NULL,
+ADD COLUMN contact_urgence_relation VARCHAR(50) DEFAULT NULL;
+
+-- Add enhancements to constantes_vitales table
+ALTER TABLE constantes_vitales
+ADD COLUMN poids DECIMAL(5,2) DEFAULT NULL,
+ADD COLUMN taille INT DEFAULT NULL,
+ADD COLUMN imc DECIMAL(4,2) DEFAULT NULL;
+
+-- Add enhancements to traitements table
+ALTER TABLE traitements
+ADD COLUMN rappel_prise BOOLEAN DEFAULT FALSE,
+ADD COLUMN frequence_rappel VARCHAR(100) DEFAULT NULL;
+
+-- Create new table for patient notes
+CREATE TABLE notes_patient (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  medecin_id INT NOT NULL,
+  contenu TEXT NOT NULL,
+  date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  est_important BOOLEAN DEFAULT FALSE,
+  categorie VARCHAR(50) DEFAULT 'general',
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (medecin_id) REFERENCES medecins(id)
+);
+
+-- Add a new table for patient follow-up reminders
+CREATE TABLE rappels_suivi (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  medecin_id INT NOT NULL,
+  date_rappel DATE NOT NULL,
+  motif VARCHAR(255) NOT NULL,
+  description TEXT,
+  est_complete BOOLEAN DEFAULT FALSE,
+  date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (medecin_id) REFERENCES medecins(id)
+);
+
+-- Add a new table for patient medical measurements (for tracking progress over time)
+CREATE TABLE mesures_patient (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  medecin_id INT NOT NULL,
+  type_mesure VARCHAR(50) NOT NULL,
+  valeur DECIMAL(10,2) NOT NULL,
+  unite VARCHAR(20) NOT NULL,
+  date_mesure DATETIME NOT NULL,
+  notes TEXT,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (medecin_id) REFERENCES medecins(id)
+);
+
+-- Remove the teleconsultation column from consultations table
+ALTER TABLE consultations
+DROP COLUMN is_teleconsultation;
+
+-- Update the rendez_vous table to remove teleconsultation mode
+-- First, update any existing teleconsultation appointments to présentiel
+UPDATE rendez_vous
+SET mode = 'présentiel'
+WHERE mode = 'téléconsultation';
+
+-- Then modify the ENUM to remove the téléconsultation option
+ALTER TABLE rendez_vous
+MODIFY COLUMN mode ENUM('présentiel') DEFAULT 'présentiel'; 
+
+-- Migration: Add enhancements for walk-in patient registration
+-- Date: 2024
+
+-- Add index on CNE for faster lookups
+CREATE INDEX idx_patients_cne ON patients(CNE);
+
+-- Add index on nom_utilisateur for faster username lookups
+CREATE INDEX idx_utilisateurs_nom_utilisateur ON utilisateurs(nom_utilisateur);
+
+-- Add constraint to ensure CNE is unique when not null
+-- Note: MySQL allows multiple NULL values in UNIQUE columns, which is what we want
+ALTER TABLE patients ADD CONSTRAINT unique_cne_when_not_null UNIQUE (CNE);
+
+-- Add a flag to track if patient was registered by a doctor (walk-in)
+ALTER TABLE patients ADD COLUMN est_inscrit_par_medecin BOOLEAN DEFAULT FALSE;
+ALTER TABLE patients ADD COLUMN medecin_inscripteur_id INT DEFAULT NULL;
+ALTER TABLE patients ADD FOREIGN KEY (medecin_inscripteur_id) REFERENCES medecins(id);
+
+-- Add index for better performance on walk-in patient queries
+CREATE INDEX idx_patients_inscrit_par_medecin ON patients(est_inscrit_par_medecin); 

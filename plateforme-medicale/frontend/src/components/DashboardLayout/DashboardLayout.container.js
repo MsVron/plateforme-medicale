@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AdminPanelSettings, MedicalServices, Person, Business, Lock, BarChart } from '@mui/icons-material';
+import {   AdminPanelSettings,   MedicalServices,   Person,   Business,   Lock,   BarChart,   Search,   Event,   MedicalInformation,   CalendarMonth,  Favorite,  Dashboard,  PersonAdd} from '@mui/icons-material';
 import DashboardLayoutView from './DashboardLayout.view';
 
 const DashboardLayoutContainer = () => {
@@ -41,11 +41,12 @@ const DashboardLayoutContainer = () => {
       { text: 'Gestion des institutions', path: '/admin/institutions', icon: <Business /> },
       { text: 'Statistiques', path: '/admin/statistiques', icon: <BarChart /> },
     ],
-    medecin: [
-      { text: 'Mon espace', path: '/medecin', icon: <MedicalServices /> },
-    ],
+        medecin: [      { text: 'Mon espace', path: '/medecin', icon: <Dashboard /> },      { text: 'Patient sur place', path: '/medecin/walk-in-patient', icon: <PersonAdd /> },      { text: 'Rendez-vous', path: '/medecin/appointments', icon: <Event /> },      { text: 'Rechercher un patient', path: '/medecin/patients/search', icon: <Search /> },      { text: 'Dossiers médicaux', path: '/medecin/medical-records', icon: <MedicalInformation /> },      { text: 'Calendrier', path: '/medecin/calendar', icon: <CalendarMonth /> },    ],
     patient: [
-      { text: 'Mon espace', path: '/patient', icon: <Person /> },
+      { text: 'Mon espace', path: '/patient', icon: <Dashboard /> },
+      { text: 'Rechercher un médecin', path: '/patient/doctor-search', icon: <Search /> },
+      { text: 'Mes rendez-vous', path: '/patient/appointments', icon: <Event /> },
+      { text: 'Médecins favoris', path: '/patient/favorites', icon: <Favorite /> },
     ],
     institution: [
       { text: 'Mon espace', path: '/institution', icon: <Business /> },

@@ -29,11 +29,7 @@ const validateUsername = (username) => {
 const ManagePatients = () => {
   const [patients, setPatients] = useState([]);
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    nom_utilisateur: '', mot_de_passe: '', prenom: '', nom: '', date_naissance: '',
-    sexe: '', email: '', telephone: '', adresse: '', ville: '', code_postal: '',
-    pays: 'Maroc', est_actif: true, CNE: '', groupe_sanguin: ''
-  });
+    const [formData, setFormData] = useState({    nom_utilisateur: '', mot_de_passe: '', prenom: '', nom: '', date_naissance: '',    sexe: '', email: '', telephone: '', adresse: '', ville: '', code_postal: '',    pays: 'Maroc', est_actif: true, CNE: '', CNE_confirm: '', groupe_sanguin: ''  });
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -57,30 +53,10 @@ const ManagePatients = () => {
   const handleOpen = (patient = null) => {
     if (patient) {
       setEditId(patient.id);
-      setFormData({
-        nom_utilisateur: patient.nom_utilisateur || '',
-        mot_de_passe: '',
-        prenom: patient.prenom,
-        nom: patient.nom,
-        date_naissance: patient.date_naissance,
-        sexe: patient.sexe,
-        email: patient.email || '',
-        telephone: patient.telephone || '',
-        adresse: patient.adresse || '',
-        ville: patient.ville || '',
-        code_postal: patient.code_postal || '',
-        pays: patient.pays || 'Maroc',
-        est_actif: patient.est_actif,
-        CNE: patient.CNE || '',
-        groupe_sanguin: patient.groupe_sanguin || ''
-      });
+            setFormData({        nom_utilisateur: patient.nom_utilisateur || '',        mot_de_passe: '',        prenom: patient.prenom,        nom: patient.nom,        date_naissance: patient.date_naissance,        sexe: patient.sexe,        email: patient.email || '',        telephone: patient.telephone || '',        adresse: patient.adresse || '',        ville: patient.ville || '',        code_postal: patient.code_postal || '',        pays: patient.pays || 'Maroc',        est_actif: patient.est_actif,        CNE: patient.CNE || '',        CNE_confirm: patient.CNE || '',        groupe_sanguin: patient.groupe_sanguin || ''      });
     } else {
       setEditId(null);
-      setFormData({
-        nom_utilisateur: '', mot_de_passe: '', prenom: '', nom: '', date_naissance: '',
-        sexe: '', email: '', telephone: '', adresse: '', ville: '', code_postal: '',
-        pays: 'Maroc', est_actif: true, CNE: '', groupe_sanguin: ''
-      });
+              setFormData({          nom_utilisateur: '', mot_de_passe: '', prenom: '', nom: '', date_naissance: '',          sexe: '', email: '', telephone: '', adresse: '', ville: '', code_postal: '',          pays: 'Maroc', est_actif: true, CNE: '', CNE_confirm: '', groupe_sanguin: ''        });
     }
     setError('');
     setSuccess('');
@@ -278,13 +254,7 @@ const ManagePatients = () => {
             <MenuItem value="F">Féminin</MenuItem>
             <MenuItem value="Autre">Autre</MenuItem>
           </TextField>
-          <TextField
-            margin="dense"
-            label="CNE"
-            fullWidth
-            value={formData.CNE}
-            onChange={(e) => setFormData({ ...formData, CNE: e.target.value })}
-          />
+                    <TextField            margin="dense"            label="CNE"            fullWidth            value={formData.CNE}            onChange={(e) => setFormData({ ...formData, CNE: e.target.value })}          />          <TextField            margin="dense"            label="Confirmer le CNE"            fullWidth            value={formData.CNE_confirm}            onChange={(e) => setFormData({ ...formData, CNE_confirm: e.target.value })}            onPaste={(e) => e.preventDefault()}            helperText="Saisissez à nouveau le CNE (copier-coller désactivé)"          />
           <TextField
             margin="dense"
             label="Groupe sanguin"

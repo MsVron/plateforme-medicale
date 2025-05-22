@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const medecinController = require('../controllers/medecinController');
+const appointmentController = require('../controllers/medecin/appointmentController');
+const medicalRecordController = require('../controllers/medecin/medicalRecordController');
 const { verifyToken, isAdmin, isSuperAdmin } = require('../middlewares/auth');
 
 // Public routes (no authentication required)
@@ -31,5 +33,31 @@ router.post('/medecin/absences', verifyToken, medecinController.addEmergencyAbse
 router.delete('/medecin/absences/:id', verifyToken, medecinController.deleteEmergencyAbsence);
 router.post('/medecin/patients', verifyToken, medecinController.addPatient);
 router.get('/medecin/patients', verifyToken, medecinController.getPatients);
+
+// Appointment routes
+router.get('/medecin/appointments', verifyToken, appointmentController.getUpcomingAppointments);
+router.get('/medecin/appointments/:appointmentId', verifyToken, appointmentController.getAppointmentById);
+router.put('/medecin/appointments/:appointmentId/status', verifyToken, appointmentController.updateAppointmentStatus);
+
+// Medical records routes
+router.get('/medecin/patients/search', verifyToken, medicalRecordController.searchPatients);
+router.get('/medecin/patients/:patientId/medical-record', verifyToken, medicalRecordController.getPatientMedicalRecord);
+router.post('/medecin/consultations', verifyToken, medicalRecordController.addConsultation);
+router.put('/medecin/consultations/:consultationId', verifyToken, medicalRecordController.updateConsultation);
+router.post('/medecin/medical-history', verifyToken, medicalRecordController.addMedicalHistory);
+router.post('/medecin/treatments', verifyToken, medicalRecordController.addTreatment);
+router.post('/medecin/documents', verifyToken, medicalRecordController.addMedicalDocument);
+router.get('/medecin/medications', verifyToken, medicalRecordController.getMedications);
+router.get('/medecin/allergies', verifyToken, medicalRecordController.getAllergies);
+router.post('/medecin/patient-allergies', verifyToken, medicalRecordController.addPatientAllergy);
+
+// New enhanced features routes
+router.post('/medecin/patient-notes', verifyToken, medicalRecordController.addPatientNote);
+router.get('/medecin/patients/:patientId/notes', verifyToken, medicalRecordController.getPatientNotes);
+router.post('/medecin/follow-up-reminders', verifyToken, medicalRecordController.addFollowUpReminder);
+router.get('/medecin/patients/:patientId/reminders', verifyToken, medicalRecordController.getFollowUpReminders);
+router.post('/medecin/patient-measurements', verifyToken, medicalRecordController.addPatientMeasurement);
+router.get('/medecin/patients/:patientId/measurements', verifyToken, medicalRecordController.getPatientMeasurements);
+router.get('/medecin/patients/:patientId/measurements/:type_mesure', verifyToken, medicalRecordController.getPatientMeasurements);
 
 module.exports = router;

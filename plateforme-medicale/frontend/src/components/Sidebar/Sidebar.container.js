@@ -9,6 +9,9 @@ import {
   CalendarMonth as CalendarIcon,
   Favorite as FavoriteIcon,
   DocumentScanner as DocumentIcon,
+  MedicalServices as MedicalIcon,
+  Dashboard as DashboardIcon,
+  Event as EventIcon,
 } from '@mui/icons-material';
 import SidebarView from './Sidebar.view';
 
@@ -42,6 +45,14 @@ const SidebarContainer = () => {
       { text: 'Rechercher un médecin', path: '/patient/doctor-search', icon: <SearchIcon /> },
       { text: 'Mes rendez-vous', path: '/patient/appointments', icon: <CalendarIcon /> },
       { text: 'Médecins favoris', path: '/patient/favorites', icon: <FavoriteIcon /> },
+    ];
+  } else if (user.role === 'medecin') {
+    menuItems = [
+      { text: 'Tableau de bord', path: '/medecin/dashboard', icon: <DashboardIcon /> },
+      { text: 'Rendez-vous', path: '/medecin/appointments', icon: <EventIcon /> },
+      { text: 'Rechercher un patient', path: '/medecin/patients/search', icon: <SearchIcon /> },
+      { text: 'Dossiers médicaux', path: '/medecin/medical-records', icon: <MedicalIcon /> },
+      { text: 'Calendrier', path: '/medecin/calendar', icon: <CalendarIcon /> },
     ];
   }
 
