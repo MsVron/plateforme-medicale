@@ -100,7 +100,12 @@ const PatientAppointments = () => {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status, isPast = false) => {
+    // If it's a past appointment and status is still "planifié", show as default
+    if (isPast && status?.toLowerCase() === 'planifié') {
+      return 'default';
+    }
+    
     switch (status?.toLowerCase()) {
       case 'planifié':
         return 'info';
@@ -117,7 +122,12 @@ const PatientAppointments = () => {
     }
   };
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status, isPast = false) => {
+    // If it's a past appointment and status is still "planifié", show "Passé"
+    if (isPast && status?.toLowerCase() === 'planifié') {
+      return 'Passé';
+    }
+    
     switch (status?.toLowerCase()) {
       case 'planifié':
         return 'Planifié';
@@ -211,14 +221,14 @@ const PatientAppointments = () => {
                 mt: 3, 
                 mb: 3,
                 p: 2,
-                bgcolor: 'primary.light',
+                bgcolor: 'grey.100',
                 borderRadius: 2,
                 border: '1px solid',
-                borderColor: 'primary.main'
+                borderColor: 'grey.400'
               }}>
-                <CalendarIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+                <CalendarIcon sx={{ color: 'text.primary', fontSize: 28 }} />
                 <Typography variant="h5" component="h2" sx={{ 
-                  color: 'primary.main', 
+                  color: 'text.primary', 
                   fontWeight: 'bold',
                   flex: 1
                 }}>
@@ -226,7 +236,7 @@ const PatientAppointments = () => {
                 </Typography>
                 <Chip 
                   label={`${upcomingAppointments.length} rendez-vous`}
-                  color="primary"
+                  color="default"
                   sx={{ fontWeight: 'bold' }}
                 />
               </Box>
@@ -235,8 +245,8 @@ const PatientAppointments = () => {
                   <Grid item xs={12} md={6} key={appointment.id}>
                     <Card sx={{ 
                       height: '100%', 
-                      border: '2px solid', 
-                      borderColor: 'primary.light',
+                      border: '1px solid', 
+                      borderColor: 'grey.300',
                       borderRadius: 2,
                       transition: 'transform 0.2s, box-shadow 0.2s',
                       minWidth: '400px !important',
@@ -250,40 +260,40 @@ const PatientAppointments = () => {
                         {/* Doctor Name and Status */}
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, width: '100% !important', minWidth: '320px !important' }}>
                           <Box sx={{ flex: 1, minWidth: '200px !important' }}>
-                            <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 0.5, fontSize: '1.1rem !important' }}>
+                            <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5, fontSize: '1.1rem !important' }}>
                               Dr. {appointment.medecin_prenom} {appointment.medecin_nom}
                             </Typography>
                             {appointment.specialite && (
-                              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', fontSize: '0.9rem !important' }}>
+                              <Typography variant="body2" sx={{ fontStyle: 'italic', fontSize: '0.9rem !important', color: 'text.primary', fontWeight: 'medium' }}>
                                 {appointment.specialite}
                               </Typography>
                             )}
                           </Box>
                           <Chip 
                             label={getStatusLabel(appointment.statut)} 
-                            color={getStatusColor(appointment.statut)}
+                            color={getStatusColor(appointment.statut, false)}
                             size="small"
                             sx={{ fontWeight: 'bold', minWidth: '80px !important' }}
                           />
                         </Box>
 
                         {/* Date and Time Information */}
-                        <Box sx={{ mb: 3, p: 2, bgcolor: 'primary.light', borderRadius: 1, border: '1px solid', borderColor: 'primary.main', width: '100% !important' }}>
+                        <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1, border: '1px solid', borderColor: 'grey.300', width: '100% !important' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, width: '100% !important' }}>
-                            <CalendarIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.dark', flexShrink: 0 }} />
+                            <CalendarIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary', flexShrink: 0 }} />
                             <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                               {formatDate(appointment.date_heure_debut)}
                             </Typography>
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, width: '100% !important' }}>
-                            <TimeIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.dark', flexShrink: 0 }} />
+                            <TimeIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary', flexShrink: 0 }} />
                             <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                               {formatTime(appointment.date_heure_debut)} - {formatTime(appointment.date_heure_fin)}
                             </Typography>
                           </Box>
                           {appointment.institution_nom && (
                             <Box sx={{ display: 'flex', alignItems: 'center', width: '100% !important' }}>
-                              <PlaceIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.dark', flexShrink: 0 }} />
+                              <PlaceIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary', flexShrink: 0 }} />
                               <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                                 {appointment.institution_nom}
                               </Typography>
@@ -300,11 +310,11 @@ const PatientAppointments = () => {
                                   Motif:
                                 </Typography>
                                 <Typography variant="body2" sx={{ 
-                                  bgcolor: 'info.light', 
+                                  bgcolor: 'grey.200', 
                                   p: 1.5, 
                                   borderRadius: 1,
                                   border: '1px solid',
-                                  borderColor: 'info.main',
+                                  borderColor: 'grey.400',
                                   color: 'text.primary',
                                   fontWeight: 'medium',
                                   width: '100% !important',
@@ -323,11 +333,11 @@ const PatientAppointments = () => {
                                   Notes:
                                 </Typography>
                                 <Typography variant="body2" sx={{ 
-                                  bgcolor: 'warning.light', 
+                                  bgcolor: 'grey.200', 
                                   p: 1.5, 
                                   borderRadius: 1,
                                   border: '1px solid',
-                                  borderColor: 'warning.main',
+                                  borderColor: 'grey.400',
                                   color: 'text.primary',
                                   fontWeight: 'medium',
                                   width: '100% !important',
@@ -381,10 +391,10 @@ const PatientAppointments = () => {
                 mt: 5, 
                 mb: 3,
                 p: 2,
-                bgcolor: 'grey.200',
+                bgcolor: 'grey.100',
                 borderRadius: 2,
                 border: '1px solid',
-                borderColor: 'grey.500'
+                borderColor: 'grey.400'
               }}>
                 <CalendarIcon sx={{ color: 'text.primary', fontSize: 28 }} />
                 <Typography variant="h5" component="h2" sx={{ 
@@ -405,12 +415,16 @@ const PatientAppointments = () => {
                   <Grid item xs={12} md={6} key={appointment.id}>
                     <Card sx={{ 
                       height: '100%', 
-                      opacity: 0.85,
                       borderRadius: 2,
                       border: '1px solid',
                       borderColor: 'grey.300',
                       minWidth: '400px !important',
-                      width: '100% !important'
+                      width: '100% !important',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                      }
                     }}>
                       <CardContent sx={{ p: 3, minWidth: '350px !important' }}>
                         {/* Doctor Name and Status */}
@@ -426,30 +440,30 @@ const PatientAppointments = () => {
                             )}
                           </Box>
                           <Chip 
-                            label={getStatusLabel(appointment.statut)} 
-                            color={getStatusColor(appointment.statut)}
+                            label={getStatusLabel(appointment.statut, true)} 
+                            color={getStatusColor(appointment.statut, true)}
                             size="small"
                             sx={{ fontWeight: 'bold', minWidth: '80px !important' }}
                           />
                         </Box>
 
                         {/* Date and Time Information */}
-                        <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.200', borderRadius: 1, border: '1px solid', borderColor: 'grey.400', width: '100% !important' }}>
+                        <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1, border: '1px solid', borderColor: 'grey.300', width: '100% !important' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, width: '100% !important' }}>
-                            <CalendarIcon fontSize="small" sx={{ mr: 1.5, color: 'text.primary', flexShrink: 0 }} />
+                            <CalendarIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary', flexShrink: 0 }} />
                             <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                               {formatDate(appointment.date_heure_debut)}
                             </Typography>
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, width: '100% !important' }}>
-                            <TimeIcon fontSize="small" sx={{ mr: 1.5, color: 'text.primary', flexShrink: 0 }} />
+                            <TimeIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary', flexShrink: 0 }} />
                             <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                               {formatTime(appointment.date_heure_debut)} - {formatTime(appointment.date_heure_fin)}
                             </Typography>
                           </Box>
                           {appointment.institution_nom && (
                             <Box sx={{ display: 'flex', alignItems: 'center', width: '100% !important' }}>
-                              <PlaceIcon fontSize="small" sx={{ mr: 1.5, color: 'text.primary', flexShrink: 0 }} />
+                              <PlaceIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary', flexShrink: 0 }} />
                               <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                                 {appointment.institution_nom}
                               </Typography>
@@ -466,13 +480,13 @@ const PatientAppointments = () => {
                                   Motif:
                                 </Typography>
                                 <Typography variant="body2" sx={{ 
-                                  bgcolor: 'grey.300', 
+                                  bgcolor: 'grey.200', 
                                   p: 1.5, 
                                   borderRadius: 1,
-                                  color: 'text.primary',
-                                  fontWeight: 'medium',
                                   border: '1px solid',
                                   borderColor: 'grey.400',
+                                  color: 'text.primary',
+                                  fontWeight: 'medium',
                                   width: '100% !important',
                                   fontSize: '0.85rem !important',
                                   wordWrap: 'break-word',
@@ -489,13 +503,13 @@ const PatientAppointments = () => {
                                   Notes:
                                 </Typography>
                                 <Typography variant="body2" sx={{ 
-                                  bgcolor: 'grey.300', 
+                                  bgcolor: 'grey.200', 
                                   p: 1.5, 
                                   borderRadius: 1,
-                                  color: 'text.primary',
-                                  fontWeight: 'medium',
                                   border: '1px solid',
                                   borderColor: 'grey.400',
+                                  color: 'text.primary',
+                                  fontWeight: 'medium',
                                   width: '100% !important',
                                   fontSize: '0.85rem !important',
                                   wordWrap: 'break-word',
