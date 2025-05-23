@@ -110,7 +110,7 @@ const PatientSearch = () => {
   };
 
   const viewMedicalRecord = (patientId) => {
-    navigate(`/medecin/patients/${patientId}/medical-record`);
+    navigate(`/medecin/patients/${patientId}/dossier`);
   };
 
   const getActiveSearchCriteria = () => {

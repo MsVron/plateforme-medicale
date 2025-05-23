@@ -3,13 +3,20 @@ require('dotenv').config();
 
 // Middleware to verify JWT token
 exports.verifyToken = (req, res, next) => {
+  console.log('=== DEBUG: verifyToken middleware called ===');
+  console.log('Request URL:', req.originalUrl);
+  console.log('Request method:', req.method);
+  console.log('Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
+  
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('DEBUG: No valid authorization header found');
       return res.status(401).json({ message: 'Authentification requise' });
     }
 
     const token = authHeader.split(' ')[1];
+    console.log('DEBUG: Token extracted, length:', token.length);
 
     if (!process.env.JWT_SECRET) {
       console.error('JWT_SECRET non défini dans .env');
@@ -17,6 +24,13 @@ exports.verifyToken = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('DEBUG: Token decoded successfully');
+    console.log('DEBUG: User info from token:', {
+      id: decoded.id,
+      role: decoded.role,
+      nom_utilisateur: decoded.nom_utilisateur,
+      id_specifique_role: decoded.id_specifique_role
+    });
 
     req.user = {
       id: decoded.id,
@@ -27,8 +41,13 @@ exports.verifyToken = (req, res, next) => {
       id_specifique_role: decoded.id_specifique_role // Add this
     };
 
+    console.log('DEBUG: User attached to request, proceeding to next middleware');
     next();
   } catch (error) {
+    console.log('DEBUG: Token verification failed');
+    console.log('DEBUG: Error name:', error.name);
+    console.log('DEBUG: Error message:', error.message);
+    
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ message: 'Session expirée, veuillez vous reconnecter' });
     }

@@ -4,6 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import Layout from './components/layout';
 import MedecinDashboard from './components/MedecinDashboard';
 import PatientMedicalRecord from './components/medecin/PatientMedicalRecord';
+import MedicalDossier from './components/medecin/MedicalDossier';
 import UpcomingAppointments from './components/medecin/UpcomingAppointments';
 import PatientSearch from './pages/medecin/PatientSearch';
 import MedicalRecords from './pages/medecin/MedicalRecords';
@@ -124,6 +125,14 @@ function App() {
               }
             />
             <Route
+              path="/medecin/patients/:patientId/dossier"
+              element={
+                <ProtectedRoute allowedRoles={['medecin']}>
+                  <MedicalDossier />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/medecin/medical-records"
               element={
                 <ProtectedRoute allowedRoles={['medecin']}>
@@ -209,8 +218,8 @@ function App() {
             />
           </Route>
 
-          {/* Default route */}
-          <Route path="*" element={<Navigate to="/unauthorized" />} />
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>
     </ThemeProvider>

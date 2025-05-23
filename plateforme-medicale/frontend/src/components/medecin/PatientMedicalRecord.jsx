@@ -61,7 +61,7 @@ const PatientMedicalRecord = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/medecin/patients/${patientId}/medical-record`, {
+      const response = await axios.get(`/medecin/patients/${patientId}/medical-record`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMedicalRecord(response.data);

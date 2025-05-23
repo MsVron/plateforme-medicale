@@ -3,6 +3,7 @@ const router = express.Router();
 const medecinController = require('../controllers/medecinController');
 const appointmentController = require('../controllers/medecin/appointmentController');
 const medicalRecordController = require('../controllers/medecin/medicalRecordController');
+const medicalDossierController = require('../controllers/medecin/medicalDossierController');
 const { verifyToken, isAdmin, isSuperAdmin } = require('../middlewares/auth');
 
 // Public routes (no authentication required)
@@ -43,7 +44,7 @@ router.get('/medecin/appointments', verifyToken, appointmentController.getUpcomi
 router.get('/medecin/appointments/:appointmentId', verifyToken, appointmentController.getAppointmentById);
 router.put('/medecin/appointments/:appointmentId/status', verifyToken, appointmentController.updateAppointmentStatus);
 
-// Medical records routes
+// Medical records routes (legacy - keeping for backward compatibility)
 router.get('/medecin/patients/search', verifyToken, medicalRecordController.searchPatients);
 router.get('/medecin/patients/:patientId/medical-record', verifyToken, medicalRecordController.getPatientMedicalRecord);
 router.post('/medecin/consultations', verifyToken, medicalRecordController.addConsultation);
@@ -63,5 +64,24 @@ router.get('/medecin/patients/:patientId/reminders', verifyToken, medicalRecordC
 router.post('/medecin/patient-measurements', verifyToken, medicalRecordController.addPatientMeasurement);
 router.get('/medecin/patients/:patientId/measurements', verifyToken, medicalRecordController.getPatientMeasurements);
 router.get('/medecin/patients/:patientId/measurements/:type_mesure', verifyToken, medicalRecordController.getPatientMeasurements);
+
+// NEW MEDICAL DOSSIER ROUTES
+// Main dossier access
+router.get('/medecin/patients/:patientId/dossier', verifyToken, medicalDossierController.getPatientDossier);
+
+// Treatment management routes
+router.post('/medecin/patients/:patientId/treatments', verifyToken, medicalDossierController.addTreatment);
+router.put('/medecin/patients/:patientId/treatments/:treatmentId', verifyToken, medicalDossierController.updateTreatment);
+router.delete('/medecin/patients/:patientId/treatments/:treatmentId', verifyToken, medicalDossierController.deleteTreatment);
+
+// Medical history management
+router.post('/medecin/patients/:patientId/medical-history', verifyToken, medicalDossierController.addMedicalHistory);
+
+// Patient notes management
+router.post('/medecin/patients/:patientId/notes', verifyToken, medicalDossierController.addPatientNote);
+
+// Autocomplete/search routes for forms
+router.get('/medecin/medications/search', verifyToken, medicalDossierController.getMedications);
+router.get('/medecin/allergies/search', verifyToken, medicalDossierController.getAllergies);
 
 module.exports = router;
