@@ -44,14 +44,14 @@ const Appointments = () => {
     try {
       await axios.put(
         `http://localhost:5000/api/medecin/appointments/${appointmentId}/status`,
-        { status: newStatus },
+        { statut: newStatus },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       
       // Update local state
       setAppointments(appointments.map(appointment => 
         appointment.id === appointmentId 
-          ? { ...appointment, status: newStatus } 
+          ? { ...appointment, statut: newStatus } 
           : appointment
       ));
     } catch (err) {
@@ -62,10 +62,12 @@ const Appointments = () => {
 
   const getStatusChip = (status) => {
     const statusConfig = {
-      pending: { label: 'En attente', color: 'warning' },
-      confirmed: { label: 'Confirmé', color: 'success' },
-      completed: { label: 'Terminé', color: 'info' },
-      cancelled: { label: 'Annulé', color: 'error' },
+      'planifié': { label: 'Planifié', color: 'info' },
+      'confirmé': { label: 'Confirmé', color: 'success' },
+      'en cours': { label: 'En cours', color: 'warning' },
+      'terminé': { label: 'Terminé', color: 'default' },
+      'annulé': { label: 'Annulé', color: 'error' },
+      'patient absent': { label: 'Patient absent', color: 'error' }
     };
     
     const config = statusConfig[status] || { label: status, color: 'default' };
@@ -113,20 +115,20 @@ const Appointments = () => {
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
                   <TableCell>
-                    {appointment.patient?.prenom} {appointment.patient?.nom}
+                    {appointment.patient_prenom} {appointment.patient_nom}
                   </TableCell>
-                  <TableCell>{formatDateTime(appointment.date_heure)}</TableCell>
+                  <TableCell>{formatDateTime(appointment.date_heure_debut)}</TableCell>
                   <TableCell>{appointment.motif || 'Non spécifié'}</TableCell>
-                  <TableCell>{getStatusChip(appointment.status)}</TableCell>
+                  <TableCell>{getStatusChip(appointment.statut)}</TableCell>
                   <TableCell>
-                    {appointment.status === 'pending' && (
+                    {appointment.statut === 'planifié' && (
                       <>
                         <Button 
                           size="small" 
                           variant="contained" 
                           color="success" 
                           sx={{ mr: 1 }}
-                          onClick={() => handleStatusChange(appointment.id, 'confirmed')}
+                          onClick={() => handleStatusChange(appointment.id, 'confirmé')}
                         >
                           Confirmer
                         </Button>
@@ -134,18 +136,18 @@ const Appointments = () => {
                           size="small" 
                           variant="contained" 
                           color="error"
-                          onClick={() => handleStatusChange(appointment.id, 'cancelled')}
+                          onClick={() => handleStatusChange(appointment.id, 'annulé')}
                         >
                           Annuler
                         </Button>
                       </>
                     )}
-                    {appointment.status === 'confirmed' && (
+                    {appointment.statut === 'confirmé' && (
                       <Button 
                         size="small" 
                         variant="contained" 
                         color="info"
-                        onClick={() => handleStatusChange(appointment.id, 'completed')}
+                        onClick={() => handleStatusChange(appointment.id, 'terminé')}
                       >
                         Marquer comme terminé
                       </Button>

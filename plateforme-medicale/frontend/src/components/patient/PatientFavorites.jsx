@@ -99,7 +99,7 @@ const PatientFavorites = () => {
   }
 
   return (
-    <Container>
+    <Container maxWidth="xl" sx={{ width: '100% !important', minWidth: '800px !important' }}>
       <Box sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <FavoriteIcon color="primary" />
@@ -132,35 +132,48 @@ const PatientFavorites = () => {
       ) : (
         <Grid container spacing={3}>
           {favoriteDoctors.map((doctor) => (
-            <Grid item xs={12} md={6} lg={4} key={doctor.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+            <Grid item xs={12} md={6} key={doctor.id}>
+              <Card sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                minWidth: '400px !important',
+                width: '100% !important',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                }
+              }}>
+                <CardContent sx={{ flexGrow: 1, p: 3, minWidth: '350px !important' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2, width: '100% !important', minWidth: '320px !important' }}>
                     <Avatar
                       sx={{ 
                         width: 60, 
                         height: 60, 
                         mr: 2,
-                        bgcolor: 'primary.main'
+                        bgcolor: 'primary.main',
+                        flexShrink: 0
                       }}
                     >
                       {doctor.prenom?.[0]}{doctor.nom?.[0]}
                     </Avatar>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" component="h2">
+                    <Box sx={{ flexGrow: 1, minWidth: '200px !important' }}>
+                      <Typography variant="h6" component="h2" sx={{ fontSize: '1.1rem !important', fontWeight: 'bold' }}>
                         Dr. {doctor.prenom} {doctor.nom}
                       </Typography>
                       <Chip 
                         label={doctor.specialite}
                         color={getSpecialtyColor(doctor.specialite)}
                         size="small"
-                        sx={{ mt: 0.5 }}
+                        sx={{ mt: 0.5, fontSize: '0.8rem !important' }}
                       />
                     </Box>
                     <Tooltip title="Retirer des favoris">
                       <IconButton 
                         color="error"
                         onClick={() => handleRemoveFromFavorites(doctor.id)}
+                        sx={{ flexShrink: 0 }}
                       >
                         <FavoriteIcon />
                       </IconButton>
@@ -168,69 +181,74 @@ const PatientFavorites = () => {
                   </Box>
 
                   {doctor.institution_nom && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <LocationIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, width: '100% !important' }}>
+                      <LocationIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary', flexShrink: 0 }} />
+                      <Typography variant="body2" color="text.secondary" sx={{ flex: 1, fontSize: '0.9rem !important' }}>
                         {doctor.institution_nom}
                       </Typography>
                     </Box>
                   )}
 
                   {doctor.ville && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <LocationIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, width: '100% !important' }}>
+                      <LocationIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary', flexShrink: 0 }} />
+                      <Typography variant="body2" color="text.secondary" sx={{ flex: 1, fontSize: '0.9rem !important' }}>
                         {doctor.ville}
                       </Typography>
                     </Box>
                   )}
 
                   {doctor.telephone && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <PhoneIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, width: '100% !important' }}>
+                      <PhoneIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary', flexShrink: 0 }} />
+                      <Typography variant="body2" color="text.secondary" sx={{ flex: 1, fontSize: '0.9rem !important' }}>
                         {doctor.telephone}
                       </Typography>
                     </Box>
                   )}
 
                   {doctor.email && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <EmailIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, width: '100% !important' }}>
+                      <EmailIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary', flexShrink: 0 }} />
+                      <Typography variant="body2" color="text.secondary" sx={{ flex: 1, fontSize: '0.9rem !important', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                         {doctor.email}
                       </Typography>
                     </Box>
                   )}
 
                   {doctor.experience_annees && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontSize: '0.9rem !important' }}>
                       <strong>Expérience:</strong> {doctor.experience_annees} ans
                     </Typography>
                   )}
 
                   {doctor.tarif_consultation && (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.9rem !important' }}>
                       <strong>Tarif:</strong> {doctor.tarif_consultation} DH
                     </Typography>
                   )}
 
                   {doctor.rating && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <StarIcon fontSize="small" sx={{ mr: 0.5, color: 'warning.main' }} />
-                      <Typography variant="body2" color="text.secondary">
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, width: '100% !important' }}>
+                      <StarIcon fontSize="small" sx={{ mr: 0.5, color: 'warning.main', flexShrink: 0 }} />
+                      <Typography variant="body2" color="text.secondary" sx={{ flex: 1, fontSize: '0.9rem !important' }}>
                         {doctor.rating}/5 ({doctor.reviews_count || 0} avis)
                       </Typography>
                     </Box>
                   )}
                 </CardContent>
 
-                <CardActions sx={{ p: 2, pt: 0 }}>
+                <CardActions sx={{ p: 2, pt: 0, width: '100% !important' }}>
                   <Button 
                     variant="contained" 
                     fullWidth
                     startIcon={<CalendarIcon />}
                     onClick={() => handleBookAppointment(doctor.id)}
+                    sx={{ 
+                      minWidth: '200px !important',
+                      fontSize: '0.9rem !important',
+                      fontWeight: 'bold'
+                    }}
                   >
                     Prendre rendez-vous
                   </Button>

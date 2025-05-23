@@ -28,7 +28,7 @@ import medicalTheme from './styles/theme';
 
 // Import the doctor components
 import { 
-  Appointments as MedecinAppointments,
+  UpcomingAppointments as MedecinAppointments,
   PatientSearch as MedecinPatientSearch,
   MedicalRecords as MedecinMedicalRecords,
   Calendar as MedecinCalendar
