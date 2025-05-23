@@ -145,7 +145,7 @@ const PatientAppointments = () => {
   }
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="xl" sx={{ width: '100% !important', minWidth: '800px !important' }}>
       <Box sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom sx={{ 
           display: 'flex', 
@@ -232,27 +232,29 @@ const PatientAppointments = () => {
               </Box>
               <Grid container spacing={3}>
                 {upcomingAppointments.map((appointment) => (
-                  <Grid item xs={12} md={6} lg={4} key={appointment.id}>
+                  <Grid item xs={12} md={6} key={appointment.id}>
                     <Card sx={{ 
                       height: '100%', 
                       border: '2px solid', 
                       borderColor: 'primary.light',
                       borderRadius: 2,
                       transition: 'transform 0.2s, box-shadow 0.2s',
+                      minWidth: '400px !important',
+                      width: '100% !important',
                       '&:hover': {
                         transform: 'translateY(-4px)',
                         boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
                       }
                     }}>
-                      <CardContent sx={{ p: 3 }}>
+                      <CardContent sx={{ p: 3, minWidth: '350px !important' }}>
                         {/* Doctor Name and Status */}
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 0.5 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, width: '100% !important', minWidth: '320px !important' }}>
+                          <Box sx={{ flex: 1, minWidth: '200px !important' }}>
+                            <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 0.5, fontSize: '1.1rem !important' }}>
                               Dr. {appointment.medecin_prenom} {appointment.medecin_nom}
                             </Typography>
                             {appointment.specialite && (
-                              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', fontSize: '0.9rem !important' }}>
                                 {appointment.specialite}
                               </Typography>
                             )}
@@ -261,28 +263,28 @@ const PatientAppointments = () => {
                             label={getStatusLabel(appointment.statut)} 
                             color={getStatusColor(appointment.statut)}
                             size="small"
-                            sx={{ fontWeight: 'bold' }}
+                            sx={{ fontWeight: 'bold', minWidth: '80px !important' }}
                           />
                         </Box>
 
                         {/* Date and Time Information */}
-                        <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                            <CalendarIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.main' }} />
-                            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                        <Box sx={{ mb: 3, p: 2, bgcolor: 'primary.light', borderRadius: 1, border: '1px solid', borderColor: 'primary.main', width: '100% !important' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, width: '100% !important' }}>
+                            <CalendarIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.dark', flexShrink: 0 }} />
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                               {formatDate(appointment.date_heure_debut)}
                             </Typography>
                           </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                            <TimeIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.main' }} />
-                            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, width: '100% !important' }}>
+                            <TimeIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.dark', flexShrink: 0 }} />
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                               {formatTime(appointment.date_heure_debut)} - {formatTime(appointment.date_heure_fin)}
                             </Typography>
                           </Box>
                           {appointment.institution_nom && (
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <PlaceIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.main' }} />
-                              <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100% !important' }}>
+                              <PlaceIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.dark', flexShrink: 0 }} />
+                              <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                                 {appointment.institution_nom}
                               </Typography>
                             </Box>
@@ -291,18 +293,24 @@ const PatientAppointments = () => {
 
                         {/* Additional Information */}
                         {(appointment.motif || appointment.notes_patient) && (
-                          <Box sx={{ mb: 3 }}>
+                          <Box sx={{ mb: 3, width: '100% !important' }}>
                             {appointment.motif && (
-                              <Box sx={{ mb: 2 }}>
-                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5 }}>
+                              <Box sx={{ mb: 2, width: '100% !important' }}>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5, fontSize: '0.9rem !important' }}>
                                   Motif:
                                 </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ 
+                                <Typography variant="body2" sx={{ 
                                   bgcolor: 'info.light', 
-                                  p: 1, 
+                                  p: 1.5, 
                                   borderRadius: 1,
                                   border: '1px solid',
-                                  borderColor: 'info.main'
+                                  borderColor: 'info.main',
+                                  color: 'text.primary',
+                                  fontWeight: 'medium',
+                                  width: '100% !important',
+                                  fontSize: '0.85rem !important',
+                                  wordWrap: 'break-word',
+                                  overflowWrap: 'break-word'
                                 }}>
                                   {appointment.motif}
                                 </Typography>
@@ -310,16 +318,22 @@ const PatientAppointments = () => {
                             )}
 
                             {appointment.notes_patient && (
-                              <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5 }}>
+                              <Box sx={{ width: '100% !important' }}>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5, fontSize: '0.9rem !important' }}>
                                   Notes:
                                 </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ 
+                                <Typography variant="body2" sx={{ 
                                   bgcolor: 'warning.light', 
-                                  p: 1, 
+                                  p: 1.5, 
                                   borderRadius: 1,
                                   border: '1px solid',
-                                  borderColor: 'warning.main'
+                                  borderColor: 'warning.main',
+                                  color: 'text.primary',
+                                  fontWeight: 'medium',
+                                  width: '100% !important',
+                                  fontSize: '0.85rem !important',
+                                  wordWrap: 'break-word',
+                                  overflowWrap: 'break-word'
                                 }}>
                                   {appointment.notes_patient}
                                 </Typography>
@@ -367,14 +381,14 @@ const PatientAppointments = () => {
                 mt: 5, 
                 mb: 3,
                 p: 2,
-                bgcolor: 'grey.100',
+                bgcolor: 'grey.200',
                 borderRadius: 2,
                 border: '1px solid',
-                borderColor: 'grey.400'
+                borderColor: 'grey.500'
               }}>
-                <CalendarIcon sx={{ color: 'text.secondary', fontSize: 28 }} />
+                <CalendarIcon sx={{ color: 'text.primary', fontSize: 28 }} />
                 <Typography variant="h5" component="h2" sx={{ 
-                  color: 'text.secondary', 
+                  color: 'text.primary', 
                   fontWeight: 'bold',
                   flex: 1
                 }}>
@@ -388,23 +402,25 @@ const PatientAppointments = () => {
               </Box>
               <Grid container spacing={3}>
                 {pastAppointments.map((appointment) => (
-                  <Grid item xs={12} md={6} lg={4} key={appointment.id}>
+                  <Grid item xs={12} md={6} key={appointment.id}>
                     <Card sx={{ 
                       height: '100%', 
                       opacity: 0.85,
                       borderRadius: 2,
                       border: '1px solid',
-                      borderColor: 'grey.300'
+                      borderColor: 'grey.300',
+                      minWidth: '400px !important',
+                      width: '100% !important'
                     }}>
-                      <CardContent sx={{ p: 3 }}>
+                      <CardContent sx={{ p: 3, minWidth: '350px !important' }}>
                         {/* Doctor Name and Status */}
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', color: 'text.secondary', mb: 0.5 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, width: '100% !important', minWidth: '320px !important' }}>
+                          <Box sx={{ flex: 1, minWidth: '200px !important' }}>
+                            <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5, fontSize: '1.1rem !important' }}>
                               Dr. {appointment.medecin_prenom} {appointment.medecin_nom}
                             </Typography>
                             {appointment.specialite && (
-                              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                              <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.primary', fontWeight: 'medium', fontSize: '0.9rem !important' }}>
                                 {appointment.specialite}
                               </Typography>
                             )}
@@ -413,28 +429,28 @@ const PatientAppointments = () => {
                             label={getStatusLabel(appointment.statut)} 
                             color={getStatusColor(appointment.statut)}
                             size="small"
-                            sx={{ fontWeight: 'bold' }}
+                            sx={{ fontWeight: 'bold', minWidth: '80px !important' }}
                           />
                         </Box>
 
                         {/* Date and Time Information */}
-                        <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                            <CalendarIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary' }} />
-                            <Typography variant="body1" color="text.secondary">
+                        <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.200', borderRadius: 1, border: '1px solid', borderColor: 'grey.400', width: '100% !important' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, width: '100% !important' }}>
+                            <CalendarIcon fontSize="small" sx={{ mr: 1.5, color: 'text.primary', flexShrink: 0 }} />
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                               {formatDate(appointment.date_heure_debut)}
                             </Typography>
                           </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                            <TimeIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary' }} />
-                            <Typography variant="body1" color="text.secondary">
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, width: '100% !important' }}>
+                            <TimeIcon fontSize="small" sx={{ mr: 1.5, color: 'text.primary', flexShrink: 0 }} />
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                               {formatTime(appointment.date_heure_debut)} - {formatTime(appointment.date_heure_fin)}
                             </Typography>
                           </Box>
                           {appointment.institution_nom && (
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <PlaceIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary' }} />
-                              <Typography variant="body1" color="text.secondary">
+                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100% !important' }}>
+                              <PlaceIcon fontSize="small" sx={{ mr: 1.5, color: 'text.primary', flexShrink: 0 }} />
+                              <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', flex: 1, fontSize: '0.95rem !important' }}>
                                 {appointment.institution_nom}
                               </Typography>
                             </Box>
@@ -443,16 +459,24 @@ const PatientAppointments = () => {
 
                         {/* Additional Information */}
                         {(appointment.motif || appointment.notes_patient) && (
-                          <Box sx={{ mb: 2 }}>
+                          <Box sx={{ mb: 2, width: '100% !important' }}>
                             {appointment.motif && (
-                              <Box sx={{ mb: 2 }}>
-                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.secondary', mb: 0.5 }}>
+                              <Box sx={{ mb: 2, width: '100% !important' }}>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5, fontSize: '0.9rem !important' }}>
                                   Motif:
                                 </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ 
-                                  bgcolor: 'grey.200', 
-                                  p: 1, 
-                                  borderRadius: 1
+                                <Typography variant="body2" sx={{ 
+                                  bgcolor: 'grey.300', 
+                                  p: 1.5, 
+                                  borderRadius: 1,
+                                  color: 'text.primary',
+                                  fontWeight: 'medium',
+                                  border: '1px solid',
+                                  borderColor: 'grey.400',
+                                  width: '100% !important',
+                                  fontSize: '0.85rem !important',
+                                  wordWrap: 'break-word',
+                                  overflowWrap: 'break-word'
                                 }}>
                                   {appointment.motif}
                                 </Typography>
@@ -460,14 +484,22 @@ const PatientAppointments = () => {
                             )}
 
                             {appointment.notes_patient && (
-                              <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.secondary', mb: 0.5 }}>
+                              <Box sx={{ width: '100% !important' }}>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5, fontSize: '0.9rem !important' }}>
                                   Notes:
                                 </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ 
-                                  bgcolor: 'grey.200', 
-                                  p: 1, 
-                                  borderRadius: 1
+                                <Typography variant="body2" sx={{ 
+                                  bgcolor: 'grey.300', 
+                                  p: 1.5, 
+                                  borderRadius: 1,
+                                  color: 'text.primary',
+                                  fontWeight: 'medium',
+                                  border: '1px solid',
+                                  borderColor: 'grey.400',
+                                  width: '100% !important',
+                                  fontSize: '0.85rem !important',
+                                  wordWrap: 'break-word',
+                                  overflowWrap: 'break-word'
                                 }}>
                                   {appointment.notes_patient}
                                 </Typography>
