@@ -120,24 +120,7 @@ const PreferencePatientsDirectsToggle = () => {
       </Typography>
 
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={preference}
-              onChange={handleToggle}
-              disabled={updating}
-              color="success"
-            />
-          }
-          label={
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body1">
-                {preference ? 'J\'accepte les patients directs' : 'Je n\'accepte pas les patients directs'}
-              </Typography>
-              {updating && <CircularProgress size={16} />}
-            </Box>
-          }
-        />
+                <FormControlLabel          control={            <Switch              checked={preference}              onChange={handleToggle}              disabled={updating}              color="success"              size="small"            />          }          label={            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>              <Typography variant="body2">                {preference ? 'Accepter les patients sans rendez-vous' : 'Ne pas accepter les patients sans rendez-vous'}              </Typography>              {updating && <CircularProgress size={16} />}            </Box>          }        />
 
         <Chip
           label={preference ? 'Accepte patients directs' : 'Pas de patients directs'}

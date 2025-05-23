@@ -39,8 +39,7 @@ const MedecinDashboard = () => {
     const [openAvailability, setOpenAvailability] = useState(false);
     const [openAbsence, setOpenAbsence] = useState(false);
     const [openPatient, setOpenPatient] = useState(false);
-    const [isEditingFee, setIsEditingFee] = useState(false);
-    const [consultationFee, setConsultationFee] = useState("");
+    
 
     // Form states
     const [availabilityForm, setAvailabilityForm] = useState({
@@ -184,27 +183,7 @@ const MedecinDashboard = () => {
         }
     };
 
-    const handleUpdateConsultationFee = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            await axios.put(
-                "http://localhost:5000/api/medecin/profile/fee",
-                { tarif_consultation: parseFloat(consultationFee) },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            updateMedecin({
-                ...data.medecin,
-                tarif_consultation: parseFloat(consultationFee),
-            });
-
-            setIsEditingFee(false);
-            // Success message will be handled by the hook
-        } catch (error) {
-            console.error("Erreur lors de la mise à jour du tarif:", error);
-            // Error message will be handled by the hook
-        }
-    };
+    
 
     if (loading) {
         return (
@@ -266,75 +245,7 @@ const MedecinDashboard = () => {
                     | Institution: {data.medecin.institution_nom || "Aucune"}
                 </Typography>
 
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        mt: 1,
-                    }}>
-                    <Typography>
-                        <strong>Tarif de consultation:</strong>
-                    </Typography>
-                    {isEditingFee ? (
-                        <>
-                            <TextField
-                                size="small"
-                                type="number"
-                                value={consultationFee}
-                                onChange={(e) =>
-                                    setConsultationFee(e.target.value)
-                                }
-                                InputProps={{
-                                    endAdornment: (
-                                        <Typography component="span">
-                                            DH
-                                        </Typography>
-                                    ),
-                                    inputProps: { min: 0, step: "0.01" },
-                                }}
-                                sx={{ width: 150 }}
-                            />
-                            <Button
-                                size="small"
-                                variant="contained"
-                                onClick={handleUpdateConsultationFee}>
-                                Enregistrer
-                            </Button>
-                            <Button
-                                size="small"
-                                onClick={() => {
-                                    setIsEditingFee(false);
-                                    setConsultationFee(
-                                        data.medecin.tarif_consultation?.toString() ||
-                                            ""
-                                    );
-                                }}>
-                                Annuler
-                            </Button>
-                        </>
-                    ) : (
-                        <>
-                            <Typography>
-                                {data.medecin.tarif_consultation
-                                    ? `${data.medecin.tarif_consultation} DH`
-                                    : "Non défini"}
-                            </Typography>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() => {
-                                    setConsultationFee(
-                                        data.medecin.tarif_consultation?.toString() ||
-                                            ""
-                                    );
-                                    setIsEditingFee(true);
-                                }}>
-                                Modifier
-                            </Button>
-                        </>
-                    )}
-                </Box>
+                
             </Box>
 
             {/* Préférence Patients Directs Section */}

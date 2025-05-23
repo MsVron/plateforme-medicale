@@ -82,10 +82,7 @@ const PatientSearch = () => {
       if (nom.trim()) params.nom = nom.trim();
       if (cne.trim()) params.cne = cne.trim();
       
-      const response = await axios.get(`/api/medecin/patients/search`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params
-      });
+            const response = await axios.get(`http://localhost:5000/api/medecin/patients/search`, {        headers: { Authorization: `Bearer ${token}` },        params      });
       
       setPatients(response.data.patients);
       setSearched(true);

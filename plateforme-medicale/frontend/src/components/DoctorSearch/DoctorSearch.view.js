@@ -47,6 +47,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import StarIcon from '@mui/icons-material/Star';
 import SimpleMap from './SimpleMap';
+import FavoriteButton from './FavoriteButton';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { formatDateTime, formatTime, dateTimePickerProps } from '../../utils/dateUtils';
@@ -375,7 +376,7 @@ const DoctorSearchView = ({
                               {doctor.tarif_consultation && (
                                 <PriceTag 
                                   className="price-tag"
-                                  icon={<EuroIcon sx={{ fontSize: 16 }} />} 
+                                  icon={<span style={{ fontSize: 16, fontWeight: 'bold' }}>DH</span>} 
                                   label={`${doctor.tarif_consultation} DH`}
                                 />
                               )}
@@ -428,20 +429,32 @@ const DoctorSearchView = ({
                                   </Typography>
                                 </Box>
                               )}
+                              
+                              {doctor.accepte_patients_walk_in && (
+                                <Chip 
+                                  label="Accepte patients directs" 
+                                  size="small" 
+                                  color="success" 
+                                  variant="outlined"
+                                />
+                              )}
                             </Box>
                           </Box>
                           
                           <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', ml: 2 }}>
-                            <Button 
-                              variant="outlined" 
-                              color="primary" 
-                              startIcon={<CalendarMonthIcon />}
-                              className="action-button"
-                              sx={{ mb: 1, whiteSpace: 'nowrap' }}
-                              onClick={(e) => handleBookAppointment(doctor, e)}
-                            >
-                              Prendre RDV
-                            </Button>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                              <FavoriteButton doctorId={doctor.id} size="small" />
+                              <Button 
+                                variant="outlined" 
+                                color="primary" 
+                                startIcon={<CalendarMonthIcon />}
+                                className="action-button"
+                                sx={{ whiteSpace: 'nowrap' }}
+                                onClick={(e) => handleBookAppointment(doctor, e)}
+                              >
+                                Prendre RDV
+                              </Button>
+                            </Box>
                             
                             <Button 
                               variant="text" 
@@ -509,9 +522,25 @@ const DoctorSearchView = ({
                   </Box>
                   {selectedDoctor.tarif_consultation && (
                     <Box sx={{ display: 'flex', mb: 1 }}>
-                      <EuroIcon sx={{ mr: 1, color: 'primary.main' }} />
+                      <span style={{ marginRight: 8, color: '#1976d2', fontWeight: 'bold' }}>DH</span>
                       <Typography>
                         <strong>Tarif:</strong> {selectedDoctor.tarif_consultation} DH
+                      </Typography>
+                    </Box>
+                  )}
+                  {selectedDoctor.accepte_patients_walk_in && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <PersonIcon sx={{ mr: 1, color: 'success.main' }} />
+                      <Typography>
+                        <strong>Accepte les patients directs</strong>
+                      </Typography>
+                    </Box>
+                  )}
+                  {selectedDoctor.temps_consultation_moyen && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <AccessTimeIcon sx={{ mr: 1, color: 'primary.main' }} />
+                      <Typography>
+                        <strong>Durée consultation:</strong> {selectedDoctor.temps_consultation_moyen} min
                       </Typography>
                     </Box>
                   )}

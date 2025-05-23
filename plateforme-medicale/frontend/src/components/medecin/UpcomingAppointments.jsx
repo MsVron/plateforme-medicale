@@ -1,28 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import {
-  Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, 
-  TableHead, TableRow, Button, Chip, CircularProgress, Pagination,
-  Alert, IconButton, Tooltip
-} from '@mui/material';
-import {
-  AccessTime as TimeIcon,
-  Person as PersonIcon,
-  Place as PlaceIcon,
-  Today as TodayIcon,
-  MedicalServices as MedicalIcon,
-  Assignment as AssignmentIcon,
-  Edit as EditIcon
-} from '@mui/icons-material';
+import {  Box, Paper, Typography, Table, TableBody, TableCell, TableContainer,   TableHead, TableRow, Button, Chip, CircularProgress, Pagination,  Alert, IconButton, Tooltip, TextField, InputAdornment} from '@mui/material';
+import {  AccessTime as TimeIcon,  Person as PersonIcon,  Place as PlaceIcon,  Today as TodayIcon,  MedicalServices as MedicalIcon,  Assignment as AssignmentIcon,  Edit as EditIcon,  Search as SearchIcon} from '@mui/icons-material';
 
-const UpcomingAppointments = () => {
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const rowsPerPage = 10;
+const UpcomingAppointments = () => {  const [appointments, setAppointments] = useState([]);  const [filteredAppointments, setFilteredAppointments] = useState([]);  const [loading, setLoading] = useState(true);  const [error, setError] = useState(null);  const [page, setPage] = useState(1);  const [totalPages, setTotalPages] = useState(1);  const [searchTerm, setSearchTerm] = useState('');  const rowsPerPage = 10;
 
   // Status colors
   const statusColors = {
@@ -42,16 +24,9 @@ const UpcomingAppointments = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/medecin/appointments`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: {
-          limit: rowsPerPage,
-          offset: (page - 1) * rowsPerPage
-        }
-      });
+            const response = await axios.get(`http://localhost:5000/api/medecin/appointments`, {        headers: { Authorization: `Bearer ${token}` },        params: {          limit: rowsPerPage,          offset: (page - 1) * rowsPerPage        }      });
       
-      setAppointments(response.data.appointments);
-      setTotalPages(Math.ceil(response.data.total / rowsPerPage));
+            setAppointments(response.data.appointments);      setFilteredAppointments(response.data.appointments);      setTotalPages(Math.ceil(response.data.total / rowsPerPage));
     } catch (err) {
       console.error('Error fetching appointments:', err);
       setError('Impossible de récupérer les rendez-vous. Veuillez réessayer plus tard.');
@@ -60,9 +35,7 @@ const UpcomingAppointments = () => {
     }
   };
 
-  const handlePageChange = (event, value) => {
-    setPage(value);
-  };
+    const handlePageChange = (event, value) => {    setPage(value);  };  const handleSearch = (event) => {    const term = event.target.value.toLowerCase();    setSearchTerm(term);        if (!term) {      setFilteredAppointments(appointments);    } else {      const filtered = appointments.filter(appointment =>         appointment.patient_prenom.toLowerCase().includes(term) ||        appointment.patient_nom.toLowerCase().includes(term) ||        (appointment.patient_prenom + ' ' + appointment.patient_nom).toLowerCase().includes(term)      );      setFilteredAppointments(filtered);    }  };
 
   if (loading) {
     return (
