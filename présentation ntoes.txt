@@ -5,3 +5,22 @@ modélisation
 sprint
 qu'est ce qui est déjà réalisé? 
 qu'est ce qui est en cours?
+
+
+Plan
+Introduction + solution 
+Le contexte du projet
+Fonctionnalités principales
+Technologies utilisees (hadi goltli mandirohach)
+
+
+rapport
+modele standard
+intro générale : problématique générale, détaillée, les solutions proposées pour comparer avec les autres solutions existants (papers for our case, fichiers excel, systèmes internes)
+3/4 chapitres
+1 chapitre: présentation du projet 
+2 : étude fonctionnelle (diagrammes)
+3 étude technique du projet 
+4: réalisation 
+3 and 4 can be done in 1, depends
+Conclusion générale

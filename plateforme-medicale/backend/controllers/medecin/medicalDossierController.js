@@ -154,15 +154,21 @@ exports.getPatientDossier = async (req, res) => {
     const [analyses] = await db.execute(`
       SELECT 
         ra.id, ra.date_prescription, ra.date_realisation, ra.laboratoire,
-        ra.resultats, ra.interpretation, ra.est_normal, ra.document_url,
-        ta.nom as type_analyse, ta.valeurs_normales,
-        mp.prenom as prescripteur_prenom, mp.nom as prescripteur_nom
+        ra.valeur_numerique, ra.valeur_texte, ra.unite, ra.valeur_normale_min,
+        ra.valeur_normale_max, ra.interpretation, ra.est_normal, ra.est_critique,
+        ra.document_url, ra.notes_techniques,
+        ta.nom as type_analyse, ta.valeurs_normales, ta.description as type_description,
+        ca.nom as categorie_nom, ca.description as categorie_description,
+        mp.prenom as prescripteur_prenom, mp.nom as prescripteur_nom,
+        mi.prenom as interpreteur_prenom, mi.nom as interpreteur_nom
       FROM resultats_analyses ra
       JOIN types_analyses ta ON ra.type_analyse_id = ta.id
+      JOIN categories_analyses ca ON ta.categorie_id = ca.id
       JOIN medecins mp ON ra.medecin_prescripteur_id = mp.id
+      LEFT JOIN medecins mi ON ra.medecin_interpreteur_id = mi.id
       WHERE ra.patient_id = ?
       ORDER BY ra.date_realisation DESC, ra.date_prescription DESC
-      LIMIT 10
+      LIMIT 20
     `, [patientId]);
     console.log('DEBUG: Analyses found:', analyses.length);
 
@@ -681,6 +687,146 @@ exports.getAllergies = async (req, res) => {
     console.error('Erreur lors de la récupération des allergies:', error);
     return res.status(500).json({ 
       message: 'Erreur serveur lors de la récupération des allergies', 
+      error: error.message 
+    });
+  }
+};
+
+// IMPROVED: Update patient profile (all fields modifiable by doctor)
+exports.updatePatientProfile = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { patientId } = req.params;
+    const {
+      prenom,
+      nom,
+      date_naissance,
+      sexe,
+      CNE,
+      adresse,
+      ville,
+      code_postal,
+      pays,
+      telephone,
+      email,
+      contact_urgence_nom,
+      contact_urgence_telephone,
+      contact_urgence_relation,
+      groupe_sanguin,
+      taille_cm,
+      poids_kg,
+      est_fumeur,
+      consommation_alcool,
+      activite_physique,
+      profession,
+      allergies_notes
+    } = req.body;
+
+    // Validate patient exists
+    const [patients] = await db.execute(
+      'SELECT id, prenom, nom FROM patients WHERE id = ?',
+      [patientId]
+    );
+
+    if (patients.length === 0) {
+      return res.status(404).json({ message: 'Patient non trouvé' });
+    }
+
+    // Check if doctor has permission to modify patient data
+    const [appointments] = await db.execute(
+      'SELECT id FROM rendez_vous WHERE patient_id = ? AND medecin_id = ? LIMIT 1',
+      [patientId, medecinId]
+    );
+    
+    if (appointments.length === 0) {
+      return res.status(403).json({ 
+        message: 'Vous n\'êtes pas autorisé à modifier les informations de ce patient' 
+      });
+    }
+
+    // Validate email uniqueness if provided
+    if (email) {
+      const [existingEmail] = await db.execute(
+        'SELECT id FROM patients WHERE email = ? AND id != ?',
+        [email, patientId]
+      );
+      
+      if (existingEmail.length > 0) {
+        return res.status(400).json({ 
+          message: 'Cette adresse email est déjà utilisée par un autre patient' 
+        });
+      }
+    }
+
+    // Validate CNE uniqueness if provided
+    if (CNE) {
+      const [existingCNE] = await db.execute(
+        'SELECT id FROM patients WHERE CNE = ? AND id != ?',
+        [CNE, patientId]
+      );
+      
+      if (existingCNE.length > 0) {
+        return res.status(400).json({ 
+          message: 'Ce CNE est déjà utilisé par un autre patient' 
+        });
+      }
+    }
+
+    // Update patient profile
+    await db.execute(`
+      UPDATE patients SET
+        prenom = COALESCE(?, prenom),
+        nom = COALESCE(?, nom),
+        date_naissance = COALESCE(?, date_naissance),
+        sexe = COALESCE(?, sexe),
+        CNE = COALESCE(?, CNE),
+        adresse = COALESCE(?, adresse),
+        ville = COALESCE(?, ville),
+        code_postal = COALESCE(?, code_postal),
+        pays = COALESCE(?, pays),
+        telephone = COALESCE(?, telephone),
+        email = COALESCE(?, email),
+        contact_urgence_nom = COALESCE(?, contact_urgence_nom),
+        contact_urgence_telephone = COALESCE(?, contact_urgence_telephone),
+        contact_urgence_relation = COALESCE(?, contact_urgence_relation),
+        groupe_sanguin = COALESCE(?, groupe_sanguin),
+        taille_cm = COALESCE(?, taille_cm),
+        poids_kg = COALESCE(?, poids_kg),
+        est_fumeur = COALESCE(?, est_fumeur),
+        consommation_alcool = COALESCE(?, consommation_alcool),
+        activite_physique = COALESCE(?, activite_physique),
+        profession = COALESCE(?, profession),
+        allergies_notes = COALESCE(?, allergies_notes)
+      WHERE id = ?
+    `, [
+      prenom, nom, date_naissance, sexe, CNE, adresse, ville, code_postal,
+      pays, telephone, email, contact_urgence_nom, contact_urgence_telephone,
+      contact_urgence_relation, groupe_sanguin, taille_cm, poids_kg,
+      est_fumeur, consommation_alcool, activite_physique, profession,
+      allergies_notes, patientId
+    ]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'UPDATE_PATIENT_PROFILE', 
+      'patients', 
+      patientId, 
+      `Modification du profil du patient ${patients[0].prenom} ${patients[0].nom}`
+    ]);
+
+    return res.status(200).json({ 
+      message: 'Profil patient mis à jour avec succès' 
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du profil patient:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur lors de la mise à jour du profil', 
       error: error.message 
     });
   }

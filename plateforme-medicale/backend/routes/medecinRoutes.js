@@ -74,6 +74,17 @@ router.post('/medecin/patients/:patientId/treatments', verifyToken, medicalDossi
 router.put('/medecin/patients/:patientId/treatments/:treatmentId', verifyToken, medicalDossierController.updateTreatment);
 router.delete('/medecin/patients/:patientId/treatments/:treatmentId', verifyToken, medicalDossierController.deleteTreatment);
 
+// IMPROVED: Analysis management routes with categories
+router.get('/medecin/analysis-categories', verifyToken, medicalRecordController.getAnalysisCategories);
+router.get('/medecin/analysis-types', verifyToken, medicalRecordController.getAnalysisTypes);
+router.get('/medecin/analysis-types/:categoryId', verifyToken, medicalRecordController.getAnalysisTypes);
+router.post('/medecin/patients/:patientId/analyses', verifyToken, medicalRecordController.addAnalysisResult);
+router.put('/medecin/patients/:patientId/analyses/:analysisId', verifyToken, medicalRecordController.updateAnalysisResult);
+router.delete('/medecin/patients/:patientId/analyses/:analysisId', verifyToken, medicalRecordController.deleteAnalysisResult);
+
+// Patient profile update routes (all fields modifiable by doctor)
+router.put('/medecin/patients/:patientId/profile', verifyToken, medicalDossierController.updatePatientProfile);
+
 // Medical history management
 router.post('/medecin/patients/:patientId/medical-history', verifyToken, medicalDossierController.addMedicalHistory);
 

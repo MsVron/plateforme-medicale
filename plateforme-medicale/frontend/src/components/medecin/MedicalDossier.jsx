@@ -38,6 +38,7 @@ import {
   Save as SaveIcon,
   Cancel as CancelIcon
 } from '@mui/icons-material';
+import AnalysisSection from './AnalysisSection';
 
 const MedicalDossier = () => {
   const { patientId } = useParams();
@@ -873,84 +874,14 @@ const MedicalDossier = () => {
           </AccordionDetails>
         </Accordion>
 
-        {/* Analyses Section */}
-        <Accordion 
-          expanded={expandedSections.analyses} 
-          onChange={() => handleSectionToggle('analyses')}
-          sx={{ mb: 2 }}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <ScienceIcon sx={{ mr: 2, color: 'primary.main' }} />
-              <Typography variant="h6">Analyses et Examens</Typography>
-              <Chip 
-                label={analyses.length + imageries.length} 
-                size="small" 
-                color="info" 
-                sx={{ ml: 2 }} 
-              />
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Grid container spacing={2}>
-              {/* Analyses */}
-              {analyses.length > 0 && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Analyses biologiques
-                  </Typography>
-                  <List dense>
-                    {analyses.slice(0, 5).map((analyse) => (
-                      <ListItem key={analyse.id}>
-                        <ListItemText
-                          primary={analyse.type_analyse}
-                          secondary={
-                            <Box>
-                              <Typography variant="caption">
-                                {formatDate(analyse.date_realisation || analyse.date_prescription)}
-                              </Typography>
-                              {analyse.est_normal !== null && (
-                                <Chip 
-                                  label={analyse.est_normal ? 'Normal' : 'Anormal'} 
-                                  size="small" 
-                                  color={analyse.est_normal ? 'success' : 'warning'}
-                                  sx={{ ml: 1 }}
-                                />
-                              )}
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Grid>
-              )}
-              
-              {/* Imageries */}
-              {imageries.length > 0 && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Imagerie médicale
-                  </Typography>
-                  <List dense>
-                    {imageries.slice(0, 5).map((imagerie) => (
-                      <ListItem key={imagerie.id}>
-                        <ListItemText
-                          primary={imagerie.type_imagerie}
-                          secondary={
-                            <Typography variant="caption">
-                              {formatDate(imagerie.date_realisation || imagerie.date_prescription)}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Grid>
-              )}
-            </Grid>
-          </AccordionDetails>
-        </Accordion>
+        {/* Analyses Section - Enhanced with Categories */}
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <AnalysisSection 
+            patientId={patientId}
+            analyses={analyses}
+            onRefresh={fetchDossier}
+          />
+        </Paper>
       </Box>
 
       {/* Treatment Dialog */}

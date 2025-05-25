@@ -301,7 +301,7 @@ exports.getCurrentMedecin = async (req, res) => {
     const [medecins] = await db.execute(
       `SELECT
         m.id, m.prenom, m.nom, m.specialite_id, s.nom AS specialite_nom,
-        m.institution_id, i.nom AS institution_nom
+        m.institution_id, i.nom AS institution_nom, m.tarif_consultation
       FROM medecins m
       LEFT JOIN specialites s ON m.specialite_id = s.id
       LEFT JOIN institutions i ON m.institution_id = i.id

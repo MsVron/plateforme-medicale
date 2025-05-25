@@ -40,6 +40,7 @@ exports.getPatientMedicalRecord = async (req, res) => {
       JOIN medicaments m ON t.medicament_id = m.id
       JOIN medecins med ON t.medecin_prescripteur_id = med.id
       WHERE t.patient_id = ? AND (t.est_permanent = 1 OR t.date_fin >= CURDATE())
+      ORDER BY t.date_prescription DESC
     `, [patientId]);
 
     // Get consultations
@@ -843,6 +844,264 @@ exports.getPatientMeasurements = async (req, res) => {
     return res.status(200).json({ measurements });
   } catch (error) {
     console.error('Erreur lors de la récupération des mesures:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// IMPROVED: Get analysis categories
+exports.getAnalysisCategories = async (req, res) => {
+  try {
+    const [categories] = await db.execute(`
+      SELECT id, nom, description, ordre_affichage
+      FROM categories_analyses
+      ORDER BY ordre_affichage ASC, nom ASC
+    `);
+
+    return res.status(200).json(categories);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des catégories d\'analyses:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// IMPROVED: Get analysis types by category
+exports.getAnalysisTypes = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    
+    let query = `
+      SELECT 
+        ta.id, ta.nom, ta.description, ta.valeurs_normales, ta.unite,
+        ta.categorie_id, ta.ordre_affichage,
+        ca.nom as categorie_nom
+      FROM types_analyses ta
+      JOIN categories_analyses ca ON ta.categorie_id = ca.id
+    `;
+    
+    let params = [];
+    
+    if (categoryId) {
+      query += ' WHERE ta.categorie_id = ?';
+      params.push(categoryId);
+    }
+    
+    query += ' ORDER BY ca.ordre_affichage ASC, ta.ordre_affichage ASC, ta.nom ASC';
+    
+    const [types] = await db.execute(query, params);
+
+    return res.status(200).json(types);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des types d\'analyses:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// IMPROVED: Add analysis result
+exports.addAnalysisResult = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { patientId } = req.params;
+    const {
+      type_analyse_id,
+      date_prescription,
+      date_realisation,
+      laboratoire,
+      valeur_numerique,
+      valeur_texte,
+      unite,
+      valeur_normale_min,
+      valeur_normale_max,
+      interpretation,
+      est_normal,
+      est_critique,
+      document_url,
+      notes_techniques
+    } = req.body;
+
+    // Validate required fields
+    if (!type_analyse_id || !date_prescription) {
+      return res.status(400).json({ 
+        message: 'Type d\'analyse et date de prescription sont obligatoires' 
+      });
+    }
+
+    // Insert analysis result
+    const [result] = await db.execute(`
+      INSERT INTO resultats_analyses (
+        patient_id, type_analyse_id, medecin_prescripteur_id, date_prescription,
+        date_realisation, laboratoire, valeur_numerique, valeur_texte, unite,
+        valeur_normale_min, valeur_normale_max, interpretation, est_normal,
+        est_critique, document_url, notes_techniques
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      patientId, type_analyse_id, medecinId, date_prescription,
+      date_realisation || null, laboratoire || null, valeur_numerique || null,
+      valeur_texte || null, unite || null, valeur_normale_min || null,
+      valeur_normale_max || null, interpretation || null, est_normal || null,
+      est_critique || false, document_url || null, notes_techniques || null
+    ]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'ADD_ANALYSIS', 
+      'resultats_analyses', 
+      result.insertId, 
+      `Ajout d'un résultat d'analyse pour le patient ID ${patientId}`
+    ]);
+
+    return res.status(201).json({ 
+      message: 'Résultat d\'analyse ajouté avec succès',
+      analysisId: result.insertId
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout du résultat d\'analyse:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// IMPROVED: Update analysis result
+exports.updateAnalysisResult = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { patientId, analysisId } = req.params;
+    const {
+      date_realisation,
+      laboratoire,
+      valeur_numerique,
+      valeur_texte,
+      unite,
+      valeur_normale_min,
+      valeur_normale_max,
+      interpretation,
+      est_normal,
+      est_critique,
+      document_url,
+      notes_techniques
+    } = req.body;
+
+    // Validate analysis exists and belongs to this patient
+    const [analyses] = await db.execute(`
+      SELECT id, medecin_prescripteur_id
+      FROM resultats_analyses
+      WHERE id = ? AND patient_id = ?
+    `, [analysisId, patientId]);
+
+    if (analyses.length === 0) {
+      return res.status(404).json({ message: 'Résultat d\'analyse non trouvé' });
+    }
+
+    // Check if doctor has permission to modify
+    const analysis = analyses[0];
+    if (analysis.medecin_prescripteur_id !== medecinId) {
+      // Check if current doctor is treating this patient
+      const [appointments] = await db.execute(
+        'SELECT id FROM rendez_vous WHERE patient_id = ? AND medecin_id = ? LIMIT 1',
+        [patientId, medecinId]
+      );
+      
+      if (appointments.length === 0) {
+        return res.status(403).json({ 
+          message: 'Vous n\'êtes pas autorisé à modifier ce résultat d\'analyse' 
+        });
+      }
+    }
+
+    // Update analysis result
+    await db.execute(`
+      UPDATE resultats_analyses SET
+        date_realisation = COALESCE(?, date_realisation),
+        laboratoire = COALESCE(?, laboratoire),
+        valeur_numerique = COALESCE(?, valeur_numerique),
+        valeur_texte = COALESCE(?, valeur_texte),
+        unite = COALESCE(?, unite),
+        valeur_normale_min = COALESCE(?, valeur_normale_min),
+        valeur_normale_max = COALESCE(?, valeur_normale_max),
+        interpretation = COALESCE(?, interpretation),
+        est_normal = COALESCE(?, est_normal),
+        est_critique = COALESCE(?, est_critique),
+        document_url = COALESCE(?, document_url),
+        notes_techniques = COALESCE(?, notes_techniques),
+        medecin_interpreteur_id = ?,
+        date_interpretation = NOW()
+      WHERE id = ?
+    `, [
+      date_realisation, laboratoire, valeur_numerique, valeur_texte, unite,
+      valeur_normale_min, valeur_normale_max, interpretation, est_normal,
+      est_critique, document_url, notes_techniques, medecinId, analysisId
+    ]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'UPDATE_ANALYSIS', 
+      'resultats_analyses', 
+      analysisId, 
+      `Modification du résultat d'analyse ID ${analysisId} pour le patient ID ${patientId}`
+    ]);
+
+    return res.status(200).json({ message: 'Résultat d\'analyse mis à jour avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la modification du résultat d\'analyse:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// IMPROVED: Delete analysis result
+exports.deleteAnalysisResult = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { patientId, analysisId } = req.params;
+
+    // Validate analysis exists and belongs to this patient
+    const [analyses] = await db.execute(`
+      SELECT id, medecin_prescripteur_id
+      FROM resultats_analyses
+      WHERE id = ? AND patient_id = ?
+    `, [analysisId, patientId]);
+
+    if (analyses.length === 0) {
+      return res.status(404).json({ message: 'Résultat d\'analyse non trouvé' });
+    }
+
+    // Check if doctor has permission to delete (original prescriber only)
+    const analysis = analyses[0];
+    if (analysis.medecin_prescripteur_id !== medecinId) {
+      return res.status(403).json({ 
+        message: 'Seul le médecin prescripteur peut supprimer ce résultat d\'analyse' 
+      });
+    }
+
+    // Delete analysis result
+    await db.execute('DELETE FROM resultats_analyses WHERE id = ?', [analysisId]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'DELETE_ANALYSIS', 
+      'resultats_analyses', 
+      analysisId, 
+      `Suppression du résultat d'analyse ID ${analysisId} pour le patient ID ${patientId}`
+    ]);
+
+    return res.status(200).json({ message: 'Résultat d\'analyse supprimé avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la suppression du résultat d\'analyse:', error);
     return res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 }; 

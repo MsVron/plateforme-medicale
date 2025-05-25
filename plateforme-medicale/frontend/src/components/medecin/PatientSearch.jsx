@@ -53,7 +53,7 @@ const PatientSearch = () => {
   };
 
   const viewPatientRecord = (patientId) => {
-    navigate(`/medecin/patients/${patientId}/medical-record`);
+    navigate(`/medecin/patients/${patientId}/dossier`);
   };
 
   return (

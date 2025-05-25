@@ -103,7 +103,7 @@ const UpcomingAppointments = () => {  const [appointments, setAppointments] = us
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <PersonIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
-                    <Link to={`/medecin/patients/${appointment.patient_id}/medical-record`}>
+                    <Link to={`/medecin/patients/${appointment.patient_id}/dossier`}>
                       {appointment.patient_prenom} {appointment.patient_nom}
                     </Link>
                     <Typography variant="caption" sx={{ ml: 1 }}>
@@ -140,7 +140,7 @@ const UpcomingAppointments = () => {  const [appointments, setAppointments] = us
                     <Tooltip title="Dossier médical">
                       <IconButton 
                         component={Link} 
-                        to={`/medecin/patients/${appointment.patient_id}/medical-record`}
+                        to={`/medecin/patients/${appointment.patient_id}/dossier`}
                         size="small"
                         color="secondary"
                       >

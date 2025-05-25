@@ -143,7 +143,8 @@ const PatientMedicalRecord = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => navigate(`/medecin/patients/${patientId}/consultation/new`)}
+            disabled
+            title="Fonctionnalité en développement"
           >
             Nouvelle consultation
           </Button>
@@ -221,7 +222,8 @@ const PatientMedicalRecord = () => {
             <Button 
               variant="outlined" 
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/medecin/patients/${patientId}/consultation/new`)}
+              disabled
+              title="Fonctionnalité en développement"
             >
               Ajouter une consultation
             </Button>
@@ -237,7 +239,8 @@ const PatientMedicalRecord = () => {
                       subheader={`Dr. ${consultation.medecin_prenom} ${consultation.medecin_nom}`}
                       action={
                         <IconButton 
-                          onClick={() => navigate(`/medecin/consultations/${consultation.id}`)}
+                          disabled
+                          title="Fonctionnalité en développement"
                         >
                           <ViewIcon />
                         </IconButton>
@@ -279,7 +282,8 @@ const PatientMedicalRecord = () => {
             <Button 
               variant="outlined" 
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/medecin/patients/${patientId}/medical-history/new`)}
+              disabled
+              title="Fonctionnalité en développement"
             >
               Ajouter un antécédent
             </Button>
@@ -370,7 +374,8 @@ const PatientMedicalRecord = () => {
             <Button 
               variant="outlined" 
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/medecin/patients/${patientId}/treatment/new`)}
+              disabled
+              title="Fonctionnalité en développement"
             >
               Ajouter un traitement
             </Button>
@@ -417,7 +422,8 @@ const PatientMedicalRecord = () => {
             <Button 
               variant="outlined" 
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/medecin/patients/${patientId}/note/new`)}
+              disabled
+              title="Fonctionnalité en développement"
             >
               Ajouter une note
             </Button>
@@ -460,7 +466,8 @@ const PatientMedicalRecord = () => {
             <Button 
               variant="outlined" 
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/medecin/patients/${patientId}/analysis/new`)}
+              disabled
+              title="Fonctionnalité en développement"
             >
               Ajouter une analyse
             </Button>
@@ -472,7 +479,7 @@ const PatientMedicalRecord = () => {
                 <ListItem 
                   key={analyse.id}
                   secondaryAction={
-                    <IconButton edge="end" onClick={() => navigate(`/medecin/analyses/${analyse.id}`)}>
+                    <IconButton edge="end" disabled title="Fonctionnalité en développement">
                       <ViewIcon />
                     </IconButton>
                   }
@@ -519,7 +526,8 @@ const PatientMedicalRecord = () => {
               variant="outlined" 
               size="small"
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/medecin/patients/${patientId}/measurement/new`)}
+              disabled
+              title="Fonctionnalité en développement"
             >
               Ajouter une mesure
             </Button>
@@ -562,7 +570,8 @@ const PatientMedicalRecord = () => {
             <Button 
               variant="outlined" 
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/medecin/patients/${patientId}/imaging/new`)}
+              disabled
+              title="Fonctionnalité en développement"
             >
               Ajouter une imagerie
             </Button>
@@ -574,7 +583,7 @@ const PatientMedicalRecord = () => {
                 <ListItem 
                   key={imagerie.id}
                   secondaryAction={
-                    <IconButton edge="end" onClick={() => navigate(`/medecin/imageries/${imagerie.id}`)}>
+                    <IconButton edge="end" disabled title="Fonctionnalité en développement">
                       <ViewIcon />
                     </IconButton>
                   }
@@ -609,7 +618,8 @@ const PatientMedicalRecord = () => {
             <Button 
               variant="outlined" 
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/medecin/patients/${patientId}/document/new`)}
+              disabled
+              title="Fonctionnalité en développement"
             >
               Ajouter un document
             </Button>
@@ -663,7 +673,8 @@ const PatientMedicalRecord = () => {
             <Button 
               variant="outlined" 
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/medecin/patients/${patientId}/reminder/new`)}
+              disabled
+              title="Fonctionnalité en développement"
             >
               Ajouter un rappel
             </Button>
@@ -707,7 +718,8 @@ const PatientMedicalRecord = () => {
                           size="small" 
                           variant="outlined" 
                           sx={{ mt: 2 }}
-                          onClick={() => navigate(`/medecin/reminders/${reminder.id}/complete`)}
+                          disabled
+                          title="Fonctionnalité en développement"
                         >
                           Marquer comme complété
                         </Button>
