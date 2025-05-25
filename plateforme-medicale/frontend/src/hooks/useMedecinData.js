@@ -23,27 +23,27 @@ const useMedecinData = () => {
                 absencesResponse,
                 patientsResponse,
             ] = await Promise.all([
-                axios.get("http://localhost:5000/api/medecin/dashboard", {
+                axios.get("/medecin/dashboard", {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
                 }),
-                axios.get("http://localhost:5000/api/medecin/institutions", {
+                axios.get("/medecin/institutions", {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
                 }),
-                axios.get("http://localhost:5000/api/medecin/disponibilites", {
+                axios.get("/medecin/disponibilites", {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
                 }),
-                axios.get("http://localhost:5000/api/medecin/absences", {
+                axios.get("/medecin/absences", {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
                 }),
-                axios.get("http://localhost:5000/api/medecin/patients", {
+                axios.get("/medecin/patients", {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
@@ -90,7 +90,7 @@ const useMedecinData = () => {
             const token = localStorage.getItem("token");
             if (availabilityForm.id) {
                 await axios.put(
-                    `http://localhost:5000/api/medecin/disponibilites/${availabilityForm.id}`,
+                    `/medecin/disponibilites/${availabilityForm.id}`,
                     {
                         ...availabilityForm,
                         jour_semaine: availabilityForm.jours_semaine[0],
@@ -100,7 +100,7 @@ const useMedecinData = () => {
                 setSuccess("Disponibilité mise à jour avec succès");
             } else {
                 await axios.post(
-                    "http://localhost:5000/api/medecin/disponibilites",
+                    "/medecin/disponibilites",
                     availabilityForm,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
@@ -108,7 +108,7 @@ const useMedecinData = () => {
             }
 
             const response = await axios.get(
-                "http://localhost:5000/api/medecin/disponibilites",
+                "/medecin/disponibilites",
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
@@ -128,7 +128,7 @@ const useMedecinData = () => {
     const deleteAvailability = async (id) => {
         try {
             await axios.delete(
-                `http://localhost:5000/api/medecin/disponibilites/${id}`,
+                `/medecin/disponibilites/${id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -137,7 +137,7 @@ const useMedecinData = () => {
             );
             setSuccess("Disponibilité supprimée avec succès");
             const response = await axios.get(
-                "http://localhost:5000/api/medecin/disponibilites",
+                "/medecin/disponibilites",
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -163,7 +163,7 @@ const useMedecinData = () => {
 
             const token = localStorage.getItem("token");
             await axios.post(
-                "http://localhost:5000/api/medecin/absences",
+                "/medecin/absences",
                 absenceForm,
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -172,7 +172,7 @@ const useMedecinData = () => {
             setSuccess("Absence ajoutée avec succès");
 
             const response = await axios.get(
-                "http://localhost:5000/api/medecin/absences",
+                "/medecin/absences",
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
@@ -192,7 +192,7 @@ const useMedecinData = () => {
     const deleteAbsence = async (id) => {
         try {
             await axios.delete(
-                `http://localhost:5000/api/medecin/absences/${id}`,
+                `/medecin/absences/${id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -201,7 +201,7 @@ const useMedecinData = () => {
             );
             setSuccess("Absence supprimée avec succès");
             const response = await axios.get(
-                "http://localhost:5000/api/medecin/absences",
+                "/medecin/absences",
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -241,7 +241,7 @@ const useMedecinData = () => {
 
             const token = localStorage.getItem("token");
             await axios.post(
-                "http://localhost:5000/api/medecin/patients",
+                "/medecin/patients",
                 formattedPatient,
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -250,7 +250,7 @@ const useMedecinData = () => {
             setSuccess("Patient ajouté avec succès");
 
             const response = await axios.get(
-                "http://localhost:5000/api/medecin/patients",
+                "/medecin/patients",
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }

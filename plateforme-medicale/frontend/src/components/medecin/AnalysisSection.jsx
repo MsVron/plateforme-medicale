@@ -122,6 +122,7 @@ const AnalysisSection = ({ patientId, analyses = [], onRefresh }) => {
   };
 
   const handleEditAnalysis = (analysis) => {
+    // First set the form data with the analysis information
     setAnalysisForm({
       type_analyse_id: analysis.type_analyse_id || '',
       categorie_id: analysis.categorie_id || '',
@@ -139,6 +140,12 @@ const AnalysisSection = ({ patientId, analyses = [], onRefresh }) => {
       document_url: analysis.document_url || '',
       notes_techniques: analysis.notes_techniques || ''
     });
+    
+    // If we have a category ID, fetch the analysis types for that category
+    if (analysis.categorie_id) {
+      fetchAnalysisTypes(analysis.categorie_id);
+    }
+    
     setAnalysisDialog({ open: true, mode: 'edit', data: analysis });
   };
 

@@ -19,7 +19,7 @@ const ProfileTab = ({ medecin, onUpdateMedecin, onSuccess, onError }) => {
         try {
             const token = localStorage.getItem("token");
             await axios.put(
-                "http://localhost:5000/api/medecin/profile/fee",
+                "/medecin/profile/fee",
                 { tarif_consultation: parseFloat(consultationFee) },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

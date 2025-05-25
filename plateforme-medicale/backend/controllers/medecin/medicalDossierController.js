@@ -153,12 +153,12 @@ exports.getPatientDossier = async (req, res) => {
     console.log('DEBUG: Fetching analyses...');
     const [analyses] = await db.execute(`
       SELECT 
-        ra.id, ra.date_prescription, ra.date_realisation, ra.laboratoire,
+        ra.id, ra.type_analyse_id, ra.date_prescription, ra.date_realisation, ra.laboratoire,
         ra.valeur_numerique, ra.valeur_texte, ra.unite, ra.valeur_normale_min,
         ra.valeur_normale_max, ra.interpretation, ra.est_normal, ra.est_critique,
         ra.document_url, ra.notes_techniques,
         ta.nom as type_analyse, ta.valeurs_normales, ta.description as type_description,
-        ca.nom as categorie_nom, ca.description as categorie_description,
+        ca.id as categorie_id, ca.nom as categorie_nom, ca.description as categorie_description,
         mp.prenom as prescripteur_prenom, mp.nom as prescripteur_nom,
         mi.prenom as interpreteur_prenom, mi.nom as interpreteur_nom
       FROM resultats_analyses ra
@@ -588,7 +588,7 @@ exports.addPatientNote = async (req, res) => {
   try {
     const medecinId = req.user.id_specifique_role;
     const { patientId } = req.params;
-    const { contenu, est_important, categorie } = req.body;
+    const { contenu, est_important, categorie, date_note } = req.body;
 
     // Validate required fields
     if (!patientId || !contenu) {
@@ -603,14 +603,17 @@ exports.addPatientNote = async (req, res) => {
       return res.status(404).json({ message: 'Patient non trouvé' });
     }
 
+    // Use provided date or current timestamp
+    const noteDate = date_note || new Date().toISOString().split('T')[0];
+
     // Insert note
     const [result] = await db.execute(`
       INSERT INTO notes_patient (
-        patient_id, medecin_id, contenu, est_important, categorie
-      ) VALUES (?, ?, ?, ?, ?)
+        patient_id, medecin_id, contenu, est_important, categorie, date_creation
+      ) VALUES (?, ?, ?, ?, ?, ?)
     `, [
       patientId, medecinId, contenu, 
-      est_important || false, categorie || 'general'
+      est_important || false, categorie || 'general', noteDate
     ]);
 
     // Log action
@@ -830,4 +833,248 @@ exports.updatePatientProfile = async (req, res) => {
       error: error.message 
     });
   }
-}; 
+};
+
+// Weight/Height Measurements Management
+exports.getPatientMeasurements = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const medecinId = req.user.id_specifique_role;
+
+    // Verify patient access
+    const [patientCheck] = await db.execute(
+      'SELECT id FROM patients WHERE id = ?',
+      [patientId]
+    );
+
+    if (patientCheck.length === 0) {
+      return res.status(404).json({ message: 'Patient non trouvé' });
+    }
+
+    // Get measurements from mesures_patient table
+    const [measurements] = await db.execute(`
+      SELECT 
+        mp.id,
+        mp.date_mesure,
+        mp.notes,
+        MAX(CASE WHEN mp.type_mesure = 'poids' THEN mp.valeur END) as poids,
+        MAX(CASE WHEN mp.type_mesure = 'taille' THEN mp.valeur END) as taille
+      FROM mesures_patient mp
+      WHERE mp.patient_id = ? AND mp.type_mesure IN ('poids', 'taille')
+      GROUP BY DATE(mp.date_mesure), mp.notes
+      ORDER BY mp.date_mesure DESC
+    `, [patientId]);
+
+    // Also get measurements from constantes_vitales table
+    const [vitalSigns] = await db.execute(`
+      SELECT 
+        cv.id,
+        cv.date_mesure,
+        cv.poids,
+        cv.taille,
+        'Consultation' as notes
+      FROM constantes_vitales cv
+      WHERE cv.patient_id = ? AND (cv.poids IS NOT NULL OR cv.taille IS NOT NULL)
+      ORDER BY cv.date_mesure DESC
+    `, [patientId]);
+
+    // Combine and format measurements
+    const allMeasurements = [];
+    
+    // Add measurements from mesures_patient
+    measurements.forEach(m => {
+      allMeasurements.push({
+        id: `mp_${m.id}`,
+        date_mesure: m.date_mesure,
+        poids: m.poids,
+        taille: m.taille,
+        notes: m.notes || '',
+        source: 'measurements'
+      });
+    });
+
+    // Add measurements from constantes_vitales
+    vitalSigns.forEach(v => {
+      allMeasurements.push({
+        id: `cv_${v.id}`,
+        date_mesure: v.date_mesure,
+        poids: v.poids,
+        taille: v.taille,
+        notes: v.notes || '',
+        source: 'vital_signs'
+      });
+    });
+
+    // Sort by date (most recent first)
+    allMeasurements.sort((a, b) => new Date(b.date_mesure) - new Date(a.date_mesure));
+
+    return res.status(200).json({ measurements: allMeasurements });
+  } catch (error) {
+    console.error('Error fetching patient measurements:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+exports.addPatientMeasurement = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const { poids, taille, date_mesure, notes } = req.body;
+    const medecinId = req.user.id_specifique_role;
+
+    // Verify patient access
+    const [patientCheck] = await db.execute(
+      'SELECT id FROM patients WHERE id = ?',
+      [patientId]
+    );
+
+    if (patientCheck.length === 0) {
+      return res.status(404).json({ message: 'Patient non trouvé' });
+    }
+
+    if (!poids && !taille) {
+      return res.status(400).json({ message: 'Au moins le poids ou la taille doit être fourni' });
+    }
+
+    const measurementDate = date_mesure || new Date().toISOString().split('T')[0];
+
+    // Insert weight measurement if provided
+    if (poids) {
+      await db.execute(`
+        INSERT INTO mesures_patient (patient_id, medecin_id, type_mesure, valeur, unite, date_mesure, notes)
+        VALUES (?, ?, 'poids', ?, 'kg', ?, ?)
+      `, [patientId, medecinId, poids, measurementDate, notes || '']);
+    }
+
+    // Insert height measurement if provided
+    if (taille) {
+      await db.execute(`
+        INSERT INTO mesures_patient (patient_id, medecin_id, type_mesure, valeur, unite, date_mesure, notes)
+        VALUES (?, ?, 'taille', ?, 'cm', ?, ?)
+      `, [patientId, medecinId, taille, measurementDate, notes || '']);
+    }
+
+    // Update patient's current weight and height in patients table
+    const updateFields = [];
+    const updateValues = [];
+
+    if (poids) {
+      updateFields.push('poids_kg = ?');
+      updateValues.push(poids);
+    }
+
+    if (taille) {
+      updateFields.push('taille_cm = ?');
+      updateValues.push(taille);
+    }
+
+    if (updateFields.length > 0) {
+      updateValues.push(patientId);
+      await db.execute(
+        `UPDATE patients SET ${updateFields.join(', ')} WHERE id = ?`,
+        updateValues
+      );
+    }
+
+    return res.status(201).json({ message: 'Mesure ajoutée avec succès' });
+  } catch (error) {
+    console.error('Error adding patient measurement:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+exports.updatePatientMeasurement = async (req, res) => {
+  try {
+    const { patientId, measurementId } = req.params;
+    const { poids, taille, date_mesure, notes } = req.body;
+    const medecinId = req.user.id_specifique_role;
+
+    // Verify patient access
+    const [patientCheck] = await db.execute(
+      'SELECT id FROM patients WHERE id = ?',
+      [patientId]
+    );
+
+    if (patientCheck.length === 0) {
+      return res.status(404).json({ message: 'Patient non trouvé' });
+    }
+
+    if (!poids && !taille) {
+      return res.status(400).json({ message: 'Au moins le poids ou la taille doit être fourni' });
+    }
+
+    // Check if measurement exists and belongs to this patient
+    const [existingMeasurement] = await db.execute(
+      'SELECT id FROM mesures_patient WHERE id = ? AND patient_id = ?',
+      [measurementId, patientId]
+    );
+
+    if (existingMeasurement.length === 0) {
+      return res.status(404).json({ message: 'Mesure non trouvée' });
+    }
+
+    // Delete existing measurements for this date
+    await db.execute(
+      'DELETE FROM mesures_patient WHERE patient_id = ? AND DATE(date_mesure) = ? AND type_mesure IN ("poids", "taille")',
+      [patientId, date_mesure]
+    );
+
+    // Insert updated measurements
+    if (poids) {
+      await db.execute(`
+        INSERT INTO mesures_patient (patient_id, medecin_id, type_mesure, valeur, unite, date_mesure, notes)
+        VALUES (?, ?, 'poids', ?, 'kg', ?, ?)
+      `, [patientId, medecinId, poids, date_mesure, notes || '']);
+    }
+
+    if (taille) {
+      await db.execute(`
+        INSERT INTO mesures_patient (patient_id, medecin_id, type_mesure, valeur, unite, date_mesure, notes)
+        VALUES (?, ?, 'taille', ?, 'cm', ?, ?)
+      `, [patientId, medecinId, taille, date_mesure, notes || '']);
+    }
+
+    return res.status(200).json({ message: 'Mesure mise à jour avec succès' });
+  } catch (error) {
+    console.error('Error updating patient measurement:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+exports.deletePatientMeasurement = async (req, res) => {
+  try {
+    const { patientId, measurementId } = req.params;
+
+    // Verify patient access
+    const [patientCheck] = await db.execute(
+      'SELECT id FROM patients WHERE id = ?',
+      [patientId]
+    );
+
+    if (patientCheck.length === 0) {
+      return res.status(404).json({ message: 'Patient non trouvé' });
+    }
+
+    // Check if measurement exists and belongs to this patient
+    const [existingMeasurement] = await db.execute(
+      'SELECT id, date_mesure FROM mesures_patient WHERE id = ? AND patient_id = ?',
+      [measurementId, patientId]
+    );
+
+    if (existingMeasurement.length === 0) {
+      return res.status(404).json({ message: 'Mesure non trouvée' });
+    }
+
+    // Delete all measurements for this date (both weight and height)
+    await db.execute(
+      'DELETE FROM mesures_patient WHERE patient_id = ? AND DATE(date_mesure) = ? AND type_mesure IN ("poids", "taille")',
+      [patientId, existingMeasurement[0].date_mesure.toISOString().split('T')[0]]
+    );
+
+    return res.status(200).json({ message: 'Mesure supprimée avec succès' });
+  } catch (error) {
+    console.error('Error deleting patient measurement:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+module.exports = exports; 

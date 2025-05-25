@@ -39,6 +39,8 @@ import {
   Cancel as CancelIcon
 } from '@mui/icons-material';
 import AnalysisSection from './AnalysisSection';
+import PatientProfileEditor from './PatientProfileEditor';
+import WeightHeightHistory from './WeightHeightHistory';
 
 const MedicalDossier = () => {
   const { patientId } = useParams();
@@ -54,13 +56,15 @@ const MedicalDossier = () => {
     history: false,
     appointments: false,
     notes: false,
-    analyses: false
+    analyses: false,
+    measurements: false
   });
   
   // Dialog states
   const [treatmentDialog, setTreatmentDialog] = useState({ open: false, mode: 'add', data: null });
   const [historyDialog, setHistoryDialog] = useState({ open: false, data: null });
   const [noteDialog, setNoteDialog] = useState({ open: false, data: null });
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
   
   // Form states
   const [treatmentForm, setTreatmentForm] = useState({
@@ -86,7 +90,8 @@ const MedicalDossier = () => {
   const [noteForm, setNoteForm] = useState({
     contenu: '',
     est_important: false,
-    categorie: 'general'
+    categorie: 'general',
+    date_note: new Date().toISOString().split('T')[0]
   });
   
   // Autocomplete data
@@ -288,7 +293,8 @@ const MedicalDossier = () => {
     setNoteForm({
       contenu: '',
       est_important: false,
-      categorie: 'general'
+      categorie: 'general',
+      date_note: new Date().toISOString().split('T')[0]
     });
     setNoteDialog({ open: true, data: null });
   };
@@ -331,6 +337,20 @@ const MedicalDossier = () => {
     } catch (err) {
       console.error('Error searching medications:', err);
     }
+  };
+
+  // Profile editor handlers
+  const handleEditProfile = () => {
+    setProfileEditorOpen(true);
+  };
+
+  const handleProfileSuccess = (message) => {
+    setSnackbar({ open: true, message, severity: 'success' });
+    fetchDossier(); // Refresh the dossier to show updated information
+  };
+
+  const handleProfileError = (message) => {
+    setSnackbar({ open: true, message, severity: 'error' });
   };
 
   if (loading) {
@@ -450,9 +470,21 @@ const MedicalDossier = () => {
           sx={{ mb: 2 }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <PersonIcon sx={{ mr: 2, color: 'primary.main' }} />
-              <Typography variant="h6">Informations Personnelles</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <PersonIcon sx={{ mr: 2, color: 'primary.main' }} />
+                <Typography variant="h6">Informations Personnelles</Typography>
+              </Box>
+              <IconButton 
+                color="primary" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditProfile();
+                }}
+                sx={{ mr: 2 }}
+              >
+                <EditIcon />
+              </IconButton>
             </Box>
           </AccordionSummary>
           <AccordionDetails>
@@ -470,6 +502,12 @@ const MedicalDossier = () => {
                   </ListItem>
                   <ListItem>
                     <ListItemText 
+                      primary="CNE" 
+                      secondary={patient.CNE || 'Non renseigné'} 
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
                       primary="Groupe sanguin" 
                       secondary={patient.groupe_sanguin || 'Non renseigné'} 
                     />
@@ -478,6 +516,32 @@ const MedicalDossier = () => {
                     <ListItemText 
                       primary="Profession" 
                       secondary={patient.profession || 'Non renseignée'} 
+                    />
+                  </ListItem>
+                </List>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Informations de contact
+                </Typography>
+                <List dense>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Adresse" 
+                      secondary={patient.adresse || 'Non renseignée'} 
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Ville" 
+                      secondary={`${patient.ville || 'Non renseignée'}${patient.code_postal ? ` (${patient.code_postal})` : ''}`} 
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Pays" 
+                      secondary={patient.pays || 'Non renseigné'} 
                     />
                   </ListItem>
                 </List>
@@ -508,6 +572,50 @@ const MedicalDossier = () => {
                   </ListItem>
                 </List>
               </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Habitudes de vie
+                </Typography>
+                <List dense>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Consommation d'alcool" 
+                      secondary={patient.consommation_alcool || 'Non renseigné'} 
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Activité physique" 
+                      secondary={patient.activite_physique || 'Non renseigné'} 
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Fumeur" 
+                      secondary={patient.est_fumeur === true ? 'Oui' : patient.est_fumeur === false ? 'Non' : 'Non renseigné'} 
+                    />
+                  </ListItem>
+                </List>
+              </Grid>
+
+              {/* Allergy Notes */}
+              {patient.allergies_notes && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Notes sur les allergies
+                  </Typography>
+                  <Typography variant="body2" sx={{ 
+                    p: 2, 
+                    bgcolor: 'warning.light', 
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'warning.main'
+                  }}>
+                    {patient.allergies_notes}
+                  </Typography>
+                </Grid>
+              )}
               
               {/* Latest vital signs */}
               {constantes && constantes.length > 0 && (
@@ -534,6 +642,14 @@ const MedicalDossier = () => {
                         </Card>
                       </Grid>
                     )}
+                    {constantes[0].imc && (
+                      <Grid item xs={6} md={2}>
+                        <Card variant="outlined" sx={{ textAlign: 'center', p: 1 }}>
+                          <Typography variant="body2">IMC</Typography>
+                          <Typography variant="h6">{constantes[0].imc}</Typography>
+                        </Card>
+                      </Grid>
+                    )}
                     {constantes[0].tension_arterielle_systolique && constantes[0].tension_arterielle_diastolique && (
                       <Grid item xs={6} md={2}>
                         <Card variant="outlined" sx={{ textAlign: 'center', p: 1 }}>
@@ -550,6 +666,14 @@ const MedicalDossier = () => {
                         <Card variant="outlined" sx={{ textAlign: 'center', p: 1 }}>
                           <Typography variant="body2">Pouls</Typography>
                           <Typography variant="h6">{constantes[0].frequence_cardiaque} bpm</Typography>
+                        </Card>
+                      </Grid>
+                    )}
+                    {constantes[0].temperature && (
+                      <Grid item xs={6} md={2}>
+                        <Card variant="outlined" sx={{ textAlign: 'center', p: 1 }}>
+                          <Typography variant="body2">Température</Typography>
+                          <Typography variant="h6">{constantes[0].temperature}°C</Typography>
                         </Card>
                       </Grid>
                     )}
@@ -874,6 +998,27 @@ const MedicalDossier = () => {
           </AccordionDetails>
         </Accordion>
 
+        {/* Weight/Height History Section */}
+        <Accordion 
+          expanded={expandedSections.measurements} 
+          onChange={() => handleSectionToggle('measurements')}
+          sx={{ mb: 2 }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <WeightIcon sx={{ mr: 2, color: 'primary.main' }} />
+              <Typography variant="h6">Historique Poids/Taille</Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <WeightHeightHistory 
+              patientId={patientId}
+              onSuccess={handleProfileSuccess}
+              onError={handleProfileError}
+            />
+          </AccordionDetails>
+        </Accordion>
+
         {/* Analyses Section - Enhanced with Categories */}
         <Paper sx={{ p: 2, mb: 2 }}>
           <AnalysisSection 
@@ -1125,7 +1270,18 @@ const MedicalDossier = () => {
               />
             </Grid>
             
-            <Grid item xs={8}>
+            <Grid item xs={6}>
+              <TextField
+                label="Date de la note"
+                type="date"
+                value={noteForm.date_note}
+                onChange={(e) => setNoteForm(prev => ({ ...prev, date_note: e.target.value }))}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            
+            <Grid item xs={6}>
               <FormControl fullWidth>
                 <InputLabel>Catégorie</InputLabel>
                 <Select
@@ -1142,7 +1298,7 @@ const MedicalDossier = () => {
               </FormControl>
             </Grid>
             
-            <Grid item xs={4}>
+            <Grid item xs={12}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -1172,6 +1328,15 @@ const MedicalDossier = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Patient Profile Editor */}
+      <PatientProfileEditor
+        open={profileEditorOpen}
+        onClose={() => setProfileEditorOpen(false)}
+        patient={patient}
+        onSuccess={handleProfileSuccess}
+        onError={handleProfileError}
+      />
 
       {/* Snackbar for feedback */}
       <Snackbar

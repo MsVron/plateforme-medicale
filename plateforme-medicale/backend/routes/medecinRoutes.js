@@ -95,4 +95,10 @@ router.post('/medecin/patients/:patientId/notes', verifyToken, medicalDossierCon
 router.get('/medecin/medications/search', verifyToken, medicalDossierController.getMedications);
 router.get('/medecin/allergies/search', verifyToken, medicalDossierController.getAllergies);
 
+// Patient measurements routes
+router.get('/patients/:patientId/measurements', verifyToken, medicalDossierController.getPatientMeasurements);
+router.post('/patients/:patientId/measurements', verifyToken, medicalDossierController.addPatientMeasurement);
+router.put('/patients/:patientId/measurements/:measurementId', verifyToken, medicalDossierController.updatePatientMeasurement);
+router.delete('/patients/:patientId/measurements/:measurementId', verifyToken, medicalDossierController.deletePatientMeasurement);
+
 module.exports = router;
