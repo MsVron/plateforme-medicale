@@ -61,9 +61,12 @@ router.post('/medecin/patient-notes', verifyToken, medicalRecordController.addPa
 router.get('/medecin/patients/:patientId/notes', verifyToken, medicalRecordController.getPatientNotes);
 router.post('/medecin/follow-up-reminders', verifyToken, medicalRecordController.addFollowUpReminder);
 router.get('/medecin/patients/:patientId/reminders', verifyToken, medicalRecordController.getFollowUpReminders);
-router.post('/medecin/patient-measurements', verifyToken, medicalRecordController.addPatientMeasurement);
-router.get('/medecin/patients/:patientId/measurements', verifyToken, medicalRecordController.getPatientMeasurements);
-router.get('/medecin/patients/:patientId/measurements/:type_mesure', verifyToken, medicalRecordController.getPatientMeasurements);
+
+// Patient measurements routes - Updated to use medicalDossierController
+router.get('/medecin/patients/:patientId/measurements', verifyToken, medicalDossierController.getPatientMeasurements);
+router.post('/medecin/patients/:patientId/measurements', verifyToken, medicalDossierController.addPatientMeasurement);
+router.put('/medecin/patients/:patientId/measurements/:measurementId', verifyToken, medicalDossierController.updatePatientMeasurement);
+router.delete('/medecin/patients/:patientId/measurements/:measurementId', verifyToken, medicalDossierController.deletePatientMeasurement);
 
 // NEW MEDICAL DOSSIER ROUTES
 // Main dossier access
@@ -94,11 +97,5 @@ router.post('/medecin/patients/:patientId/notes', verifyToken, medicalDossierCon
 // Autocomplete/search routes for forms
 router.get('/medecin/medications/search', verifyToken, medicalDossierController.getMedications);
 router.get('/medecin/allergies/search', verifyToken, medicalDossierController.getAllergies);
-
-// Patient measurements routes
-router.get('/patients/:patientId/measurements', verifyToken, medicalDossierController.getPatientMeasurements);
-router.post('/patients/:patientId/measurements', verifyToken, medicalDossierController.addPatientMeasurement);
-router.put('/patients/:patientId/measurements/:measurementId', verifyToken, medicalDossierController.updatePatientMeasurement);
-router.delete('/patients/:patientId/measurements/:measurementId', verifyToken, medicalDossierController.deletePatientMeasurement);
 
 module.exports = router;

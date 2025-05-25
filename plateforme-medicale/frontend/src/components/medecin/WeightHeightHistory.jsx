@@ -47,6 +47,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
 import axios from 'axios';
+import { formatDate } from '../../utils/dateUtils';
 
 // Register Chart.js components
 ChartJS.register(
@@ -442,7 +443,7 @@ const WeightHeightHistory = ({ patientId, onSuccess, onError }) => {
                   return (
                     <TableRow key={measurement.id}>
                       <TableCell>
-                        {new Date(measurement.date_mesure).toLocaleDateString('fr-FR')}
+                        {formatDate(measurement.date_mesure)}
                       </TableCell>
                       <TableCell>
                         {measurement.poids ? `${measurement.poids} kg` : '-'}

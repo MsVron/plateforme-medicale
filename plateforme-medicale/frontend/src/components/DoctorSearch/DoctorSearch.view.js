@@ -50,7 +50,7 @@ import SimpleMap from './SimpleMap';
 import FavoriteButton from './FavoriteButton';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { formatDateTime, formatTime, dateTimePickerProps } from '../../utils/dateUtils';
+import { formatDateTime, formatTime, dateTimePickerProps, formatDate } from '../../utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
 
 const MapBox = styled(Box)(({ theme }) => ({
@@ -568,7 +568,7 @@ const DoctorSearchView = ({
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                             <Rating value={review.note} size="small" readOnly />
                             <Typography variant="caption" sx={{ ml: 1 }}>
-                              {review.est_anonyme ? 'Anonyme' : review.patient_nom} - {new Date(review.date_evaluation).toLocaleDateString()}
+                              {review.est_anonyme ? 'Anonyme' : review.patient_nom} - {formatDate(review.date_evaluation)}
                             </Typography>
                           </Box>
                           <Typography variant="body2">{review.commentaire}</Typography>

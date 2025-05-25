@@ -20,6 +20,7 @@ import {
   Info as InfoIcon
 } from '@mui/icons-material';
 import axios from 'axios';
+import { formatDate } from '../../utils/dateUtils';
 
 const AnalysisSection = ({ patientId, analyses = [], onRefresh }) => {
   // State management
@@ -61,7 +62,7 @@ const AnalysisSection = ({ patientId, analyses = [], onRefresh }) => {
     severity: 'success' 
   });
   
-  // Expanded sections state
+  // Expanded sections state - Start with all categories collapsed
   const [expandedCategories, setExpandedCategories] = useState({});
 
   useEffect(() => {
@@ -211,16 +212,6 @@ const AnalysisSection = ({ patientId, analyses = [], onRefresh }) => {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
   const getStatusIcon = (analysis) => {
     if (analysis.est_critique) {
       return <ErrorIcon color="error" />;
@@ -319,7 +310,7 @@ const AnalysisSection = ({ patientId, analyses = [], onRefresh }) => {
         Object.entries(analysesByCategory).map(([categoryName, categoryAnalyses]) => (
           <Accordion
             key={categoryName}
-            expanded={expandedCategories[categoryName] !== false}
+            expanded={expandedCategories[categoryName] === true}
             onChange={() => handleCategoryToggle(categoryName)}
             sx={{ mb: 1 }}
           >

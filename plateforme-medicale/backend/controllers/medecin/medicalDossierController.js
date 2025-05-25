@@ -856,57 +856,56 @@ exports.getPatientMeasurements = async (req, res) => {
       SELECT 
         mp.id,
         mp.date_mesure,
-        mp.notes,
-        MAX(CASE WHEN mp.type_mesure = 'poids' THEN mp.valeur END) as poids,
-        MAX(CASE WHEN mp.type_mesure = 'taille' THEN mp.valeur END) as taille
+        mp.type_mesure,
+        mp.valeur,
+        mp.notes
       FROM mesures_patient mp
       WHERE mp.patient_id = ? AND mp.type_mesure IN ('poids', 'taille')
-      GROUP BY DATE(mp.date_mesure), mp.notes
-      ORDER BY mp.date_mesure DESC
+      ORDER BY mp.date_mesure DESC, mp.type_mesure
     `, [patientId]);
 
-    // Also get measurements from constantes_vitales table
-    const [vitalSigns] = await db.execute(`
-      SELECT 
-        cv.id,
-        cv.date_mesure,
-        cv.poids,
-        cv.taille,
-        'Consultation' as notes
-      FROM constantes_vitales cv
-      WHERE cv.patient_id = ? AND (cv.poids IS NOT NULL OR cv.taille IS NOT NULL)
-      ORDER BY cv.date_mesure DESC
-    `, [patientId]);
-
-    // Combine and format measurements
-    const allMeasurements = [];
+    // Group measurements by date for display
+    const measurementsByDate = {};
     
-    // Add measurements from mesures_patient
     measurements.forEach(m => {
-      allMeasurements.push({
-        id: `mp_${m.id}`,
-        date_mesure: m.date_mesure,
-        poids: m.poids,
-        taille: m.taille,
-        notes: m.notes || '',
-        source: 'measurements'
-      });
+      const dateKey = m.date_mesure.toISOString().split('T')[0];
+      if (!measurementsByDate[dateKey]) {
+        measurementsByDate[dateKey] = {
+          date_mesure: m.date_mesure,
+          poids: null,
+          taille: null,
+          notes: '',
+          poids_id: null,
+          taille_id: null
+        };
+      }
+      
+      if (m.type_mesure === 'poids') {
+        measurementsByDate[dateKey].poids = m.valeur;
+        measurementsByDate[dateKey].poids_id = m.id;
+        measurementsByDate[dateKey].notes = m.notes || measurementsByDate[dateKey].notes;
+      } else if (m.type_mesure === 'taille') {
+        measurementsByDate[dateKey].taille = m.valeur;
+        measurementsByDate[dateKey].taille_id = m.id;
+        measurementsByDate[dateKey].notes = m.notes || measurementsByDate[dateKey].notes;
+      }
     });
 
-    // Add measurements from constantes_vitales
-    vitalSigns.forEach(v => {
-      allMeasurements.push({
-        id: `cv_${v.id}`,
-        date_mesure: v.date_mesure,
-        poids: v.poids,
-        taille: v.taille,
-        notes: v.notes || '',
-        source: 'vital_signs'
+    // Convert to array and create a unique ID for each grouped measurement
+    const allMeasurements = Object.keys(measurementsByDate)
+      .sort((a, b) => new Date(b) - new Date(a))
+      .map(dateKey => {
+        const measurement = measurementsByDate[dateKey];
+        
+        // Create a unique identifier that includes both individual IDs
+        let id_parts = [];
+        if (measurement.poids_id) id_parts.push(`p${measurement.poids_id}`);
+        if (measurement.taille_id) id_parts.push(`t${measurement.taille_id}`);
+        
+        measurement.id = id_parts.join('_');
+        
+        return measurement;
       });
-    });
-
-    // Sort by date (most recent first)
-    allMeasurements.sort((a, b) => new Date(b.date_mesure) - new Date(a.date_mesure));
 
     return res.status(200).json({ measurements: allMeasurements });
   } catch (error) {
@@ -1002,20 +1001,139 @@ exports.updatePatientMeasurement = async (req, res) => {
       return res.status(400).json({ message: 'Au moins le poids ou la taille doit être fourni' });
     }
 
-    // Check if measurement exists and belongs to this patient
-    const [existingMeasurement] = await db.execute(
-      'SELECT id FROM mesures_patient WHERE id = ? AND patient_id = ?',
-      [measurementId, patientId]
+    // Check if measurementId is a numeric ID (actual database ID)
+    if (/^\d+$/.test(measurementId)) {
+      // Handle individual measurement update by database ID
+      const [existingMeasurement] = await db.execute(
+        'SELECT id, type_mesure, date_mesure FROM mesures_patient WHERE id = ? AND patient_id = ?',
+        [measurementId, patientId]
+      );
+
+      if (existingMeasurement.length === 0) {
+        return res.status(404).json({ message: 'Mesure non trouvée' });
+      }
+
+      const measurement = existingMeasurement[0];
+      const measurementDate = date_mesure || measurement.date_mesure;
+
+      // Update the specific measurement based on its type
+      if (measurement.type_mesure === 'poids' && poids) {
+        await db.execute(
+          'UPDATE mesures_patient SET valeur = ?, date_mesure = ?, notes = ? WHERE id = ?',
+          [poids, measurementDate, notes || '', measurementId]
+        );
+      } else if (measurement.type_mesure === 'taille' && taille) {
+        await db.execute(
+          'UPDATE mesures_patient SET valeur = ?, date_mesure = ?, notes = ? WHERE id = ?',
+          [taille, measurementDate, notes || '', measurementId]
+        );
+      } else {
+        return res.status(400).json({ 
+          message: `Cette mesure est de type ${measurement.type_mesure}. Veuillez fournir la valeur correspondante.` 
+        });
+      }
+
+      return res.status(200).json({ message: 'Mesure mise à jour avec succès' });
+    }
+
+    // Check if measurementId is in the new format (p1_t2)
+    if (measurementId.includes('p') || measurementId.includes('t')) {
+      const parts = measurementId.split('_');
+      let poidsId = null;
+      let tailleId = null;
+      
+      parts.forEach(part => {
+        if (part.startsWith('p')) {
+          poidsId = part.substring(1); // Remove 'p' prefix
+        } else if (part.startsWith('t')) {
+          tailleId = part.substring(1); // Remove 't' prefix
+        }
+      });
+
+      const measurementDate = date_mesure || new Date().toISOString().split('T')[0];
+
+      // Update weight measurement if provided and ID exists
+      if (poids && poidsId) {
+        const [existingPoids] = await db.execute(
+          'SELECT id FROM mesures_patient WHERE id = ? AND patient_id = ? AND type_mesure = "poids"',
+          [poidsId, patientId]
+        );
+
+        if (existingPoids.length > 0) {
+          await db.execute(
+            'UPDATE mesures_patient SET valeur = ?, date_mesure = ?, notes = ? WHERE id = ?',
+            [poids, measurementDate, notes || '', poidsId]
+          );
+        }
+      }
+
+      // Update height measurement if provided and ID exists
+      if (taille && tailleId) {
+        const [existingTaille] = await db.execute(
+          'SELECT id FROM mesures_patient WHERE id = ? AND patient_id = ? AND type_mesure = "taille"',
+          [tailleId, patientId]
+        );
+
+        if (existingTaille.length > 0) {
+          await db.execute(
+            'UPDATE mesures_patient SET valeur = ?, date_mesure = ?, notes = ? WHERE id = ?',
+            [taille, measurementDate, notes || '', tailleId]
+          );
+        }
+      }
+
+      // If we need to add new measurements (when only one existed before)
+      if (poids && !poidsId) {
+        await db.execute(`
+          INSERT INTO mesures_patient (patient_id, medecin_id, type_mesure, valeur, unite, date_mesure, notes)
+          VALUES (?, ?, 'poids', ?, 'kg', ?, ?)
+        `, [patientId, medecinId, poids, measurementDate, notes || '']);
+      }
+
+      if (taille && !tailleId) {
+        await db.execute(`
+          INSERT INTO mesures_patient (patient_id, medecin_id, type_mesure, valeur, unite, date_mesure, notes)
+          VALUES (?, ?, 'taille', ?, 'cm', ?, ?)
+        `, [patientId, medecinId, taille, measurementDate, notes || '']);
+      }
+
+      return res.status(200).json({ message: 'Mesure mise à jour avec succès' });
+    }
+
+    // Handle legacy date-based IDs (mp_YYYY-MM-DD)
+    let targetDate, source;
+    if (measurementId.startsWith('mp_')) {
+      targetDate = measurementId.substring(3); // Extract date from mp_YYYY-MM-DD
+      source = 'measurements';
+    } else if (measurementId.startsWith('cv_')) {
+      const actualId = measurementId.substring(3);
+      source = 'vital_signs';
+      
+      // Cannot edit vital signs measurements - they come from consultations
+      return res.status(400).json({ message: 'Les mesures de consultation ne peuvent pas être modifiées ici' });
+    } else {
+      return res.status(400).json({ message: 'Format d\'ID de mesure invalide' });
+    }
+
+    // Validate date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+      return res.status(400).json({ message: 'Format de date invalide dans l\'ID de mesure' });
+    }
+
+    // Check if measurements exist for this date and patient
+    const [existingMeasurements] = await db.execute(
+      'SELECT id, type_mesure FROM mesures_patient WHERE patient_id = ? AND DATE(date_mesure) = ?',
+      [patientId, targetDate]
     );
 
-    if (existingMeasurement.length === 0) {
-      return res.status(404).json({ message: 'Mesure non trouvée' });
+    if (existingMeasurements.length === 0) {
+      return res.status(404).json({ message: 'Mesure non trouvée pour cette date' });
     }
 
     // Delete existing measurements for this date
     await db.execute(
       'DELETE FROM mesures_patient WHERE patient_id = ? AND DATE(date_mesure) = ? AND type_mesure IN ("poids", "taille")',
-      [patientId, date_mesure]
+      [patientId, targetDate]
     );
 
     // Insert updated measurements
@@ -1054,20 +1172,98 @@ exports.deletePatientMeasurement = async (req, res) => {
       return res.status(404).json({ message: 'Patient non trouvé' });
     }
 
-    // Check if measurement exists and belongs to this patient
-    const [existingMeasurement] = await db.execute(
-      'SELECT id, date_mesure FROM mesures_patient WHERE id = ? AND patient_id = ?',
-      [measurementId, patientId]
+    // Check if measurementId is a numeric ID (actual database ID)
+    if (/^\d+$/.test(measurementId)) {
+      // Handle individual measurement deletion by database ID
+      const [existingMeasurement] = await db.execute(
+        'SELECT id, type_mesure, date_mesure FROM mesures_patient WHERE id = ? AND patient_id = ?',
+        [measurementId, patientId]
+      );
+
+      if (existingMeasurement.length === 0) {
+        return res.status(404).json({ message: 'Mesure non trouvée' });
+      }
+
+      // Delete the specific measurement
+      await db.execute(
+        'DELETE FROM mesures_patient WHERE id = ? AND patient_id = ?',
+        [measurementId, patientId]
+      );
+
+      return res.status(200).json({ message: 'Mesure supprimée avec succès' });
+    }
+
+    // Check if measurementId is in the new format (p1_t2)
+    if (measurementId.includes('p') || measurementId.includes('t')) {
+      const parts = measurementId.split('_');
+      const idsToDelete = [];
+      
+      parts.forEach(part => {
+        if (part.startsWith('p')) {
+          idsToDelete.push(part.substring(1)); // Remove 'p' prefix
+        } else if (part.startsWith('t')) {
+          idsToDelete.push(part.substring(1)); // Remove 't' prefix
+        }
+      });
+
+      if (idsToDelete.length === 0) {
+        return res.status(400).json({ message: 'Format d\'ID de mesure invalide' });
+      }
+
+      // Verify all measurements exist and belong to the patient
+      const placeholders = idsToDelete.map(() => '?').join(',');
+      const [existingMeasurements] = await db.execute(
+        `SELECT id FROM mesures_patient WHERE id IN (${placeholders}) AND patient_id = ?`,
+        [...idsToDelete, patientId]
+      );
+
+      if (existingMeasurements.length !== idsToDelete.length) {
+        return res.status(404).json({ message: 'Une ou plusieurs mesures non trouvées' });
+      }
+
+      // Delete all the measurements
+      await db.execute(
+        `DELETE FROM mesures_patient WHERE id IN (${placeholders}) AND patient_id = ?`,
+        [...idsToDelete, patientId]
+      );
+
+      return res.status(200).json({ message: 'Mesure(s) supprimée(s) avec succès' });
+    }
+
+    // Handle legacy date-based IDs (mp_YYYY-MM-DD)
+    let targetDate, source;
+    if (measurementId.startsWith('mp_')) {
+      targetDate = measurementId.substring(3); // Extract date from mp_YYYY-MM-DD
+      source = 'measurements';
+    } else if (measurementId.startsWith('cv_')) {
+      const actualId = measurementId.substring(3);
+      source = 'vital_signs';
+      
+      // Cannot delete vital signs measurements - they come from consultations
+      return res.status(400).json({ message: 'Les mesures de consultation ne peuvent pas être supprimées ici' });
+    } else {
+      return res.status(400).json({ message: 'Format d\'ID de mesure invalide' });
+    }
+
+    // Validate date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+      return res.status(400).json({ message: 'Format de date invalide dans l\'ID de mesure' });
+    }
+
+    // Check if measurements exist for this date and patient
+    const [existingMeasurements] = await db.execute(
+      'SELECT id, type_mesure FROM mesures_patient WHERE patient_id = ? AND DATE(date_mesure) = ?',
+      [patientId, targetDate]
     );
 
-    if (existingMeasurement.length === 0) {
-      return res.status(404).json({ message: 'Mesure non trouvée' });
+    if (existingMeasurements.length === 0) {
+      return res.status(404).json({ message: 'Mesure non trouvée pour cette date' });
     }
 
     // Delete all measurements for this date (both weight and height)
     await db.execute(
       'DELETE FROM mesures_patient WHERE patient_id = ? AND DATE(date_mesure) = ? AND type_mesure IN ("poids", "taille")',
-      [patientId, existingMeasurement[0].date_mesure.toISOString().split('T')[0]]
+      [patientId, targetDate]
     );
 
     return res.status(200).json({ message: 'Mesure supprimée avec succès' });

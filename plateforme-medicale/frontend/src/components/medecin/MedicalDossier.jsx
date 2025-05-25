@@ -41,6 +41,7 @@ import {
 import AnalysisSection from './AnalysisSection';
 import PatientProfileEditor from './PatientProfileEditor';
 import WeightHeightHistory from './WeightHeightHistory';
+import { formatDate, formatDateTime } from '../../utils/dateUtils';
 
 const MedicalDossier = () => {
   const { patientId } = useParams();
@@ -51,13 +52,13 @@ const MedicalDossier = () => {
   const [error, setError] = useState(null);
   const [dossier, setDossier] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
-    personal: true,
-    treatments: false,
-    history: false,
-    appointments: false,
-    notes: false,
-    analyses: false,
-    measurements: false
+    personal: true,        // Only personal information expanded by default
+    treatments: false,     // Current medications
+    history: false,        // Allergies and medical history
+    analyses: false,       // Recent test results
+    measurements: false,   // Vital signs tracking
+    notes: false,          // Clinical observations
+    appointments: false    // Scheduling information
   });
   
   // Dialog states
@@ -137,28 +138,6 @@ const MedicalDossier = () => {
       age--;
     }
     return age;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   // Treatment management functions
@@ -463,7 +442,7 @@ const MedicalDossier = () => {
 
       {/* Medical Dossier Sections */}
       <Box sx={{ width: '100%' }}>
-        {/* Personal Information Section */}
+        {/* 1. Personal Information Section - FIRST (Administrative details) */}
         <Accordion 
           expanded={expandedSections.personal} 
           onChange={() => handleSectionToggle('personal')}
@@ -593,7 +572,11 @@ const MedicalDossier = () => {
                   <ListItem>
                     <ListItemText 
                       primary="Fumeur" 
-                      secondary={patient.est_fumeur === true ? 'Oui' : patient.est_fumeur === false ? 'Non' : 'Non renseigné'} 
+                      secondary={
+                        patient.est_fumeur === true || patient.est_fumeur === 1 ? 'Oui' : 
+                        patient.est_fumeur === false || patient.est_fumeur === 0 ? 'Non' : 
+                        'Non renseigné'
+                      } 
                     />
                   </ListItem>
                 </List>
@@ -661,14 +644,6 @@ const MedicalDossier = () => {
                         </Card>
                       </Grid>
                     )}
-                    {constantes[0].frequence_cardiaque && (
-                      <Grid item xs={6} md={2}>
-                        <Card variant="outlined" sx={{ textAlign: 'center', p: 1 }}>
-                          <Typography variant="body2">Pouls</Typography>
-                          <Typography variant="h6">{constantes[0].frequence_cardiaque} bpm</Typography>
-                        </Card>
-                      </Grid>
-                    )}
                     {constantes[0].temperature && (
                       <Grid item xs={6} md={2}>
                         <Card variant="outlined" sx={{ textAlign: 'center', p: 1 }}>
@@ -684,7 +659,7 @@ const MedicalDossier = () => {
           </AccordionDetails>
         </Accordion>
 
-        {/* Treatments Section */}
+        {/* 2. Treatments Section - Current medications */}
         <Accordion 
           expanded={expandedSections.treatments} 
           onChange={() => handleSectionToggle('treatments')}
@@ -770,7 +745,7 @@ const MedicalDossier = () => {
           </AccordionDetails>
         </Accordion>
 
-        {/* Medical History Section */}
+        {/* 3. Medical History & Allergies Section - CRITICAL FOR SAFETY */}
         <Accordion 
           expanded={expandedSections.history} 
           onChange={() => handleSectionToggle('history')}
@@ -780,9 +755,9 @@ const MedicalDossier = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <HistoryIcon sx={{ mr: 2, color: 'primary.main' }} />
-                <Typography variant="h6">Historique Médical</Typography>
+                <Typography variant="h6">Historique Médical & Allergies</Typography>
                 <Chip 
-                  label={antecedents.length} 
+                  label={antecedents.length + patientAllergies.length} 
                   size="small" 
                   color="secondary" 
                   sx={{ ml: 2 }} 
@@ -801,11 +776,12 @@ const MedicalDossier = () => {
             </Box>
           </AccordionSummary>
           <AccordionDetails>
-            {/* Allergies */}
+            {/* Allergies - Show first as they're critical for safety */}
             {patientAllergies.length > 0 && (
               <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" gutterBottom color="error">
-                  Allergies
+                <Typography variant="subtitle1" gutterBottom color="error" sx={{ display: 'flex', alignItems: 'center' }}>
+                  <WarningIcon sx={{ mr: 1 }} />
+                  Allergies (CRITIQUE)
                 </Typography>
                 <Grid container spacing={1}>
                   {patientAllergies.map((allergy, index) => (
@@ -815,6 +791,7 @@ const MedicalDossier = () => {
                         label={`${allergy.allergie_nom} (${allergy.severite})`}
                         color={allergy.severite === 'sévère' || allergy.severite === 'mortelle' ? 'error' : 'warning'}
                         variant="outlined"
+                        size="medium"
                       />
                     </Grid>
                   ))}
@@ -867,71 +844,37 @@ const MedicalDossier = () => {
           </AccordionDetails>
         </Accordion>
 
-        {/* Appointments Section */}
+        {/* 4. Analyses Section - Recent test results */}
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <AnalysisSection 
+            patientId={patientId}
+            analyses={analyses}
+            onRefresh={fetchDossier}
+          />
+        </Paper>
+
+        {/* 5. Weight/Height History Section - Vital signs tracking */}
         <Accordion 
-          expanded={expandedSections.appointments} 
-          onChange={() => handleSectionToggle('appointments')}
+          expanded={expandedSections.measurements} 
+          onChange={() => handleSectionToggle('measurements')}
           sx={{ mb: 2 }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <DateIcon sx={{ mr: 2, color: 'primary.main' }} />
-              <Typography variant="h6">Rendez-vous</Typography>
-              <Chip 
-                label={appointments.length} 
-                size="small" 
-                color="info" 
-                sx={{ ml: 2 }} 
-              />
+              <WeightIcon sx={{ mr: 2, color: 'primary.main' }} />
+              <Typography variant="h6">Historique Poids/Taille</Typography>
             </Box>
           </AccordionSummary>
           <AccordionDetails>
-            {appointments.length === 0 ? (
-              <Typography color="text.secondary">Aucun rendez-vous enregistré</Typography>
-            ) : (
-              <List>
-                {appointments.slice(0, 10).map((appointment) => (
-                  <ListItem key={appointment.id} divider>
-                    <ListItemText
-                      primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Typography variant="body1">{appointment.motif}</Typography>
-                          <Chip 
-                            label={appointment.statut} 
-                            size="small" 
-                            color={
-                              appointment.statut === 'terminé' ? 'success' :
-                              appointment.statut === 'confirmé' ? 'primary' :
-                              appointment.statut === 'annulé' ? 'error' : 'default'
-                            }
-                          />
-                        </Box>
-                      }
-                      secondary={
-                        <Box>
-                          <Typography variant="body2">
-                            {formatDateTime(appointment.date_heure_debut)}
-                          </Typography>
-                          <Typography variant="caption">
-                            Dr. {appointment.medecin_prenom} {appointment.medecin_nom}
-                            {appointment.specialite_nom && ` - ${appointment.specialite_nom}`}
-                          </Typography>
-                          {appointment.institution_nom && (
-                            <Typography variant="caption" display="block">
-                              {appointment.institution_nom}
-                            </Typography>
-                          )}
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
+            <WeightHeightHistory 
+              patientId={patientId}
+              onSuccess={handleProfileSuccess}
+              onError={handleProfileError}
+            />
           </AccordionDetails>
         </Accordion>
 
-        {/* Notes Section */}
+        {/* 6. Notes Section - Clinical observations */}
         <Accordion 
           expanded={expandedSections.notes} 
           onChange={() => handleSectionToggle('notes')}
@@ -998,35 +941,69 @@ const MedicalDossier = () => {
           </AccordionDetails>
         </Accordion>
 
-        {/* Weight/Height History Section */}
+        {/* 7. Appointments Section - Scheduling information */}
         <Accordion 
-          expanded={expandedSections.measurements} 
-          onChange={() => handleSectionToggle('measurements')}
+          expanded={expandedSections.appointments} 
+          onChange={() => handleSectionToggle('appointments')}
           sx={{ mb: 2 }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <WeightIcon sx={{ mr: 2, color: 'primary.main' }} />
-              <Typography variant="h6">Historique Poids/Taille</Typography>
+              <DateIcon sx={{ mr: 2, color: 'primary.main' }} />
+              <Typography variant="h6">Rendez-vous</Typography>
+              <Chip 
+                label={appointments.length} 
+                size="small" 
+                color="info" 
+                sx={{ ml: 2 }} 
+              />
             </Box>
           </AccordionSummary>
           <AccordionDetails>
-            <WeightHeightHistory 
-              patientId={patientId}
-              onSuccess={handleProfileSuccess}
-              onError={handleProfileError}
-            />
+            {appointments.length === 0 ? (
+              <Typography color="text.secondary">Aucun rendez-vous enregistré</Typography>
+            ) : (
+              <List>
+                {appointments.slice(0, 10).map((appointment) => (
+                  <ListItem key={appointment.id} divider>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Typography variant="body1">{appointment.motif}</Typography>
+                          <Chip 
+                            label={appointment.statut} 
+                            size="small" 
+                            color={
+                              appointment.statut === 'terminé' ? 'success' :
+                              appointment.statut === 'confirmé' ? 'primary' :
+                              appointment.statut === 'annulé' ? 'error' : 'default'
+                            }
+                          />
+                        </Box>
+                      }
+                      secondary={
+                        <Box>
+                          <Typography variant="body2">
+                            {formatDateTime(appointment.date_heure_debut)}
+                          </Typography>
+                          <Typography variant="caption">
+                            Dr. {appointment.medecin_prenom} {appointment.medecin_nom}
+                            {appointment.specialite_nom && ` - ${appointment.specialite_nom}`}
+                          </Typography>
+                          {appointment.institution_nom && (
+                            <Typography variant="caption" display="block">
+                              {appointment.institution_nom}
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
           </AccordionDetails>
         </Accordion>
-
-        {/* Analyses Section - Enhanced with Categories */}
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <AnalysisSection 
-            patientId={patientId}
-            analyses={analyses}
-            onRefresh={fetchDossier}
-          />
-        </Paper>
       </Box>
 
       {/* Treatment Dialog */}

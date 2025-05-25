@@ -4,7 +4,8 @@ import axios from 'axios';
 import {
   Box, Paper, Typography, Tabs, Tab, CircularProgress, Alert,
   Button, Divider, Grid, Card, CardContent, CardHeader, List,
-  ListItem, ListItemText, Chip, IconButton, Tooltip
+  ListItem, ListItemText, Chip, IconButton, Tooltip, Dialog, DialogTitle, DialogContent,
+  DialogActions, TextField, FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -21,8 +22,11 @@ import {
   DateRange as DateIcon,
   Bloodtype as BloodIcon,
   Height as HeightIcon,
-  Scale as WeightIcon
+  Scale as WeightIcon,
+  ArrowBack as ArrowBackIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
+import { formatDate, formatDateTime } from '../../utils/dateUtils';
 
 // Tab Panel Component
 function TabPanel(props) {
@@ -86,16 +90,6 @@ const PatientMedicalRecord = () => {
       age--;
     }
     return age;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
   };
 
   if (loading) {
@@ -437,7 +431,7 @@ const PatientMedicalRecord = () => {
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                         <Typography variant="caption" color="text.secondary">
-                          {new Date(note.date_creation).toLocaleDateString('fr-FR')} - Dr. {note.medecin_prenom} {note.medecin_nom}
+                          {formatDate(note.date_creation)} - Dr. {note.medecin_prenom} {note.medecin_nom}
                         </Typography>
                         {note.est_important && (
                           <Chip size="small" label="Important" color="warning" />
