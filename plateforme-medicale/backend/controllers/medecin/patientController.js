@@ -13,8 +13,8 @@ exports.addPatient = async (req, res) => {
     }
 
     // Validate sexe
-    if (!['M', 'F', 'Autre'].includes(sexe)) {
-      return res.status(400).json({ message: 'Sexe doit être M, F ou Autre' });
+    if (!['M', 'F'].includes(sexe)) {
+      return res.status(400).json({ message: 'Sexe doit être M ou F' });
     }
 
     // Validate CNE uniqueness if provided

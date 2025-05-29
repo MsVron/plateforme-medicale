@@ -159,7 +159,7 @@ CREATE TABLE patients (
   prenom VARCHAR(50) NOT NULL,
   nom VARCHAR(50) NOT NULL,
   date_naissance DATE NOT NULL,
-  sexe ENUM('M', 'F', 'Autre') NOT NULL,
+  sexe ENUM('M', 'F') NOT NULL,
   CNE VARCHAR(20) UNIQUE,
   adresse VARCHAR(255),
   ville VARCHAR(100),

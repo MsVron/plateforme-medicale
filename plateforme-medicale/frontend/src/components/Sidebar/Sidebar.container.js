@@ -12,6 +12,11 @@ import {
   MedicalServices as MedicalIcon,
   Dashboard as DashboardIcon,
   Event as EventIcon,
+  PersonAdd as PersonAddIcon,
+  LocalPharmacy as PharmacyIcon,
+  AssignmentInd as AssignmentIndIcon,
+  FolderOpen as FolderOpenIcon,
+  ManageAccounts as ManageAccountsIcon
 } from '@mui/icons-material';
 import SidebarView from './Sidebar.view';
 
@@ -32,16 +37,24 @@ const SidebarContainer = () => {
   // Define menu items based on user role
   let menuItems = [];
   
-  if (user.role === 'admin') {
+  if (user.role === 'super_admin') {
     menuItems = [
-      { text: 'Gestion des médecins', path: '/admin/medecins', icon: <PeopleIcon /> },
-      { text: 'Gestion des institutions', path: '/admin/institutions', icon: <BusinessIcon /> },
-      { text: 'Gestion des accès', path: '/admin/acces', icon: <SecurityIcon /> },
-      { text: 'Statistiques', path: '/admin/statistiques', icon: <BarChartIcon /> },
+      { text: 'Gestion des Institutions', path: '/admin/institutions', icon: <BusinessIcon /> },
+      { text: 'Enregistrement Patient', path: '/admin/patient-registration', icon: <PersonAddIcon /> },
+      { text: 'Gestion des Pharmacies', path: '/admin/pharmacy-management', icon: <PharmacyIcon /> },
+      { text: 'Statistiques', path: '/admin/statistics', icon: <BarChartIcon /> },
+      { text: 'Gestion des Admins', path: '/admin/admin-management', icon: <ManageAccountsIcon /> },
+    ];
+  } else if (user.role === 'admin') {
+    menuItems = [
+      { text: 'Gestion des Institutions', path: '/admin/institutions', icon: <BusinessIcon /> },
+      { text: 'Enregistrement Patient', path: '/admin/patient-registration', icon: <PersonAddIcon /> },
+      { text: 'Gestion des Pharmacies', path: '/admin/pharmacy-management', icon: <PharmacyIcon /> },
+      { text: 'Statistiques', path: '/admin/statistics', icon: <BarChartIcon /> },
     ];
   } else if (user.role === 'patient') {
     menuItems = [
-      { text: 'Accueil Patient', path: '/patient', icon: <DocumentIcon /> },
+      { text: 'Dossier Médical', path: '/patient/medical-record', icon: <FolderOpenIcon /> },
       { text: 'Rechercher un médecin', path: '/patient/doctor-search', icon: <SearchIcon /> },
       { text: 'Mes rendez-vous', path: '/patient/appointments', icon: <CalendarIcon /> },
       { text: 'Médecins favoris', path: '/patient/favorites', icon: <FavoriteIcon /> },
@@ -53,6 +66,12 @@ const SidebarContainer = () => {
       { text: 'Rechercher un patient', path: '/medecin/patients/search', icon: <SearchIcon /> },
       { text: 'Dossiers médicaux', path: '/medecin/medical-records', icon: <MedicalIcon /> },
       { text: 'Calendrier', path: '/medecin/calendar', icon: <CalendarIcon /> },
+    ];
+  } else if (user.role === 'institution') {
+    menuItems = [
+      { text: 'Tableau de bord', path: '/institution/dashboard', icon: <DashboardIcon /> },
+      { text: 'Gestion des médecins', path: '/institution/doctors', icon: <PeopleIcon /> },
+      { text: 'Statistiques', path: '/institution/statistics', icon: <BarChartIcon /> },
     ];
   }
 

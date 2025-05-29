@@ -130,7 +130,7 @@ const PatientMedicalRecord = () => {
                 {patient.prenom} {patient.nom}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                {calculateAge(patient.date_naissance)} ans • {patient.sexe === 'M' ? 'Homme' : patient.sexe === 'F' ? 'Femme' : 'Autre'}
+                {calculateAge(patient.date_naissance)} ans • {patient.sexe === 'M' ? 'Homme' : 'Femme'}
               </Typography>
             </Box>
           </Box>

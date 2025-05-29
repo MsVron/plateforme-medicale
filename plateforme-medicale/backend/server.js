@@ -20,7 +20,7 @@ const evaluationRoutes = require('./routes/evaluationRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 
 app.use('/api/auth', authRoutes);
-app.use('/api', adminRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api', patientRoutes);
 app.use('/api', medecinRoutes);
 app.use('/api', institutionRoutes);

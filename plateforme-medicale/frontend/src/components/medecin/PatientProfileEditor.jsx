@@ -155,9 +155,8 @@ const PatientProfileEditor = ({ open, onClose, patient, onSuccess, onError }) =>
                     label="Sexe"
                     onChange={(e) => handleChange('sexe', e.target.value)}
                   >
-                    <MenuItem value="M">Masculin</MenuItem>
-                    <MenuItem value="F">Féminin</MenuItem>
-                    <MenuItem value="Autre">Autre</MenuItem>
+                    <MenuItem value="M">Homme</MenuItem>
+                    <MenuItem value="F">Femme</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>

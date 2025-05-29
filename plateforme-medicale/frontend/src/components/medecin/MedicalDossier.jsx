@@ -372,7 +372,7 @@ const MedicalDossier = () => {
                 {patient.prenom} {patient.nom}
               </Typography>
               <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                {calculateAge(patient.date_naissance)} ans • {patient.sexe === 'M' ? 'Homme' : patient.sexe === 'F' ? 'Femme' : 'Autre'}
+                {calculateAge(patient.date_naissance)} ans • {patient.sexe === 'M' ? 'Homme' : 'Femme'}
               </Typography>
               {patient.CNE && (
                 <Typography variant="body2" sx={{ opacity: 0.8 }}>

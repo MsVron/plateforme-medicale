@@ -403,7 +403,6 @@ const WalkInPatientRegistration = ({ open, onClose, onSuccess }) => {
               >
                 <MenuItem value="M">Homme</MenuItem>
                 <MenuItem value="F">Femme</MenuItem>
-                <MenuItem value="Autre">Autre</MenuItem>
               </Select>
               {shouldShowError('sexe') && (
                 <FormHelperText error>{errors.sexe}</FormHelperText>

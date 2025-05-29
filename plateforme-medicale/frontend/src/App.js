@@ -27,6 +27,25 @@ import PatientAppointments from './components/patient/PatientAppointments';
 import PatientFavorites from './components/patient/PatientFavorites';
 import medicalTheme from './styles/theme';
 
+// Import the new pages
+import MedicalRecord from './pages/patient/MedicalRecord';
+import InstitutionManagement from './pages/admin/InstitutionManagement';
+import PharmacyManagement from './pages/admin/PharmacyManagement';
+import PatientRegistration from './pages/admin/PatientRegistration';
+import Statistics from './pages/admin/Statistics';
+
+// Import Super Admin Statistics Pages
+import StatsOverview from './pages/superadmin/StatsOverview';
+import StatsUsers from './pages/superadmin/StatsUsers';
+import StatsAppointments from './pages/superadmin/StatsAppointments';
+import StatsMedicalActivity from './pages/superadmin/StatsMedicalActivity';
+import StatsDoctors from './pages/superadmin/StatsDoctors';
+import StatsPatients from './pages/superadmin/StatsPatients';
+import StatsInstitutions from './pages/superadmin/StatsInstitutions';
+import StatsGeographic from './pages/superadmin/StatsGeographic';
+import StatsDashboards from './pages/superadmin/StatsDashboards';
+import StatsAudit from './pages/superadmin/StatsAudit';
+
 // Import the doctor components
 import { 
   UpcomingAppointments as MedecinAppointments,
@@ -79,6 +98,120 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
                   <DoctorManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/institutions"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
+                  <InstitutionManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/patient-registration"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
+                  <PatientRegistration />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/pharmacy-management"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
+                  <PharmacyManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/statistics"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
+                  <Statistics />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Super Admin Advanced Statistics Routes */}
+            <Route
+              path="/superadmin/stats/overview"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsOverview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/stats/users"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsUsers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/stats/appointments"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsAppointments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/stats/medical-activity"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsMedicalActivity />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/stats/doctors"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsDoctors />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/stats/patients"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsPatients />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/stats/institutions"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsInstitutions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/stats/geographic"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsGeographic />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/stats/dashboards"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsDashboards />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/stats/audit"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <StatsAudit />
                 </ProtectedRoute>
               }
             />
@@ -163,6 +296,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['patient']}>
                   <PatientHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patient/medical-record"
+              element={
+                <ProtectedRoute allowedRoles={['patient']}>
+                  <MedicalRecord />
                 </ProtectedRoute>
               }
             />

@@ -70,15 +70,6 @@ exports.isAdmin = (req, res, next) => {
     return res.status(403).json({ message: "Accès réservé aux administrateurs" });
   }
 
-  // Restriction: admin can't modify patients
-  if (
-    req.user.role === 'admin' &&
-    ['POST', 'PUT', 'DELETE'].includes(req.method) &&
-    req.originalUrl.includes('/patients')
-  ) {
-    return res.status(403).json({ message: "Les administrateurs ne peuvent pas modifier les patients" });
-  }
-
   next();
 };
 

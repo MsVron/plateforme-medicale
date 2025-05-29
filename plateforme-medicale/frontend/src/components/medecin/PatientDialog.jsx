@@ -113,9 +113,8 @@ const PatientDialog = ({
                                         })
                                     }
                                     label="Sexe">
-                                    <MenuItem value="M">Masculin</MenuItem>
-                                    <MenuItem value="F">Féminin</MenuItem>
-                                    <MenuItem value="Autre">Autre</MenuItem>
+                                    <MenuItem value="M">Homme</MenuItem>
+                                    <MenuItem value="F">Femme</MenuItem>
                                 </Select>
                             </FormControl>
                         </Grid>

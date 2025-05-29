@@ -272,7 +272,7 @@ const PatientSearch = () => {
                           </TableCell>
                           <TableCell>{calculateAge(patient.date_naissance)} ans</TableCell>
                           <TableCell>
-                            {patient.sexe === 'M' ? 'Homme' : patient.sexe === 'F' ? 'Femme' : 'Autre'}
+                            {patient.sexe === 'M' ? 'Homme' : 'Femme'}
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2" fontFamily="monospace">

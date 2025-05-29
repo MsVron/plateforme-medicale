@@ -1,10 +1,92 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, Button, Divider } from '@mui/material';
-import { ExitToApp } from '@mui/icons-material';
+import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, Button, Divider, Collapse } from '@mui/material';
+import { ExitToApp, ExpandLess, ExpandMore } from '@mui/icons-material';
 import '../../styles/Sidebar.css'; // Import the Sidebar CSS
 
 const DashboardLayoutView = ({ user, sidebarItems, handleLogout }) => {
+  const [expandedItems, setExpandedItems] = useState({});
+
+  const toggleExpanded = (itemText) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [itemText]: !prev[itemText]
+    }));
+  };
+
+  const renderMenuItem = (item, depth = 0) => {
+    if (item.expandable && item.subItems) {
+      const isExpanded = expandedItems[item.text];
+      
+      return (
+        <React.Fragment key={item.text}>
+          <ListItem
+            button
+            onClick={() => toggleExpanded(item.text)}
+            sx={{
+              color: 'white',
+              transition: 'all 0.3s ease',
+              borderRadius: '8px',
+              margin: '4px 12px',
+              pl: depth * 2 + 2,
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                transform: 'translateX(4px)',
+              }
+            }}
+          >
+            <ListItemIcon sx={{ color: 'white', minWidth: '40px' }}>
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText primary={item.text} />
+            {isExpanded ? <ExpandLess /> : <ExpandMore />}
+          </ListItem>
+          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              {item.subItems.map((subItem) => renderMenuItem(subItem, depth + 1))}
+            </List>
+          </Collapse>
+        </React.Fragment>
+      );
+    }
+
+    return (
+      <ListItem
+        button
+        key={item.text}
+        component={NavLink}
+        to={item.path}
+        sx={{
+          color: 'white',
+          transition: 'all 0.3s ease',
+          borderRadius: '8px',
+          margin: '4px 12px',
+          pl: depth * 2 + 2,
+          '&.active': {
+            bgcolor: 'rgba(255, 255, 255, 0.2)',
+            transform: 'translateX(4px)',
+            '& .MuiListItemIcon-root': { color: 'white' },
+          },
+          '&:hover': {
+            bgcolor: 'rgba(255, 255, 255, 0.1)',
+            transform: 'translateX(4px)',
+          }
+        }}
+      >
+        <ListItemIcon sx={{ color: 'white', minWidth: '40px' }}>
+          {item.icon}
+        </ListItemIcon>
+        <ListItemText 
+          primary={item.text} 
+          sx={{ 
+            fontSize: depth > 0 ? '0.875rem' : '1rem',
+            opacity: depth > 0 ? 0.9 : 1 
+          }} 
+        />
+      </ListItem>
+    );
+  };
+
   return (
     <Box sx={{ display: 'flex' }}>
       <Drawer
@@ -28,32 +110,7 @@ const DashboardLayoutView = ({ user, sidebarItems, handleLogout }) => {
         </Box>
         <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
         <List>
-          {sidebarItems[user.role]?.map((item) => (
-            <ListItem
-              button
-              key={item.text}
-              component={NavLink}
-              to={item.path}
-              sx={{
-                color: 'white',
-                transition: 'all 0.3s ease',
-                borderRadius: '8px',
-                margin: '4px 12px',
-                '&.active': {
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
-                  transform: 'translateX(4px)',
-                  '& .MuiListItemIcon-root': { color: 'white' },
-                },
-                '&:hover': {
-                  bgcolor: 'rgba(255, 255, 255, 0.1)',
-                  transform: 'translateX(4px)',
-                }
-              }}
-            >
-              <ListItemIcon sx={{ color: 'white', minWidth: '40px' }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItem>
-          ))}
+          {sidebarItems[user.role]?.map((item) => renderMenuItem(item))}
         </List>
         <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
         <Box sx={{ p: 2, mt: 'auto' }}>

@@ -257,11 +257,8 @@ exports.addWalkInPatient = async (req, res) => {
     }
 
     // Validate sex
-    if (!['M', 'F', 'Autre'].includes(sexe)) {
-      return res.status(400).json({ 
-        message: "Sexe invalide",
-        field: "sexe"
-      });
+    if (!['M', 'F'].includes(sexe)) {
+      return res.status(400).json({ message: 'Sexe doit être M ou F' });
     }
 
     // Validate email format if provided

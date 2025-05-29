@@ -250,9 +250,8 @@ const ManagePatients = () => {
             onChange={(e) => setFormData({ ...formData, sexe: e.target.value })}
             select
           >
-            <MenuItem value="M">Masculin</MenuItem>
-            <MenuItem value="F">Féminin</MenuItem>
-            <MenuItem value="Autre">Autre</MenuItem>
+            <MenuItem value="M">Homme</MenuItem>
+            <MenuItem value="F">Femme</MenuItem>
           </TextField>
                     <TextField            margin="dense"            label="CNE"            fullWidth            value={formData.CNE}            onChange={(e) => setFormData({ ...formData, CNE: e.target.value })}          />          <TextField            margin="dense"            label="Confirmer le CNE"            fullWidth            value={formData.CNE_confirm}            onChange={(e) => setFormData({ ...formData, CNE_confirm: e.target.value })}            onPaste={(e) => e.preventDefault()}            helperText="Saisissez à nouveau le CNE (copier-coller désactivé)"          />
           <TextField
