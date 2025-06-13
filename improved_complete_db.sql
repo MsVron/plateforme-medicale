@@ -9,7 +9,7 @@ CREATE TABLE utilisateurs (
   nom_utilisateur VARCHAR(50) NOT NULL UNIQUE,
   mot_de_passe VARCHAR(255) NOT NULL,
   email VARCHAR(100) NOT NULL UNIQUE,
-  role ENUM('super_admin', 'admin', 'medecin', 'patient', 'institution') NOT NULL,
+  role ENUM('super_admin', 'admin', 'medecin', 'patient', 'institution', 'pharmacy', 'hospital', 'laboratory') NOT NULL,
   date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   id_specifique_role INT NOT NULL,
   est_actif BOOLEAN DEFAULT TRUE,
@@ -58,7 +58,9 @@ CREATE TABLE institutions (
   est_actif BOOLEAN DEFAULT TRUE,
   date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   type ENUM('hôpital','clinique','cabinet privé','centre médical','laboratoire','autre') NOT NULL DEFAULT 'autre',
-  medecin_proprietaire_id INT DEFAULT NULL
+  medecin_proprietaire_id INT DEFAULT NULL,
+  type_institution ENUM('pharmacy', 'hospital', 'laboratory', 'clinic', 'hôpital', 'clinique', 'cabinet privé', 'centre médical', 'laboratoire', 'autre') DEFAULT 'autre',
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'approved'
 );
 
 -- Table des spécialités médicales
@@ -280,9 +282,15 @@ CREATE TABLE traitements (
   instructions TEXT,
   rappel_prise BOOLEAN DEFAULT FALSE,
   frequence_rappel VARCHAR(100) DEFAULT NULL,
+  status ENUM('prescribed', 'dispensed', 'expired') DEFAULT 'prescribed',
+  pharmacy_dispensed_id INT DEFAULT NULL,
+  date_dispensed DATETIME DEFAULT NULL,
+  dispensed_by_user_id INT DEFAULT NULL,
   FOREIGN KEY (patient_id) REFERENCES patients(id),
   FOREIGN KEY (medicament_id) REFERENCES medicaments(id),
-  FOREIGN KEY (medecin_prescripteur_id) REFERENCES medecins(id)
+  FOREIGN KEY (medecin_prescripteur_id) REFERENCES medecins(id),
+  FOREIGN KEY (pharmacy_dispensed_id) REFERENCES institutions(id),
+  FOREIGN KEY (dispensed_by_user_id) REFERENCES utilisateurs(id)
 );
 
 -- Table des rendez-vous
@@ -403,10 +411,17 @@ CREATE TABLE resultats_analyses (
   medecin_interpreteur_id INT,
   date_interpretation DATETIME,
   notes_techniques TEXT,
+  laboratory_id INT DEFAULT NULL,
+  request_status ENUM('requested', 'in_progress', 'completed', 'validated') DEFAULT 'requested',
+  priority ENUM('normal', 'urgent') DEFAULT 'normal',
+  technician_user_id INT DEFAULT NULL,
+  date_status_updated DATETIME DEFAULT NULL,
   FOREIGN KEY (patient_id) REFERENCES patients(id),
   FOREIGN KEY (type_analyse_id) REFERENCES types_analyses(id),
   FOREIGN KEY (medecin_prescripteur_id) REFERENCES medecins(id),
-  FOREIGN KEY (medecin_interpreteur_id) REFERENCES medecins(id)
+  FOREIGN KEY (medecin_interpreteur_id) REFERENCES medecins(id),
+  FOREIGN KEY (laboratory_id) REFERENCES institutions(id),
+  FOREIGN KEY (technician_user_id) REFERENCES utilisateurs(id)
 );
 
 -- Table des types d'imagerie
@@ -784,4 +799,267 @@ INSERT INTO types_analyses (nom, description, valeurs_normales, unite, categorie
 ('Leucocytes urinaires', 'Globules blancs dans les urines', '<10/μL', '/μL', 10, 10),
 ('Hématies urinaires', 'Globules rouges dans les urines', '<5/μL', '/μL', 10, 11),
 ('Glucose urinaire', 'Sucre dans les urines', 'Négatif', '', 10, 12),
-('Cétones urinaires', 'Corps cétoniques', 'Négatif', '', 10, 13); 
+('Cétones urinaires', 'Corps cétoniques', 'Négatif', '', 10, 13);
+
+-- ENHANCED INSTITUTION MANAGEMENT MODIFICATIONS
+-- Add institution type and status fields
+ALTER TABLE institutions 
+ADD COLUMN type_institution ENUM('pharmacy', 'hospital', 'laboratory', 'clinic', 'hôpital', 'clinique', 'cabinet privé', 'centre médical', 'laboratoire', 'autre') DEFAULT 'autre',
+ADD COLUMN status ENUM('pending', 'approved', 'rejected') DEFAULT 'approved';
+
+-- ENHANCED TRAITEMENTS TABLE - Add dispensing status
+ALTER TABLE traitements 
+ADD COLUMN status ENUM('prescribed', 'dispensed', 'expired') DEFAULT 'prescribed',
+ADD COLUMN pharmacy_dispensed_id INT DEFAULT NULL,
+ADD COLUMN date_dispensed DATETIME DEFAULT NULL,
+ADD COLUMN dispensed_by_user_id INT DEFAULT NULL,
+ADD FOREIGN KEY (pharmacy_dispensed_id) REFERENCES institutions(id),
+ADD FOREIGN KEY (dispensed_by_user_id) REFERENCES utilisateurs(id);
+
+-- ENHANCED RESULTATS_ANALYSES TABLE - Add laboratory management
+ALTER TABLE resultats_analyses 
+ADD COLUMN laboratory_id INT DEFAULT NULL,
+ADD COLUMN request_status ENUM('requested', 'in_progress', 'completed', 'validated') DEFAULT 'requested',
+ADD COLUMN priority ENUM('normal', 'urgent') DEFAULT 'normal',
+ADD COLUMN technician_user_id INT DEFAULT NULL,
+ADD COLUMN date_status_updated DATETIME DEFAULT NULL,
+ADD FOREIGN KEY (laboratory_id) REFERENCES institutions(id),
+ADD FOREIGN KEY (technician_user_id) REFERENCES utilisateurs(id);
+
+-- HOSPITAL ASSIGNMENTS TABLE
+CREATE TABLE hospital_assignments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  medecin_id INT NOT NULL,
+  hospital_id INT NOT NULL,
+  admission_date DATETIME NOT NULL,
+  discharge_date DATETIME DEFAULT NULL,
+  status ENUM('active', 'discharged', 'transferred') DEFAULT 'active',
+  admission_reason TEXT NOT NULL,
+  bed_number VARCHAR(20) DEFAULT NULL,
+  ward_name VARCHAR(100) DEFAULT NULL,
+  assigned_by_user_id INT NOT NULL,
+  discharge_reason TEXT DEFAULT NULL,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  date_modified DATETIME DEFAULT NULL,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (medecin_id) REFERENCES medecins(id),
+  FOREIGN KEY (hospital_id) REFERENCES institutions(id),
+  FOREIGN KEY (assigned_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_hospital_assignments_patient (patient_id),
+  INDEX idx_hospital_assignments_medecin (medecin_id),
+  INDEX idx_hospital_assignments_hospital (hospital_id),
+  INDEX idx_hospital_assignments_status (status)
+);
+
+-- AUDIT LOGS TABLE
+CREATE TABLE audit_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  action VARCHAR(255) NOT NULL,
+  entity_type VARCHAR(50) NOT NULL,
+  entity_id INT DEFAULT NULL,
+  details JSON DEFAULT NULL,
+  ip_address VARCHAR(45) DEFAULT NULL,
+  user_agent TEXT DEFAULT NULL,
+  success BOOLEAN DEFAULT TRUE,
+  error_message TEXT DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES utilisateurs(id),
+  INDEX idx_audit_logs_user (user_id),
+  INDEX idx_audit_logs_entity (entity_type, entity_id),
+  INDEX idx_audit_logs_action (action),
+  INDEX idx_audit_logs_created (created_at)
+);
+
+-- INSTITUTION CHANGE REQUESTS TABLE (for admin-initiated changes requiring super admin approval)
+CREATE TABLE institution_change_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  institution_id INT DEFAULT NULL,
+  request_type ENUM('create', 'modify', 'delete') NOT NULL,
+  requested_by_user_id INT NOT NULL,
+  request_data JSON NOT NULL,
+  current_data JSON DEFAULT NULL,
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  reviewed_by_user_id INT DEFAULT NULL,
+  review_comment TEXT DEFAULT NULL,
+  date_requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  date_reviewed DATETIME DEFAULT NULL,
+  FOREIGN KEY (institution_id) REFERENCES institutions(id),
+  FOREIGN KEY (requested_by_user_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (reviewed_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_change_requests_status (status),
+  INDEX idx_change_requests_type (request_type),
+  INDEX idx_change_requests_requested_by (requested_by_user_id)
+);
+
+-- PRESCRIPTION ACCESS LOGS (for GDPR compliance and pharmacy access tracking)
+CREATE TABLE prescription_access_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  prescription_id INT NOT NULL,
+  pharmacy_id INT NOT NULL,
+  accessed_by_user_id INT NOT NULL,
+  access_reason VARCHAR(255) NOT NULL,
+  patient_cne VARCHAR(20) NOT NULL,
+  patient_name VARCHAR(100) NOT NULL,
+  ip_address VARCHAR(45) DEFAULT NULL,
+  access_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (prescription_id) REFERENCES traitements(id),
+  FOREIGN KEY (pharmacy_id) REFERENCES institutions(id),
+  FOREIGN KEY (accessed_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_prescription_access_patient (patient_id),
+  INDEX idx_prescription_access_pharmacy (pharmacy_id),
+  INDEX idx_prescription_access_date (access_date)
+);
+
+-- ANALYSIS ACCESS LOGS (for laboratory access tracking)
+CREATE TABLE analysis_access_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  analysis_id INT NOT NULL,
+  laboratory_id INT NOT NULL,
+  accessed_by_user_id INT NOT NULL,
+  access_reason VARCHAR(255) NOT NULL,
+  patient_cne VARCHAR(20) NOT NULL,
+  patient_name VARCHAR(100) NOT NULL,
+  ip_address VARCHAR(45) DEFAULT NULL,
+  access_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (analysis_id) REFERENCES resultats_analyses(id),
+  FOREIGN KEY (laboratory_id) REFERENCES institutions(id),
+  FOREIGN KEY (accessed_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_analysis_access_patient (patient_id),
+  INDEX idx_analysis_access_laboratory (laboratory_id),
+  INDEX idx_analysis_access_date (access_date)
+);
+
+-- Add indexes for better performance on new functionality
+CREATE INDEX idx_traitements_status ON traitements(status);
+CREATE INDEX idx_traitements_patient_status ON traitements(patient_id, status);
+CREATE INDEX idx_resultats_analyses_laboratory ON resultats_analyses(laboratory_id);
+CREATE INDEX idx_resultats_analyses_status ON resultats_analyses(request_status);
+CREATE INDEX idx_resultats_analyses_priority ON resultats_analyses(priority);
+CREATE INDEX idx_institutions_type ON institutions(type_institution);
+CREATE INDEX idx_institutions_status ON institutions(status);
+
+-- INSTITUTION LOGIN ENHANCEMENT USING EXISTING UTILISATEURS TABLE
+-- Add additional indexes for institution authentication
+CREATE INDEX idx_utilisateurs_role_specifique ON utilisateurs(role, id_specifique_role);
+CREATE INDEX idx_utilisateurs_email ON utilisateurs(email);
+
+-- Create a view to easily check institution login status
+CREATE OR REPLACE VIEW v_institution_login_status AS
+SELECT 
+    i.id as institution_id,
+    i.nom as institution_name,
+    i.type_institution,
+    i.status as institution_status,
+    i.est_actif as institution_active,
+    u.id as user_id,
+    u.nom_utilisateur,
+    u.email,
+    u.est_actif as user_active,
+    u.est_verifie as user_verified,
+    u.derniere_connexion,
+    CASE 
+        WHEN u.id IS NOT NULL AND u.est_actif = TRUE AND i.est_actif = TRUE AND i.status = 'approved' 
+        THEN TRUE 
+        ELSE FALSE 
+    END as can_login
+FROM institutions i
+LEFT JOIN utilisateurs u ON u.role = 'institution' AND u.id_specifique_role = i.id
+WHERE i.est_actif = TRUE;
+
+-- Create a view for institutional users with their details
+CREATE OR REPLACE VIEW v_institutional_users AS
+SELECT 
+    u.id as user_id,
+    u.nom_utilisateur,
+    u.email,
+    u.role,
+    u.est_actif as user_active,
+    u.est_verifie,
+    u.derniere_connexion,
+    i.id as institution_id,
+    i.nom as institution_name,
+    i.type_institution,
+    i.status as institution_status,
+    i.ville,
+    i.telephone,
+    i.email_contact
+FROM utilisateurs u
+INNER JOIN institutions i ON u.role = 'institution' AND u.id_specifique_role = i.id
+WHERE u.est_actif = TRUE AND i.est_actif = TRUE;
+
+-- Add triggers to maintain data consistency for institutional users
+DELIMITER $$
+
+CREATE TRIGGER tr_institution_user_create
+AFTER INSERT ON utilisateurs
+FOR EACH ROW
+BEGIN
+    -- When a new institutional user is created, log it
+    IF NEW.role = 'institution' THEN
+        INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details, created_at)
+        VALUES (NEW.id, 'INSTITUTION_USER_CREATED', 'utilisateurs', NEW.id, 
+                JSON_OBJECT('institution_id', NEW.id_specifique_role, 'email', NEW.email), NOW());
+    END IF;
+END$$
+
+CREATE TRIGGER tr_institution_status_change
+AFTER UPDATE ON institutions
+FOR EACH ROW
+BEGIN
+    -- When institution status changes, update corresponding user status
+    IF OLD.status != NEW.status OR OLD.est_actif != NEW.est_actif THEN
+        -- Deactivate user if institution is not approved or not active
+        IF NEW.status != 'approved' OR NEW.est_actif = FALSE THEN
+            UPDATE utilisateurs 
+            SET est_actif = FALSE 
+            WHERE role = 'institution' AND id_specifique_role = NEW.id;
+        ELSE
+            -- Reactivate user if institution becomes approved and active
+            UPDATE utilisateurs 
+            SET est_actif = TRUE 
+            WHERE role = 'institution' AND id_specifique_role = NEW.id;
+        END IF;
+        
+        -- Log the change
+        INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details, created_at)
+        VALUES (1, 'INSTITUTION_STATUS_CHANGED', 'institutions', NEW.id, 
+                JSON_OBJECT('old_status', OLD.status, 'new_status', NEW.status, 
+                           'old_active', OLD.est_actif, 'new_active', NEW.est_actif), NOW());
+    END IF;
+END$$
+
+DELIMITER ; 
+
+-- Migration for AI Diagnosis Assistant Tables
+-- Create tables for storing diagnosis suggestions and feedback
+
+-- Table for storing diagnosis suggestions
+CREATE TABLE IF NOT EXISTS diagnosis_suggestions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    symptoms JSON NOT NULL,
+    suggestions JSON NOT NULL,
+    additional_info TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    INDEX idx_patient_created (patient_id, created_at)
+);
+
+-- Table for storing patient feedback on diagnosis suggestions
+CREATE TABLE IF NOT EXISTS diagnosis_feedback (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    suggestion_id INT NOT NULL,
+    patient_id INT NOT NULL,
+    rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    feedback TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (suggestion_id) REFERENCES diagnosis_suggestions(id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    INDEX idx_suggestion_rating (suggestion_id, rating)
+); 

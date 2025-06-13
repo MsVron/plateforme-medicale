@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="700" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="900" height="700" fill="#f8f9fa" stroke="none"/>
+  
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#388e3c">
+    Diagramme de Séquence - Consultation Médicale
+  </text>
+  
+  <!-- Actors/Objects -->
+  <g id="actors">
+    <!-- Médecin -->
+    <rect x="50" y="60" width="100" height="40" fill="#e8f5e8" stroke="#388e3c" stroke-width="2" rx="5"/>
+    <text x="100" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#388e3c">
+      Médecin
+    </text>
+    
+    <!-- Interface -->
+    <rect x="180" y="60" width="100" height="40" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="5"/>
+    <text x="230" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1976d2">
+      Interface
+    </text>
+    
+    <!-- API Backend -->
+    <rect x="310" y="60" width="100" height="40" fill="#fff3e0" stroke="#f57c00" stroke-width="2" rx="5"/>
+    <text x="360" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#f57c00">
+      API Backend
+    </text>
+    
+    <!-- Base de Données -->
+    <rect x="440" y="60" width="100" height="40" fill="#fce4ec" stroke="#e91e63" stroke-width="2" rx="5"/>
+    <text x="490" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#e91e63">
+      Base de Données
+    </text>
+    
+    <!-- Assistant IA -->
+    <rect x="570" y="60" width="100" height="40" fill="#f3e5f5" stroke="#9c27b0" stroke-width="2" rx="5"/>
+    <text x="620" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#9c27b0">
+      Assistant IA
+    </text>
+  </g>
+  
+  <!-- Lifelines -->
+  <line x1="100" y1="100" x2="100" y2="650" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="230" y1="100" x2="230" y2="650" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="360" y1="100" x2="360" y2="650" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="490" y1="100" x2="490" y2="650" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="620" y1="100" x2="620" y2="650" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+    </marker>
+  </defs>
+  
+  <!-- Messages -->
+  <g id="messages">
+    <!-- 1. Accéder au dossier patient -->
+    <line x1="100" y1="130" x2="230" y2="130" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="165" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      1. Accéder dossier patient
+    </text>
+    
+    <!-- 2. Charger dossier -->
+    <line x1="230" y1="150" x2="360" y2="150" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="295" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      2. GET /api/patients/:id/dossier
+    </text>
+    
+    <!-- 3. Récupérer données -->
+    <line x1="360" y1="170" x2="490" y2="170" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="425" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      3. SELECT données patient
+    </text>
+    
+    <!-- 4. Retour données -->
+    <line x1="490" y1="190" x2="360" y2="190" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+    <text x="425" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      4. Dossier complet
+    </text>
+    
+    <!-- 5. Afficher dossier -->
+    <line x1="360" y1="210" x2="230" y2="210" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+    <text x="295" y="205" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      5. Dossier patient
+    </text>
+    
+    <!-- 6. Consulter patient -->
+    <line x1="100" y1="250" x2="230" y2="250" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="165" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      6. Saisir symptômes
+    </text>
+    
+    <!-- 7. Aide IA -->
+    <line x1="230" y1="270" x2="620" y2="270" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="425" y="265" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      7. Analyser symptômes IA
+    </text>
+    
+    <!-- 8. Suggestions IA -->
+    <line x1="620" y1="290" x2="230" y2="290" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+    <text x="425" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      8. Suggestions diagnostic
+    </text>
+    
+    <!-- 9. Ajouter consultation -->
+    <line x1="100" y1="330" x2="230" y2="330" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="165" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      9. Créer consultation
+    </text>
+    
+    <!-- 10. Enregistrer consultation -->
+    <line x1="230" y1="350" x2="360" y2="350" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="295" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      10. POST /api/consultations
+    </text>
+    
+    <!-- 11. Sauvegarder -->
+    <line x1="360" y1="370" x2="490" y2="370" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="425" y="365" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      11. INSERT consultation
+    </text>
+    
+    <!-- 12. Prescrire traitement -->
+    <line x1="100" y1="410" x2="230" y2="410" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="165" y="405" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      12. Prescrire traitement
+    </text>
+    
+    <!-- 13. Ajouter traitement -->
+    <line x1="230" y1="430" x2="360" y2="430" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="295" y="425" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      13. POST /api/traitements
+    </text>
+    
+    <!-- 14. Enregistrer traitement -->
+    <line x1="360" y1="450" x2="490" y2="450" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="425" y="445" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      14. INSERT traitement
+    </text>
+    
+    <!-- 15. Confirmer -->
+    <line x1="490" y1="470" x2="360" y2="470" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+    <text x="425" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      15. Traitement ajouté
+    </text>
+    
+    <!-- 16. Planifier suivi -->
+    <line x1="100" y1="510" x2="230" y2="510" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="165" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      16. Planifier suivi
+    </text>
+    
+    <!-- 17. Créer rappel -->
+    <line x1="230" y1="530" x2="360" y2="530" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="295" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      17. POST /api/rappels-suivi
+    </text>
+    
+    <!-- 18. Confirmation finale -->
+    <line x1="360" y1="550" x2="230" y2="550" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+    <text x="295" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">
+      18. Consultation finalisée
+    </text>
+  </g>
+  
+  <!-- Notes -->
+  <rect x="50" y="580" width="800" height="60" fill="#e8f5e8" stroke="#4caf50" stroke-width="1" rx="5"/>
+  <text x="60" y="600" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#333">
+    Processus de consultation médicale:
+  </text>
+  <text x="60" y="620" font-family="Arial, sans-serif" font-size="11" fill="#333">
+    • Intégration de l'IA pour l'aide au diagnostic • Mise à jour complète du dossier patient
+  </text>
+</svg> 

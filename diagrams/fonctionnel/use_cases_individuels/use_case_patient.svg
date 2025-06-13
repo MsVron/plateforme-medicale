@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="900" viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg">
+  <!-- Title -->
+  <text x="600" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#2c3e50">
+    Figure 2.1a : Diagramme de Cas d'Utilisation - Acteur Patient
+  </text>
+  
+  <!-- System boundary -->
+  <rect x="200" y="80" width="800" height="750" fill="none" stroke="#34495e" stroke-width="3" rx="10"/>
+  <text x="600" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#34495e">
+    Système de Plateforme Médicale - Interface Patient
+  </text>
+  
+  <!-- Patient Actor -->
+  <g id="patient_actor">
+    <circle cx="80" cy="400" r="20" fill="none" stroke="#2c3e50" stroke-width="2"/>
+    <line x1="80" y1="420" x2="80" y2="470" stroke="#2c3e50" stroke-width="2"/>
+    <line x1="60" y1="445" x2="100" y2="445" stroke="#2c3e50" stroke-width="2"/>
+    <line x1="80" y1="470" x2="60" y2="520" stroke="#2c3e50" stroke-width="2"/>
+    <line x1="80" y1="470" x2="100" y2="520" stroke="#2c3e50" stroke-width="2"/>
+    <text x="80" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2c3e50">Patient</text>
+  </g>
+  
+  <!-- Use Cases - Authentification -->
+  <g id="auth_cases">
+    <text x="250" y="140" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#3498db">Authentification</text>
+    
+    <ellipse cx="350" cy="160" rx="80" ry="20" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+    <text x="350" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">S'inscrire</text>
+    
+    <ellipse cx="500" cy="160" rx="80" ry="20" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+    <text x="500" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Se connecter</text>
+    
+    <ellipse cx="650" cy="160" rx="80" ry="20" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+    <text x="650" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Récupérer mot de passe</text>
+    
+    <ellipse cx="800" cy="160" rx="80" ry="20" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+    <text x="800" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Se déconnecter</text>
+  </g>
+  
+  <!-- Use Cases - Recherche et Navigation -->
+  <g id="search_cases">
+    <text x="250" y="220" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#9b59b6">Recherche et Navigation</text>
+    
+    <ellipse cx="350" cy="240" rx="80" ry="20" fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+    <text x="350" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Rechercher médecin</text>
+    
+    <ellipse cx="500" cy="240" rx="80" ry="20" fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+    <text x="500" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Filtrer par spécialité</text>
+    
+    <ellipse cx="650" cy="240" rx="80" ry="20" fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+    <text x="650" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Localiser par carte</text>
+    
+    <ellipse cx="800" cy="240" rx="80" ry="20" fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+    <text x="800" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Filtrer par distance</text>
+    
+    <ellipse cx="425" cy="280" rx="80" ry="20" fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+    <text x="425" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Consulter profil médecin</text>
+    
+    <ellipse cx="575" cy="280" rx="80" ry="20" fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+    <text x="575" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Voir disponibilités</text>
+  </g>
+  
+  <!-- Use Cases - Gestion des Rendez-vous -->
+  <g id="appointment_cases">
+    <text x="250" y="340" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#e74c3c">Gestion des Rendez-vous</text>
+    
+    <ellipse cx="350" cy="360" rx="80" ry="20" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+    <text x="350" y="365" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Prendre rendez-vous</text>
+    
+    <ellipse cx="500" cy="360" rx="80" ry="20" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+    <text x="500" y="365" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Consulter mes RDV</text>
+    
+    <ellipse cx="650" cy="360" rx="80" ry="20" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+    <text x="650" y="365" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Modifier rendez-vous</text>
+    
+    <ellipse cx="800" cy="360" rx="80" ry="20" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+    <text x="800" y="365" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Annuler rendez-vous</text>
+    
+    <ellipse cx="425" cy="400" rx="80" ry="20" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+    <text x="425" y="405" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Confirmer présence</text>
+    
+    <ellipse cx="575" cy="400" rx="80" ry="20" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+    <text x="575" y="405" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Évaluer consultation</text>
+  </g>
+  
+  <!-- Use Cases - Dossier Médical -->
+  <g id="medical_cases">
+    <text x="250" y="460" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#f39c12">Dossier Médical</text>
+    
+    <ellipse cx="350" cy="480" rx="80" ry="20" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+    <text x="350" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Consulter mon dossier</text>
+    
+    <ellipse cx="500" cy="480" rx="80" ry="20" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+    <text x="500" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Voir historique</text>
+    
+    <ellipse cx="650" cy="480" rx="80" ry="20" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+    <text x="650" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Télécharger ordonnances</text>
+    
+    <ellipse cx="800" cy="480" rx="80" ry="20" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+    <text x="800" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Voir résultats analyses</text>
+    
+    <ellipse cx="425" cy="520" rx="80" ry="20" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+    <text x="425" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Mettre à jour infos</text>
+    
+    <ellipse cx="575" cy="520" rx="80" ry="20" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+    <text x="575" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Consulter constantes</text>
+  </g>
+  
+  <!-- Use Cases - IA et Assistant -->
+  <g id="ai_cases">
+    <text x="250" y="580" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#e91e63">Assistant IA Médical</text>
+    
+    <ellipse cx="350" cy="600" rx="80" ry="20" fill="#e91e63" stroke="#ad1457" stroke-width="2"/>
+    <text x="350" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Décrire symptômes</text>
+    
+    <ellipse cx="500" cy="600" rx="80" ry="20" fill="#e91e63" stroke="#ad1457" stroke-width="2"/>
+    <text x="500" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Obtenir suggestions</text>
+    
+    <ellipse cx="650" cy="600" rx="80" ry="20" fill="#e91e63" stroke="#ad1457" stroke-width="2"/>
+    <text x="650" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Chat avec IA</text>
+    
+    <ellipse cx="425" cy="640" rx="80" ry="20" fill="#e91e63" stroke="#ad1457" stroke-width="2"/>
+    <text x="425" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Évaluer suggestions</text>
+  </g>
+  
+  <!-- Use Cases - Préférences -->
+  <g id="preference_cases">
+    <text x="250" y="700" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2ecc71">Préférences et Favoris</text>
+    
+    <ellipse cx="350" cy="720" rx="80" ry="20" fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
+    <text x="350" y="725" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Gérer favoris</text>
+    
+    <ellipse cx="500" cy="720" rx="80" ry="20" fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
+    <text x="500" y="725" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Configurer notifications</text>
+    
+    <ellipse cx="650" cy="720" rx="80" ry="20" fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
+    <text x="650" y="725" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Gérer contact urgence</text>
+    
+    <ellipse cx="425" cy="760" rx="80" ry="20" fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
+    <text x="425" y="765" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Modifier profil</text>
+  </g>
+  
+  <!-- Associations from Patient -->
+  <!-- Auth associations -->
+  <line x1="100" y1="380" x2="270" y2="160" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="380" x2="420" y2="160" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="390" x2="570" y2="160" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="400" x2="720" y2="160" stroke="#7f8c8d" stroke-width="1"/>
+  
+  <!-- Search associations -->
+  <line x1="100" y1="410" x2="270" y2="240" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="410" x2="420" y2="240" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="410" x2="570" y2="240" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="410" x2="720" y2="240" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="415" x2="345" y2="280" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="415" x2="495" y2="280" stroke="#7f8c8d" stroke-width="1"/>
+  
+  <!-- Appointment associations -->
+  <line x1="100" y1="420" x2="270" y2="360" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="420" x2="420" y2="360" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="420" x2="570" y2="360" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="420" x2="720" y2="360" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="425" x2="345" y2="400" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="425" x2="495" y2="400" stroke="#7f8c8d" stroke-width="1"/>
+  
+  <!-- Medical record associations -->
+  <line x1="100" y1="430" x2="270" y2="480" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="430" x2="420" y2="480" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="430" x2="570" y2="480" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="430" x2="720" y2="480" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="435" x2="345" y2="520" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="435" x2="495" y2="520" stroke="#7f8c8d" stroke-width="1"/>
+  
+  <!-- AI associations -->
+  <line x1="100" y1="440" x2="270" y2="600" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="440" x2="420" y2="600" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="440" x2="570" y2="600" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="445" x2="345" y2="640" stroke="#7f8c8d" stroke-width="1"/>
+  
+  <!-- Preference associations -->
+  <line x1="100" y1="450" x2="270" y2="720" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="450" x2="420" y2="720" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="450" x2="570" y2="720" stroke="#7f8c8d" stroke-width="1"/>
+  <line x1="100" y1="455" x2="345" y2="760" stroke="#7f8c8d" stroke-width="1"/>
+  
+  <!-- Include relationships -->
+  <line x1="430" y1="360" x2="495" y2="280" stroke="#95a5a6" stroke-width="1" stroke-dasharray="5,5"/>
+  <text x="460" y="315" font-family="Arial, sans-serif" font-size="8" fill="#95a5a6">«include»</text>
+  
+  <line x1="430" y1="600" x2="570" y2="600" stroke="#95a5a6" stroke-width="1" stroke-dasharray="5,5"/>
+  <text x="500" y="590" font-family="Arial, sans-serif" font-size="8" fill="#95a5a6">«include»</text>
+  
+</svg> 

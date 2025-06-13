@@ -30,6 +30,7 @@ import {
 } from '@mui/icons-material';
 import axios from 'axios';
 import { formatDateTime, formatDate, formatTime } from '../../utils/dateUtils';
+import DiagnosisChatbot from './DiagnosisChatbot';
 
 const PatientAppointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -530,6 +531,9 @@ const PatientAppointments = () => {
           )}
         </>
       )}
+      
+      {/* AI Diagnosis Chatbot */}
+      <DiagnosisChatbot />
     </Container>
   );
 };

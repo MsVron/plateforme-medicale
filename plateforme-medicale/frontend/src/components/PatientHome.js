@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import axios from 'axios';
 import { formatDateTime, dateTimePickerProps } from '../utils/dateUtils';
+import DiagnosisChatbot from './patient/DiagnosisChatbot';
 
 const PatientHome = () => {
   const navigate = useNavigate();
@@ -51,7 +53,7 @@ const PatientHome = () => {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Paper 
             elevation={3} 
             sx={{ 
@@ -90,7 +92,7 @@ const PatientHome = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Paper 
             elevation={3} 
             sx={{ 
@@ -129,7 +131,7 @@ const PatientHome = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Paper 
             elevation={3} 
             sx={{ 
@@ -167,6 +169,56 @@ const PatientHome = () => {
             </Button>
           </Paper>
         </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              p: 3, 
+              textAlign: 'center',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              transition: 'transform 0.3s',
+              '&:hover': {
+                transform: 'translateY(-5px)',
+                boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
+              },
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white'
+            }}
+          >
+            <Box>
+              <SmartToyIcon sx={{ fontSize: 50, mb: 2, color: 'white' }} />
+              <Typography variant="h5" gutterBottom>
+                Assistant IA
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 3, color: 'rgba(255,255,255,0.9)' }}>
+                Analysez vos symptômes et obtenez des conseils médicaux préliminaires avec notre IA.
+              </Typography>
+            </Box>
+            <Button 
+              variant="contained" 
+              sx={{ 
+                bgcolor: 'rgba(255,255,255,0.2)', 
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.3)'
+                }
+              }}
+              size="large"
+              endIcon={<SmartToyIcon />}
+              onClick={() => {
+                // The chatbot will appear as a floating button
+                // This button can show a tooltip or open the chatbot directly
+              }}
+              fullWidth
+            >
+              Utiliser l'IA
+            </Button>
+          </Paper>
+        </Grid>
       </Grid>
 
       {/* Update appointment display */}
@@ -199,6 +251,9 @@ const PatientHome = () => {
           {...dateTimePickerProps}
         />
       </LocalizationProvider>
+      
+      {/* AI Diagnosis Chatbot */}
+      <DiagnosisChatbot />
     </Container>
   );
 };

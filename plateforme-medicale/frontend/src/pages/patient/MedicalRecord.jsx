@@ -31,6 +31,7 @@ import {
   DialogActions,
   TextField
 } from '@mui/material';
+import DiagnosisChatbot from '../../components/patient/DiagnosisChatbot';
 import {
   ExpandMore as ExpandMoreIcon,
   Person as PersonIcon,
@@ -733,6 +734,9 @@ const MedicalRecord = () => {
           <Button onClick={handlePersonalInfoUpdate} variant="contained">Sauvegarder</Button>
         </DialogActions>
       </Dialog>
+      
+      {/* AI Diagnosis Chatbot */}
+      <DiagnosisChatbot />
     </Box>
   );
 };

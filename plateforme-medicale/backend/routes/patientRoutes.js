@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const patientController = require("../controllers/patientController");
+const diagnosisAssistantController = require("../controllers/diagnosisAssistantController");
 const {
     verifyToken,
     isSuperAdmin,
@@ -557,5 +558,63 @@ router.put("/patient/personal-info", verifyToken, isPatient, async (req, res) =>
         });
     }
 });
+
+// AI Diagnosis Assistant Routes
+router.post(
+    "/patient/diagnosis/analyze",
+    verifyToken,
+    isPatient,
+    diagnosisAssistantController.analyzeSymptoms
+);
+
+router.post(
+    "/patient/diagnosis/analyze-advanced",
+    verifyToken,
+    isPatient,
+    diagnosisAssistantController.analyzeSymptomsAdvanced
+);
+
+router.post(
+    "/patient/diagnosis/chat",
+    verifyToken,
+    isPatient,
+    diagnosisAssistantController.chatWithAssistant
+);
+
+router.get(
+    "/patient/diagnosis/history",
+    verifyToken,
+    isPatient,
+    diagnosisAssistantController.getDiagnosisHistory
+);
+
+router.post(
+    "/patient/diagnosis/feedback",
+    verifyToken,
+    isPatient,
+    diagnosisAssistantController.submitFeedback
+);
+
+router.get(
+    "/patient/diagnosis/symptoms",
+    verifyToken,
+    isPatient,
+    diagnosisAssistantController.getCommonSymptoms
+);
+
+// AI Service Status Routes
+router.get(
+    "/patient/diagnosis/ai-status",
+    verifyToken,
+    isPatient,
+    diagnosisAssistantController.getAIServiceStatus
+);
+
+router.post(
+    "/patient/diagnosis/test-colab",
+    verifyToken,
+    isPatient,
+    diagnosisAssistantController.testColabConnection
+);
 
 module.exports = router;
