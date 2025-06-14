@@ -77,6 +77,7 @@ const StatsInstitutions = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
   const [institutionType, setInstitutionType] = useState('all');
+  const [region, setRegion] = useState('all');
   const [activeTab, setActiveTab] = useState(0);
   const [stats, setStats] = useState({
     totalInstitutions: 0,
@@ -102,7 +103,7 @@ const StatsInstitutions = () => {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/admin/superadmin/stats/institutions?period=${period}&type=${institutionType}`, {
+        const response = await fetch(`/api/admin/superadmin/stats/institutions?period=${period}&type=${institutionType}&region=${region}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -142,7 +143,7 @@ const StatsInstitutions = () => {
     };
 
     fetchInstitutionStats();
-  }, [period, institutionType]);
+  }, [period, institutionType, region]);
 
   const getStatusColor = (status) => {
     const colors = {
@@ -217,6 +218,18 @@ const StatsInstitutions = () => {
               <MenuItem value="clinic">Cliniques</MenuItem>
               <MenuItem value="private">Cabinets privés</MenuItem>
               <MenuItem value="medical_center">Centres médicaux</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 140, bgcolor: 'white', borderRadius: 1 }}>
+            <InputLabel>Région</InputLabel>
+            <Select value={region} onChange={(e) => setRegion(e.target.value)}>
+              <MenuItem value="all">Toutes</MenuItem>
+              <MenuItem value="casablanca">Casablanca</MenuItem>
+              <MenuItem value="rabat">Rabat</MenuItem>
+              <MenuItem value="marrakech">Marrakech</MenuItem>
+              <MenuItem value="fes">Fès</MenuItem>
+              <MenuItem value="tanger">Tanger</MenuItem>
+              <MenuItem value="agadir">Agadir</MenuItem>
             </Select>
           </FormControl>
           <Button

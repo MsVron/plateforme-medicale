@@ -69,6 +69,7 @@ const StatsDoctors = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
   const [specialty, setSpecialty] = useState('all');
+  const [region, setRegion] = useState('all');
   const [stats, setStats] = useState({
     totalDoctors: 0,
     activeDoctors: 0,
@@ -91,7 +92,7 @@ const StatsDoctors = () => {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/admin/superadmin/stats/doctors?period=${period}&specialty=${specialty}`, {
+        const response = await fetch(`/api/admin/superadmin/stats/doctors?period=${period}&specialty=${specialty}&region=${region}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -126,7 +127,7 @@ const StatsDoctors = () => {
     };
 
     fetchDoctorStats();
-  }, [period, specialty]);
+  }, [period, specialty, region]);
 
   const getSpecialtyIcon = (specialtyName) => {
     const icons = {
@@ -224,6 +225,23 @@ const StatsDoctors = () => {
               <MenuItem value="orthopédie">Orthopédie</MenuItem>
               <MenuItem value="dermatologie">Dermatologie</MenuItem>
               <MenuItem value="gynécologie">Gynécologie</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel sx={{ color: 'white' }}>Région</InputLabel>
+            <Select
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              sx={{ color: 'white', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' } }}
+            >
+              <MenuItem value="all">Toutes</MenuItem>
+              <MenuItem value="casablanca">Casablanca</MenuItem>
+              <MenuItem value="rabat">Rabat</MenuItem>
+              <MenuItem value="marrakech">Marrakech</MenuItem>
+              <MenuItem value="fes">Fès</MenuItem>
+              <MenuItem value="tanger">Tanger</MenuItem>
+              <MenuItem value="agadir">Agadir</MenuItem>
             </Select>
           </FormControl>
 
