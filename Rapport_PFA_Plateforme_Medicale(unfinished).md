@@ -91,6 +91,16 @@ The platform successfully addresses the challenges of healthcare digitalization 
     3.3.1 Approche de Validation .................................................. 30
     3.3.2 Suite de Tests Backend Spécialisés ...................................... 31
     3.3.3 Monitoring et Debugging Avancé .......................................... 32
+3.4 Technologies Utilisées - Stack Technique Complet .............................. 33
+    3.4.1 Frontend - Technologies Modernes ........................................ 33
+    3.4.2 Backend - Architecture Robuste .......................................... 34
+    3.4.3 Intelligence Artificielle - Services Hybrides .......................... 35
+    3.4.4 Base de Données - Architecture Optimisée ............................... 36
+3.5 Stratégies de Déploiement ...................................................... 37
+    3.5.1 Architecture de Déploiement ............................................. 37
+    3.5.2 Solutions de Déploiement Évaluées ....................................... 38
+    3.5.3 Configuration de Production ............................................. 39
+    3.5.4 Monitoring et Maintenance ............................................... 40
 
 **CHAPITRE 4 : INTÉGRATION DE L'INTELLIGENCE ARTIFICIELLE** .......................... 33
 4.1 Vision et Objectifs de l'IA Médicale .......................................... 33
@@ -223,6 +233,26 @@ La table `patients` centralise toutes les informations personnelles, médicales 
 Les tables `medecins` et `institutions` stockent les coordonnées GPS (latitude/longitude) avec indexation spatiale pour des requêtes optimisées. L'algorithme de calcul de distance utilise la formule de Haversine côté backend pour des résultats précis. La carte interactive affiche les marqueurs des praticiens avec clustering automatique pour les performances. Les filtres combinés permettent la recherche par spécialité, distance (rayon configurable), disponibilité immédiate, tarifs et acceptation de nouveaux patients.
 
 **Recherche Intelligente :** Le système de recherche multi-critères combine recherche textuelle (nom, spécialité) et géographique avec auto-complétion. Les résultats sont triés par pertinence et distance avec pagination optimisée. La recherche sauvegarde les préférences utilisateur et propose des suggestions basées sur l'historique. L'intégration avec l'API HTML5 Geolocation permet la détection automatique de la position du patient pour des résultats personnalisés.
+
+#### 1.2.5 Assistant Chatbot Intelligent
+
+**Interface Conversationnelle :** La plateforme intègre un assistant chatbot intelligent accessible via une interface minimisable et non-intrusive.
+
+[Insert picture of chatbot interface showing conversation flow with medical symptom analysis]
+
+Le chatbot utilise une architecture multi-services combinant Ollama pour l'exécution locale de modèles de langage médicaux, OpenAI GPT-3.5-turbo comme service de fallback, et Hugging Face BioGPT-Large pour l'analyse spécialisée. L'assistant analyse les symptômes rapportés par les patients en français, anglais et arabe dialectal marocain, fournissant des suggestions diagnostiques préliminaires tout en orientant systématiquement vers une consultation médicale professionnelle.
+
+**Fonctionnalités Avancées :** Le système de détection automatique d'urgences identifie les symptômes critiques (douleurs thoraciques, essoufflement sévère, pertes de conscience) et affiche immédiatement des avertissements prioritaires. L'analyse hybride combine règles prédéfinies, intelligence artificielle et analyse contextuelle pour maximiser la précision. Toutes les interactions sont tracées dans les tables `diagnosis_suggestions` et `diagnosis_feedback` pour amélioration continue et conformité médicale.
+
+#### 1.2.6 Tableaux de Bord et Statistiques
+
+**Statistiques Médecin :** Le tableau de bord médecin présente des métriques d'activité en temps réel avec visualisations graphiques.
+
+[Insert picture of doctor statistics dashboard showing charts and KPIs]
+
+Les indicateurs incluent le nombre de consultations par période, la répartition des patients par âge et pathologie, les taux de présence aux rendez-vous, et l'évolution de l'activité mensuelle. Les graphiques Chart.js affichent les tendances de consultation, la distribution des créneaux horaires les plus demandés, et les statistiques de patients walk-in. Le système génère automatiquement des rapports d'activité exportables en PDF pour les besoins administratifs et comptables.
+
+**Statistiques Administrateur :** L'interface administrative centralise les métriques globales de la plateforme avec tableaux de bord analytiques. Les indicateurs clés incluent le nombre total d'utilisateurs actifs par type, les statistiques d'utilisation des fonctionnalités, les métriques de performance système, et les rapports de géolocalisation des établissements. Les graphiques d'évolution temporelle permettent le suivi des tendances d'adoption et l'identification des pics d'activité pour l'optimisation des ressources.
 
 ### 1.3 Utilisateurs Cibles
 
@@ -375,6 +405,12 @@ Entités d'Analyses :
 ├─► Types_analyses (id, categorie_id, nom, valeur_reference_min, valeur_reference_max, unite)
 ├─► Resultats_analyses (id, patient_id, type_analyse_id, valeur, date_analyse)
 └─► Resultats_imagerie (id, patient_id, type_examen, description, date_examen)
+
+Entités IA et Statistiques :
+├─► Diagnosis_suggestions (id, patient_id, symptomes_json, suggestions_json, niveau_confiance, date_analyse)
+├─► Diagnosis_feedback (id, suggestion_id, patient_id, evaluation, commentaires, date_feedback)
+├─► Statistiques_medecin (id, medecin_id, periode, nb_consultations, nb_patients, taux_presence)
+└─► Logs_activite (id, utilisateur_id, action, details_json, timestamp)
 ```
 
 #### 2.2.4 Diagramme de Classes
@@ -453,6 +489,22 @@ Les diagrammes d'états-transitions modélisent les changements d'état des obje
 
 **Règles Métier :** Le rayon de recherche par défaut est fixé à 50 kilomètres pour équilibrer pertinence géographique et choix disponibles. La géolocalisation nécessite le consentement explicite de l'utilisateur conformément aux réglementations sur la vie privée. Les coordonnées GPS sont stockées de manière sécurisée pour les médecins et institutions participant au système de géolocalisation.
 
+#### 2.3.4 Module Assistant Chatbot IA
+
+**Architecture Multi-Services :** Le module chatbot implémente une architecture de fallback intelligent avec trois niveaux de service. Le service principal utilise Ollama pour l'exécution locale de modèles de langage spécialisés en médecine, garantissant la confidentialité des données patients. En cas d'indisponibilité, le système bascule automatiquement vers OpenAI GPT-3.5-turbo, puis vers Hugging Face BioGPT-Large, avant de revenir à l'analyse basée sur des règles prédéfinies.
+
+**Fonctionnalités d'Analyse :** L'assistant combine trois approches complémentaires : analyse basée sur des règles avec cartographie de plus de vingt symptômes courants, analyse par IA exploitant des modèles pré-entraînés sur des corpus médicaux, et analyse contextuelle tenant compte de l'intensité des symptômes et des combinaisons multi-systémiques. Le système supporte le multilinguisme (français, anglais, arabe dialectal marocain) pour une accessibilité maximale.
+
+**Règles Métier :** Chaque interaction est accompagnée de disclaimers précisant le caractère préliminaire des suggestions. Le système détecte automatiquement les urgences médicales et affiche des avertissements prioritaires. Toutes les données sont anonymisées avant transmission aux services externes. L'historique des interactions est tracé pour amélioration continue et audit de conformité.
+
+#### 2.3.5 Module Statistiques et Tableaux de Bord
+
+**Métriques Médecin :** Le système génère des statistiques d'activité personnalisées incluant le nombre de consultations par période (jour/semaine/mois), la répartition des patients par tranche d'âge et pathologie, les taux de présence aux rendez-vous avec analyse des no-shows, et l'évolution temporelle de l'activité. Les graphiques interactifs Chart.js permettent l'analyse des tendances et l'identification des créneaux horaires optimaux.
+
+**Métriques Administrateur :** L'interface administrative centralise les indicateurs globaux de performance : nombre d'utilisateurs actifs par type et période, statistiques d'utilisation des fonctionnalités principales, métriques de performance système (temps de réponse, disponibilité), et rapports géographiques de répartition des établissements. Les tableaux de bord analytiques facilitent la prise de décisions stratégiques et l'optimisation des ressources.
+
+**Règles Métier :** Les données statistiques respectent l'anonymisation des informations patients. Les rapports sont générés en temps réel avec mise en cache pour optimiser les performances. L'export des données est sécurisé et tracé pour audit. Les métriques de géolocalisation respectent les contraintes de confidentialité des établissements.
+
 ### 2.4 Interfaces Utilisateur
 
 #### 2.4.1 Interface Patient
@@ -461,15 +513,21 @@ Les diagrammes d'états-transitions modélisent les changements d'état des obje
 
 **Recherche de Médecin :** La barre de recherche intelligente propose une saisie intuitive avec auto-complétion et suggestions contextuelles. Les filtres avancés permettent de combiner spécialité, distance géographique et tarif pour affiner les résultats. La carte interactive avec marqueurs offre une visualisation géographique immédiate des praticiens disponibles. Les profils détaillés des médecins fournissent toutes les informations nécessaires à la prise de décision (formation, expérience, tarifs, avis patients).
 
+**Assistant Chatbot :** L'interface chatbot se présente sous forme d'une fenêtre de discussion minimisable et non-intrusive, accessible depuis toutes les pages patient. L'interface conversationnelle guide l'utilisateur dans la description de ses symptômes avec des questions contextuelles intelligentes. Les réponses de l'assistant incluent des suggestions diagnostiques préliminaires, des recommandations d'urgence si nécessaire, et des orientations vers des spécialités médicales appropriées. L'historique des conversations est sauvegardé pour permettre un suivi longitudinal des préoccupations de santé.
+
 #### 2.4.2 Interface Médecin
 
 **Tableau de Bord :** Le tableau de bord médecin optimise la gestion quotidienne de l'activité professionnelle. L'affichage des rendez-vous du jour permet une préparation efficace des consultations. La liste des patients en attente facilite la gestion des urgences et des imprévus. Les statistiques d'activité fournissent des indicateurs de performance et d'évolution de la pratique. Les notifications urgentes alertent sur les situations nécessitant une attention immédiate.
 
 **Gestion des Patients :** La recherche de patients permet un accès rapide aux dossiers médicaux lors des consultations. Les dossiers médicaux complets centralisent toute l'information nécessaire à la prise en charge. La création de consultations documente chaque interaction thérapeutique de manière structurée. Les modules de prescription et recommandations facilitent le suivi post-consultation et la continuité des soins.
 
+**Statistiques et Analyses :** Le tableau de bord statistiques présente des graphiques interactifs Chart.js avec métriques d'activité personnalisées. Les visualisations incluent l'évolution du nombre de consultations, la répartition des patients par pathologie, les analyses de créneaux horaires optimaux, et les taux de présence aux rendez-vous. Les rapports d'activité sont exportables en PDF pour les besoins administratifs et comptables. Les graphiques de tendances permettent l'identification des patterns d'activité et l'optimisation de la planification.
+
 #### 2.4.3 Interface Administrative
 
 **Gestion Globale :** L'interface administrative centralise le pilotage de la plateforme. Le tableau de bord analytique fournit une vue d'ensemble de l'activité avec des indicateurs clés de performance. La gestion des utilisateurs permet l'administration des comptes et la résolution des problèmes d'accès. La configuration du système autorise l'adaptation de la plateforme aux besoins spécifiques. Les rapports d'activité génèrent des synthèses périodiques pour le suivi de la performance globale.
+
+**Tableaux de Bord Analytiques :** L'interface administrative intègre des tableaux de bord sophistiqués avec métriques globales de la plateforme. Les indicateurs incluent le nombre d'utilisateurs actifs par type et période, les statistiques d'utilisation des fonctionnalités principales, les métriques de performance système (temps de réponse, disponibilité), et les analyses géographiques de répartition des établissements. Les graphiques d'évolution temporelle permettent le suivi des tendances d'adoption et l'identification des pics d'activité pour l'optimisation des ressources. Les rapports de géolocalisation visualisent la densité des praticiens par région et facilitent l'analyse de couverture territoriale.
 
 ### 2.5 Architecture Fonctionnelle
 
@@ -502,6 +560,10 @@ L'architecture fonctionnelle s'organise en quatre couches distinctes pour garant
 **Gestion des Médecins :** Les endpoints médecins facilitent la recherche et la consultation des profils professionnels. GET /api/medecins fournit la liste complète des praticiens avec filtrage possible. GET /api/medecins/search offre une recherche avancée par critères multiples. GET /api/medecins/:id/disponibilites récupère les créneaux disponibles d'un praticien spécifique.
 
 **Gestion des Patients :** Les endpoints patients centralisent l'accès aux dossiers médicaux. GET /api/patients/:id/dossier récupère le dossier médical complet d'un patient. POST /api/patients/:id/consultation crée un nouveau compte-rendu de consultation. GET /api/patients/:id/historique fournit l'historique complet des interactions médicales du patient.
+
+**Assistant Chatbot IA :** Les endpoints de l'assistant IA gèrent l'analyse de symptômes et les interactions conversationnelles. POST /api/diagnosis/analyze traite l'analyse basique de symptômes avec règles prédéfinies. POST /api/diagnosis/ai-analyze effectue l'analyse avancée via les services IA externes. POST /api/diagnosis/chat gère les conversations avec l'assistant virtuel. GET /api/diagnosis/history récupère l'historique des analyses pour un patient. POST /api/diagnosis/feedback collecte les évaluations des patients sur la qualité des suggestions.
+
+**Statistiques et Métriques :** Les endpoints statistiques fournissent les données analytiques pour les tableaux de bord. GET /api/stats/medecin/:id génère les statistiques d'activité personnalisées pour un médecin. GET /api/stats/admin/global fournit les métriques globales de la plateforme. GET /api/stats/admin/users récupère les statistiques d'utilisation par type d'utilisateur. GET /api/stats/geolocation analyse la répartition géographique des établissements. POST /api/stats/export génère et exporte les rapports d'activité en PDF.
 
 ---
 
@@ -595,6 +657,97 @@ L'intégration frontend-backend utilise une API REST cohérente avec gestion d'e
 La fonctionnalité de géolocalisation combine l'API HTML5 Geolocation côté client avec des calculs de distance côté serveur. Les cartes interactives utilisent OpenStreetMap avec clustering des marqueurs pour les performances. Les filtres de recherche sont optimisés avec des requêtes SQL indexées.
 
 Le système de notifications push informe en temps réel des nouveaux rendez-vous et modifications. L'envoi d'emails utilise des templates responsive avec personnalisation selon le type d'utilisateur. Le système de rappels automatiques réduit l'absentéisme grâce à des notifications programmées.
+
+#### 3.2.4 Implémentation du Chatbot IA
+
+L'assistant chatbot s'appuie sur une architecture modulaire avec le contrôleur `diagnosisAssistantController.js` qui orchestre les interactions avec les services d'intelligence artificielle. Le gestionnaire AIManager implémente un système de fallback intelligent testant séquentiellement Ollama local, OpenAI GPT-3.5-turbo, et Hugging Face BioGPT-Large avant de revenir à l'analyse basée sur des règles prédéfinies.
+
+[Insert picture of chatbot architecture diagram showing AIManager, service fallback, and data flow]
+
+Le système d'analyse hybride combine trois approches : l'analyse basée sur des règles utilise une cartographie exhaustive de symptômes vers diagnostics potentiels couvrant plus de vingt symptômes courants, l'analyse par IA exploite des modèles pré-entraînés sur des corpus médicaux, et l'analyse contextuelle enrichit les suggestions selon l'intensité des symptômes et les combinaisons multi-systémiques. La persistance s'effectue via les tables `diagnosis_suggestions` et `diagnosis_feedback` pour traçabilité et amélioration continue.
+
+#### 3.2.5 Implémentation des Statistiques
+
+Le module statistiques utilise Chart.js avec React-ChartJS-2 pour générer des visualisations interactives et responsives. L'architecture backend comprend des contrôleurs spécialisés pour les métriques médecin et administrateur, avec requêtes SQL optimisées et mise en cache Redis pour les performances.
+
+[Insert picture of statistics dashboard showing various charts and KPIs]
+
+Les statistiques médecin incluent des graphiques d'évolution temporelle des consultations, des diagrammes de répartition des patients par pathologie, des analyses de créneaux horaires optimaux, et des métriques de taux de présence. Les statistiques administrateur centralisent les indicateurs globaux avec graphiques d'utilisateurs actifs, métriques de performance système, et analyses géographiques de répartition des établissements. L'export PDF utilise la bibliothèque jsPDF avec génération de rapports formatés et sécurisés.
+
+### 3.4 Technologies Utilisées - Stack Technique Complet
+
+#### 3.4.1 Frontend - Technologies Modernes
+
+**React.js Ecosystem :** L'interface utilisateur s'appuie sur React.js 18.2.0 avec une architecture basée sur les hooks et composants fonctionnels pour une performance optimale. React Router DOM 6.11.1 gère la navigation SPA avec protection des routes par rôle utilisateur. La gestion d'état utilise le Context API React et des hooks personnalisés pour centraliser la logique métier.
+
+**Interface Utilisateur Avancée :** Material-UI (MUI) 5.13.0 fournit un système de design cohérent avec @mui/icons-material pour l'iconographie, @mui/lab pour les composants expérimentaux, @mui/x-date-pickers pour la gestion des dates, et @mui/utils pour les utilitaires. Le système de thème personnalisé assure une identité visuelle médicale professionnelle.
+
+**Cartographie et Visualisation :** React Leaflet 5.0.0 avec Leaflet 1.9.4 intègre OpenStreetMap pour la géolocalisation interactive des médecins et institutions. Chart.js 4.4.9 avec React-ChartJS-2 5.3.0 génère des graphiques statistiques dynamiques. Recharts 2.15.3 complète les visualisations avec des composants graphiques spécialisés.
+
+**Communication et Utilitaires :** Axios 1.4.0 gère les communications HTTP avec intercepteurs d'authentification et gestion d'erreurs centralisée. Date-fns 2.30.0 optimise la manipulation des dates et créneaux horaires. Lucide-react 0.511.0 enrichit l'iconographie avec des icônes modernes et cohérentes.
+
+#### 3.4.2 Backend - Architecture Robuste
+
+**Runtime et Framework :** Node.js avec Express.js 4.18.2 implémente une API REST performante suivant l'architecture MVC. La structure modulaire sépare controllers, routes, middlewares et services pour une maintenabilité optimale.
+
+**Base de Données et ORM :** MySQL2 3.3.1 assure les connexions optimisées avec pool de connexions et requêtes préparées. L'architecture de base de données comprend 25+ tables normalisées avec contraintes d'intégrité référentielle strictes et index composites optimisés.
+
+**Sécurité et Authentification :** JWT (jsonwebtoken 9.0.0) gère l'authentification stateless avec tokens sécurisés. Bcrypt 5.1.0 assure le hashage des mots de passe avec salt. CORS 2.8.5 sécurise les requêtes cross-origin avec configuration granulaire.
+
+**Communication et Services :** Nodemailer 6.9.2 gère l'envoi d'emails avec templates HTML personnalisés et authentification SMTP. Axios 1.9.0 facilite les communications avec les services externes d'intelligence artificielle.
+
+**Configuration et Utilitaires :** Dotenv 16.0.3 sécurise la gestion des variables d'environnement. Date-fns 2.30.0 harmonise la manipulation des dates côté serveur.
+
+#### 3.4.3 Intelligence Artificielle - Services Hybrides
+
+**Services IA Locaux :** Ollama permet l'exécution locale de modèles de langage spécialisés en médecine (Phi3:mini, Mistral:7b) garantissant la confidentialité des données patients. L'architecture de fallback intelligent assure une disponibilité maximale du service d'assistance.
+
+**Services IA Externes :** OpenAI GPT-3.5-turbo fournit un service de fallback robuste pour l'analyse de symptômes complexes. Hugging Face BioGPT-Large offre une spécialisation médicale avancée. L'architecture multi-services optimise coûts et performance selon la disponibilité.
+
+**Gestion et Orchestration :** Le gestionnaire AIManager centralise l'orchestration des services IA avec système de fallback intelligent. La persistance des interactions via les tables `diagnosis_suggestions` et `diagnosis_feedback` assure traçabilité et amélioration continue.
+
+#### 3.4.4 Base de Données - Architecture Optimisée
+
+**Système de Gestion :** MySQL 8.0 avec architecture normalisée (3NF) et contraintes d'intégrité référentielle strictes. Plus de 25 tables interconnectées gèrent l'ensemble des données médicales et utilisateurs.
+
+**Optimisations Avancées :** Index composites optimisés pour les requêtes géographiques (latitude/longitude), recherches textuelles et jointures fréquentes. Index spatiaux pour les calculs de distance Haversine. Contraintes CHECK pour la validation des données médicales.
+
+**Audit et Sécurité :** Triggers automatiques pour l'audit des modifications dans `historique_actions`. Procédures stockées pour les calculs complexes de disponibilités et conflits de rendez-vous. Chiffrement des données sensibles et gestion granulaire des droits d'accès.
+
+### 3.5 Stratégies de Déploiement
+
+#### 3.5.1 Architecture de Déploiement
+
+**Approche Multi-Plateforme :** La plateforme médicale a été conçue pour supporter plusieurs stratégies de déploiement selon les besoins et contraintes des établissements de santé. L'architecture découplée frontend/backend facilite le déploiement sur différentes infrastructures cloud ou on-premise.
+
+**Séparation des Services :** Le frontend React peut être déployé sur des CDN statiques (Vercel, Netlify) pour des performances optimales. Le backend Node.js s'adapte aux plateformes serverless (Vercel Functions) ou aux serveurs traditionnels. La base de données MySQL peut être hébergée sur des services managés ou des instances dédiées.
+
+#### 3.5.2 Solutions de Déploiement Évaluées
+
+**Déploiement Cloud Gratuit :**
+- **Vercel + db4free.net :** Solution optimale pour démonstration et développement avec frontend sur Vercel (100GB bandwidth gratuit) et base de données MySQL gratuite sur db4free.net (200MB storage)
+- **Railway :** Plateforme tout-en-un avec $5 de crédit mensuel couvrant frontend, backend et base de données MySQL native
+- **Render + Aiven :** Alternative avec services gratuits pour applications web et base de données managée
+
+**Déploiement Professionnel :**
+- **AWS/Azure/GCP :** Solutions enterprise avec haute disponibilité, scaling automatique et conformité médicale
+- **Infrastructure On-Premise :** Déploiement local pour établissements nécessitant un contrôle total des données
+
+#### 3.5.3 Configuration de Production
+
+**Variables d'Environnement :** Configuration sécurisée via variables d'environnement pour les credentials de base de données, clés JWT, configuration SMTP, et APIs externes. Séparation stricte entre environnements de développement, test et production.
+
+**Optimisations Performance :** Compression gzip, mise en cache des ressources statiques, optimisation des requêtes SQL avec index appropriés, et configuration de pools de connexions pour la base de données.
+
+**Sécurité Production :** Configuration HTTPS obligatoire, headers de sécurité CSP, limitation du taux de requêtes, monitoring des tentatives d'intrusion, et sauvegarde automatisée des données.
+
+#### 3.5.4 Monitoring et Maintenance
+
+**Surveillance Système :** Monitoring des performances applicatives, surveillance de la disponibilité des services, alertes automatiques en cas de dysfonctionnement, et métriques d'utilisation pour l'optimisation continue.
+
+**Gestion des Mises à Jour :** Stratégie de déploiement continu avec tests automatisés, rollback automatique en cas d'erreur, et maintenance programmée avec notification utilisateurs.
+
+**Sauvegarde et Récupération :** Sauvegarde automatique quotidienne de la base de données, réplication des données critiques, et procédures de récupération d'urgence documentées.
 
 ### 3.3 Validation et Testing
 
@@ -798,7 +951,7 @@ La solution développée propose une interface intuitive et responsive qui s'ada
 
 Sur le plan technique, le projet a permis l'appropriation de technologies modernes et la mise en œuvre d'une architecture robuste. L'utilisation de React.js pour le frontend a facilité le développement d'une interface utilisateur dynamique et réactive. L'implémentation d'un backend Node.js avec Express.js a assuré la création d'une API REST performante et sécurisée. L'intégration de MySQL comme système de gestion de base de données a garanti la persistance et l'intégrité des données médicales sensibles.
 
-Les fonctionnalités avancées développées apportent une réelle valeur ajoutée aux utilisateurs. La recherche géographique de médecins avec carte interactive améliore significativement l'accessibilité aux soins. La gestion des patients walk-in répond aux besoins d'urgence de la pratique médicale quotidienne. Le système de notifications automatiques optimise la communication entre tous les acteurs de la chaîne de soins.
+Les fonctionnalités avancées développées apportent une réelle valeur ajoutée aux utilisateurs. La recherche géographique de médecins avec carte interactive améliore significativement l'accessibilité aux soins. La gestion des patients walk-in répond aux besoins d'urgence de la pratique médicale quotidienne. Le système de notifications automatiques optimise la communication entre tous les acteurs de la chaîne de soins. L'assistant chatbot IA révolutionne l'expérience patient en fournissant une première évaluation médicale accessible 24h/24. Les tableaux de bord statistiques permettent aux médecins et administrateurs d'optimiser leurs pratiques grâce à des analyses de performance détaillées.
 
 ### Défis Relevés et Solutions Apportées
 
@@ -870,15 +1023,15 @@ La plateforme développée constitue une base solide pour une éventuelle mise e
 
 ### Annexe A : Structure de la Base de Données
 
-La base de données MySQL de la plateforme médicale comprend plus de vingt-cinq tables principales organisées selon une architecture normalisée respectant les trois premières formes normales. L'architecture de données s'articule autour de tables centrales gérant l'authentification multi-rôles, les informations patients complètes et modifiables, la géolocalisation des médecins et institutions, ainsi que la gestion de huit types d'établissements de santé distincts. Les tables médicales spécialisées incluent la gestion des rendez-vous avec statuts détaillés, les consultations avec classification CIM-10, les antécédents médicaux catégorisés en cinq types, le système d'allergies avec niveaux de sévérité, les traitements avec suivi d'observance, et les constantes vitales permettant un suivi longitudinal. Le système d'analyses médicales comprend plus de dix catégories d'examens, plus de deux cents types d'analyses avec valeurs de référence, ainsi que la gestion des résultats d'imagerie. Les tables de gestion avancée incluent les disponibilités médecins avec créneaux récurrents, les notifications système, les favoris médecins, et un historique complet des actions pour audit de sécurité.
+La base de données MySQL de la plateforme médicale comprend plus de vingt-cinq tables principales organisées selon une architecture normalisée respectant les trois premières formes normales. L'architecture de données s'articule autour de tables centrales gérant l'authentification multi-rôles, les informations patients complètes et modifiables, la géolocalisation des médecins et institutions, ainsi que la gestion de huit types d'établissements de santé distincts. Les tables médicales spécialisées incluent la gestion des rendez-vous avec statuts détaillés, les consultations avec classification CIM-10, les antécédents médicaux catégorisés en cinq types, le système d'allergies avec niveaux de sévérité, les traitements avec suivi d'observance, et les constantes vitales permettant un suivi longitudinal. Le système d'analyses médicales comprend plus de dix catégories d'examens, plus de deux cents types d'analyses avec valeurs de référence, ainsi que la gestion des résultats d'imagerie. Les tables de gestion avancée incluent les disponibilités médecins avec créneaux récurrents, les notifications système, les favoris médecins, et un historique complet des actions pour audit de sécurité. Les tables d'intelligence artificielle comprennent `diagnosis_suggestions` pour le stockage des analyses de symptômes et `diagnosis_feedback` pour l'amélioration continue des algorithmes. Les tables statistiques incluent `statistiques_medecin` pour les métriques d'activité et `logs_activite` pour le suivi des actions utilisateur.
 
 ### Annexe B : API REST - Endpoints Implémentés
 
-L'architecture API REST de la plateforme comprend plus de trente-cinq endpoints organisés selon une structure MVC modulaire. Le module d'authentification expose quatre endpoints principaux gérant la connexion, l'inscription, la déconnexion et la récupération de mot de passe. Le système de gestion des rendez-vous propose huit endpoints couvrant les opérations CRUD complètes, la recherche de créneaux disponibles et la gestion des patients walk-in. Le module médecins offre douze endpoints pour la recherche multi-critères, la géolocalisation avancée, la gestion des disponibilités et les statistiques d'activité. La gestion des patients s'appuie sur dix endpoints permettant la manipulation des dossiers médicaux, la consultation de l'historique et la gestion des profils complets. Le système d'analyses médicales utilise six endpoints pour la gestion des catégories, des types d'examens et des résultats. Enfin, le module de notifications comprend cinq endpoints pour la gestion des alertes et l'envoi d'emails automatisés.
+L'architecture API REST de la plateforme comprend plus de quarante endpoints organisés selon une structure MVC modulaire. Le module d'authentification expose quatre endpoints principaux gérant la connexion, l'inscription, la déconnexion et la récupération de mot de passe. Le système de gestion des rendez-vous propose huit endpoints couvrant les opérations CRUD complètes, la recherche de créneaux disponibles et la gestion des patients walk-in. Le module médecins offre douze endpoints pour la recherche multi-critères, la géolocalisation avancée, la gestion des disponibilités et les statistiques d'activité. La gestion des patients s'appuie sur dix endpoints permettant la manipulation des dossiers médicaux, la consultation de l'historique et la gestion des profils complets. Le système d'analyses médicales utilise six endpoints pour la gestion des catégories, des types d'examens et des résultats. Le module de notifications comprend cinq endpoints pour la gestion des alertes et l'envoi d'emails automatisés. L'assistant chatbot IA expose cinq endpoints spécialisés pour l'analyse de symptômes, les interactions conversationnelles et la gestion du feedback. Le module statistiques propose cinq endpoints pour la génération de métriques personnalisées, les rapports d'activité et l'export de données analytiques.
 
 ### Annexe C : Architecture Frontend React
 
-L'application React de la plateforme s'organise selon une architecture modulaire comprenant plus de quarante-cinq composants répartis dans une structure hiérarchique optimisée. La structure des dossiers respecte les bonnes pratiques de développement React avec une séparation claire entre composants principaux, vues de pages, hooks personnalisés, services d'API et utilitaires. Les composants clés incluent l'interface d'accueil patient, le tableau de bord médecin, le système de gestion des patients et le module de vérification email. L'architecture thématique comprend des modules spécialisés pour l'authentification, les interfaces patient et médecin, la gestion des rendez-vous, la recherche géolocalisée et les composants de mise en page. L'intégration technologique s'appuie sur Material-UI pour l'interface utilisateur, React Leaflet pour la cartographie interactive, Chart.js pour les visualisations graphiques, React Router pour la navigation SPA et Axios pour les communications API.
+L'application React de la plateforme s'organise selon une architecture modulaire comprenant plus de cinquante composants répartis dans une structure hiérarchique optimisée. La structure des dossiers respecte les bonnes pratiques de développement React avec une séparation claire entre composants principaux, vues de pages, hooks personnalisés, services d'API et utilitaires. Les composants clés incluent l'interface d'accueil patient, le tableau de bord médecin, le système de gestion des patients, le module de vérification email, l'assistant chatbot IA et les tableaux de bord statistiques. L'architecture thématique comprend des modules spécialisés pour l'authentification, les interfaces patient et médecin, la gestion des rendez-vous, la recherche géolocalisée, l'intelligence artificielle conversationnelle, les analyses statistiques et les composants de mise en page. L'intégration technologique s'appuie sur Material-UI pour l'interface utilisateur, React Leaflet pour la cartographie interactive, Chart.js pour les visualisations graphiques, React Router pour la navigation SPA, Axios pour les communications API, et des composants personnalisés pour l'interface chatbot et les graphiques statistiques interactifs.
 
 ### Annexe D : Fichiers de Test et Validation
 
