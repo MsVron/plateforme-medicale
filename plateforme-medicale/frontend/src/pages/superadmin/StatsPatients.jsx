@@ -150,8 +150,30 @@ const StatsPatients = () => {
     return icons[iconName] || <AccountBoxIcon />;
   };
 
-  const exportData = () => {
-    console.log('Exporting patient statistics...');
+  const exportData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/superadmin/export/patients?period=${period}&ageGroup=${ageGroup}&region=${region}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `patient-statistics-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Error exporting patient statistics:', error);
+    }
   };
 
   if (loading) {

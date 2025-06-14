@@ -153,8 +153,30 @@ const StatsInstitutions = () => {
     return colors[status] || '#9E9E9E';
   };
 
-  const exportData = () => {
-    console.log('Exporting institution statistics...');
+  const exportData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/superadmin/export/institutions?period=${period}&region=${region}&type=${institutionType}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `institution-statistics-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Error exporting institution statistics:', error);
+    }
   };
 
   if (loading) {

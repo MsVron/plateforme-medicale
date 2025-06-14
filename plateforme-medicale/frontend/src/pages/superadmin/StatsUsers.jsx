@@ -130,9 +130,30 @@ const StatsUsers = () => {
     return colors[status] || '#9E9E9E';
   };
 
-  const exportData = () => {
-    // Implementation for exporting user statistics
-    console.log('Exporting user statistics...');
+  const exportData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/superadmin/export/users?period=${period}&userType=${userType}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `user-statistics-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Error exporting user statistics:', error);
+    }
   };
 
   if (loading) {

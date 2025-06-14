@@ -149,8 +149,30 @@ const StatsDoctors = () => {
     return colors[status] || '#9E9E9E';
   };
 
-  const exportData = () => {
-    console.log('Exporting doctor statistics...');
+  const exportData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/superadmin/export/doctors?period=${period}&specialty=${specialty}&region=${region}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `doctor-statistics-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Error exporting doctor statistics:', error);
+    }
   };
 
   if (loading) {

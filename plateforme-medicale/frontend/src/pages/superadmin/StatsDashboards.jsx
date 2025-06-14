@@ -164,20 +164,33 @@ const StatsDashboards = () => {
     fetchDashboardData();
   }, [filters]);
 
-  // Real-time updates simulation
+  // Real-time updates from API
   useEffect(() => {
     if (!realTimeEnabled) return;
 
-    const interval = setInterval(() => {
-      setMetrics(prev => ({
-        ...prev,
-        realTimeData: {
-          ...prev.realTimeData,
-          activeUsers: prev.realTimeData.activeUsers + Math.floor(Math.random() * 10 - 5),
-          ongoingConsultations: Math.max(0, prev.realTimeData.ongoingConsultations + Math.floor(Math.random() * 6 - 3)),
-          systemLoad: Math.max(0, Math.min(100, prev.realTimeData.systemLoad + (Math.random() * 4 - 2)))
+    const interval = setInterval(async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/admin/superadmin/stats/realtime', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const realTimeData = await response.json();
+          setMetrics(prev => ({
+            ...prev,
+            realTimeData: {
+              ...prev.realTimeData,
+              ...realTimeData
+            }
+          }));
         }
-      }));
+      } catch (error) {
+        console.error('Error fetching real-time data:', error);
+      }
     }, 5000);
 
     return () => clearInterval(interval);
@@ -187,20 +200,79 @@ const StatsDashboards = () => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const exportReport = (reportType) => {
-    console.log(`Exporting ${reportType} report...`);
-    // Implementation for exporting reports
+  const exportReport = async (reportType) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/superadmin/export/${reportType}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ filters, dashboard: selectedDashboard })
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${reportType}-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Error exporting report:', error);
+    }
   };
 
-  const downloadReport = (reportId) => {
-    console.log(`Downloading report ${reportId}...`);
-    // Implementation for downloading reports
+  const downloadReport = async (reportId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/superadmin/reports/${reportId}/download`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report-${reportId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Error downloading report:', error);
+    }
   };
 
-  const createCustomDashboard = (dashboardData) => {
-    console.log('Creating custom dashboard:', dashboardData);
-    setCreateDashboardOpen(false);
-    // Implementation for creating custom dashboard
+  const createCustomDashboard = async (dashboardData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin/superadmin/dashboards', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dashboardData)
+      });
+      
+      if (response.ok) {
+        const newDashboard = await response.json();
+        setDashboards(prev => [...prev, newDashboard]);
+        setCreateDashboardOpen(false);
+      }
+    } catch (error) {
+      console.error('Error creating dashboard:', error);
+    }
   };
 
   const getAlertColor = (type) => {
