@@ -8,9 +8,9 @@ const performanceOptimizer = require('../utils/performanceOptimizer');
 class ColabService {
   constructor() {
     this.apiUrl = process.env.COLAB_API_URL || null;
-    this.timeout = parseInt(process.env.COLAB_TIMEOUT) || 30000;
+    this.timeout = parseInt(process.env.COLAB_TIMEOUT) || 120000;
     this.enabled = process.env.COLAB_ENABLED === 'true' && this.apiUrl;
-    this.maxRetries = 2;
+    this.maxRetries = 3;
     
     if (this.enabled) {
       this.axiosInstance = axios.create({
@@ -18,11 +18,12 @@ class ColabService {
         timeout: this.timeout,
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'Medical-Chatbot/1.0'
+          'User-Agent': 'Medical-Chatbot/1.0',
+          'ngrok-skip-browser-warning': 'true'  // Skip ngrok browser warning
         }
       });
       
-      console.log(`🚀 Colab Service initialized: ${this.apiUrl}`);
+      console.log(`🚀 Colab Service initialized: ${this.apiUrl} (timeout: ${this.timeout}ms)`);
     } else {
       console.log('⚠️ Colab Service disabled - missing COLAB_API_URL or COLAB_ENABLED=false');
     }
@@ -35,7 +36,12 @@ class ColabService {
     if (!this.enabled) return false;
     
     try {
-      const response = await this.axiosInstance.get('/', { timeout: 5000 });
+      const response = await this.axiosInstance.get('/', { 
+        timeout: 5000,
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
       return response.status === 200;
     } catch (error) {
       console.warn('Colab service unavailable:', error.message);
@@ -48,7 +54,11 @@ class ColabService {
    */
   async testConnection() {
     try {
-      const response = await this.axiosInstance.get('/');
+      const response = await this.axiosInstance.get('/', {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
       return {
         success: true,
         status: response.status,
@@ -64,7 +74,7 @@ class ColabService {
   }
 
   /**
-   * Generate medical response using Colab phi3:mini
+   * Generate medical response using Colab phi3:mini with retry logic
    */
   async generateMedicalResponse(message, context = {}) {
     if (!this.enabled) {
@@ -72,57 +82,87 @@ class ColabService {
     }
 
     const startTime = performanceOptimizer.startTimer();
+    let lastError = null;
     
-    try {
-      // Prepare request payload
-      const payload = {
-        message: message,
-        conversation_id: context.conversationId || this.generateConversationId(),
-        patient_id: context.patientId || 'default_patient',
-        language: context.language || 'fr'
-      };
-
-      // Add conversation history if available
-      if (context.conversationHistory && context.conversationHistory.length > 0) {
-        payload.conversation_history = context.conversationHistory;
-      }
-
-      console.log(`🤖 Sending request to Colab API: ${message.substring(0, 50)}...`);
-      
-      // Send request to Colab API
-      const response = await this.axiosInstance.post('/chat', payload);
-      
-      if (response.data && response.data.status === 'success') {
-        const aiResponse = response.data.response;
-        
-        // Apply safety filters and enhancements
-        const enhancedResponse = this.enhanceResponse(aiResponse, context);
-        
-        performanceOptimizer.endTimer(startTime, false, false);
-        
-        console.log(`✅ Colab API response received (${aiResponse.length} chars)`);
-        
-        return {
-          response: enhancedResponse,
-          conversationId: response.data.conversation_id,
-          service: 'colab',
-          model: 'phi3:mini',
-          timestamp: response.data.timestamp
+    // Retry logic for better reliability
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        // Prepare request payload
+        const payload = {
+          message: message,
+          conversation_id: context.conversationId || this.generateConversationId(),
+          patient_id: context.patientId || 'default_patient',
+          language: context.language || 'fr'
         };
-      } else {
-        throw new Error('Invalid response from Colab API');
+
+        // Add conversation history if available
+        if (context.conversationHistory && context.conversationHistory.length > 0) {
+          payload.conversation_history = context.conversationHistory;
+        }
+
+        console.log(`🤖 Sending request to Colab API (attempt ${attempt}/${this.maxRetries}): ${message.substring(0, 50)}...`);
+        
+        // Send request to Colab API with dynamic timeout
+        const requestTimeout = attempt === 1 ? this.timeout : this.timeout * 1.5; // Increase timeout on retries
+        const response = await this.axiosInstance.post('/chat', payload, {
+          timeout: requestTimeout,
+          headers: {
+            'ngrok-skip-browser-warning': 'true'  // Ensure ngrok warning is skipped
+          }
+        });
+        
+        if (response.data && response.data.status === 'success') {
+          const aiResponse = response.data.response;
+          
+          // Apply safety filters and enhancements
+          const enhancedResponse = this.enhanceResponse(aiResponse, context);
+          
+          performanceOptimizer.endTimer(startTime, false, false);
+          
+          console.log(`✅ Colab API response received (${aiResponse.length} chars) on attempt ${attempt}`);
+          
+          return {
+            response: enhancedResponse,
+            conversationId: response.data.conversation_id,
+            service: 'colab',
+            model: 'phi3:mini',
+            timestamp: response.data.timestamp,
+            attempt: attempt
+          };
+        } else {
+          throw new Error('Invalid response from Colab API');
+        }
+        
+      } catch (error) {
+        lastError = error;
+        
+        // Log the error for this attempt
+        if (error.code === 'ECONNABORTED') {
+          console.warn(`⚠️ Colab API timeout on attempt ${attempt}/${this.maxRetries} (${this.timeout}ms)`);
+        } else if (error.response) {
+          console.warn(`⚠️ Colab API error on attempt ${attempt}/${this.maxRetries}: ${error.response.status}`);
+        } else {
+          console.warn(`⚠️ Colab connection error on attempt ${attempt}/${this.maxRetries}: ${error.message}`);
+        }
+        
+        // If this is not the last attempt, wait before retrying
+        if (attempt < this.maxRetries) {
+          const waitTime = Math.min(1000 * attempt, 5000); // Progressive backoff, max 5 seconds
+          console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
       }
-      
-    } catch (error) {
-      performanceOptimizer.endTimer(startTime, false, true);
-      
-      if (error.code === 'ECONNABORTED') {
-        throw new Error(`Colab API timeout after ${this.timeout}ms`);
-      } else if (error.response) {
-        throw new Error(`Colab API error (${error.response.status}): ${error.response.data?.detail || error.message}`);
-      } else {
-        throw new Error(`Colab connection error: ${error.message}`);
-      }
+    }
+    
+    // All attempts failed
+    performanceOptimizer.endTimer(startTime, false, true);
+    
+    if (lastError.code === 'ECONNABORTED') {
+      throw new Error(`Colab API timeout after ${this.maxRetries} attempts (${this.timeout}ms each)`);
+    } else if (lastError.response) {
+      throw new Error(`Colab API error after ${this.maxRetries} attempts (${lastError.response.status}): ${lastError.response.data?.detail || lastError.message}`);
+    } else {
+      throw new Error(`Colab connection error after ${this.maxRetries} attempts: ${lastError.message}`);
     }
   }
 
@@ -198,8 +238,8 @@ class ColabService {
     // Ensure medical disclaimer is present
     if (!this.hasDisclaimer(enhanced)) {
       const disclaimer = context.language === 'ar' 
-        ? "\n\n⚠️ **تذكير**: هاد المحادثة غير للمعلومات فقط. **شوف طبيب مختص** لأي مشكل صحي."
-        : "\n\n⚠️ **Rappel**: Cette conversation est à titre informatif uniquement. **Consultez un professionnel de santé** pour tout problème médical.";
+        ? "\n\n⚠️ <strong>تذكير</strong>: هاد المحادثة غير للمعلومات فقط. <strong>شوف طبيب مختص</strong> لأي مشكل صحي."
+        : "\n\n⚠️ <strong>Rappel</strong>: Cette conversation est à titre informatif uniquement. <strong>Consultez un professionnel de santé</strong> pour tout problème médical.";
       
       enhanced += disclaimer;
     }
@@ -247,24 +287,26 @@ class ColabService {
   }
 
   /**
-   * Enhance bold formatting for medical terms
+   * Enhance bold formatting for medical terms - Convert markdown to HTML
    */
   enhanceBoldFormatting(response) {
+    // First convert existing markdown bold (**text**) to HTML bold (<strong>text</strong>)
+    let enhanced = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Then ensure important medical terms are bolded if not already
     const medicalTerms = [
       'urgent', 'urgence', 'important', 'consultation', 'médecin', 'docteur',
       'symptômes', 'douleur', 'traitement', 'médicament', 'diagnostic',
       'neurologue', 'cardiologue', 'gastro-entérologue', 'dermatologue',
       'gynécologue', 'urologue', 'pneumologue', 'rhumatologue',
       'endocrinologue', 'psychiatre', 'psychologue', 'orl', 'ophtalmologue',
-      '24h', '48h', '72h', 'heures', 'jours', 'semaines'
+      '24h', '48h', '72h', 'heures', 'jours', 'semaines', 'rappel', 'recommandation'
     ];
-
-    let enhanced = response;
     
     medicalTerms.forEach(term => {
-      // Only bold if not already bolded
-      const regex = new RegExp(`(?<!\\*\\*)\\b${term}\\b(?!\\*\\*)`, 'gi');
-      enhanced = enhanced.replace(regex, `**${term}**`);
+      // Only bold if not already in strong tags
+      const regex = new RegExp(`(?<!<strong>)\\b${term}\\b(?![^<]*</strong>)`, 'gi');
+      enhanced = enhanced.replace(regex, `<strong>${term}</strong>`);
     });
 
     return enhanced;

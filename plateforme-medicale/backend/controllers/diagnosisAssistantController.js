@@ -695,7 +695,7 @@ exports.chatWithAssistant = async (req, res) => {
       return res.status(400).json({ message: 'Message requis' });
     }
 
-    const currentConversationId = conversationId || `conv_${Date.now()}`;
+    let currentConversationId = conversationId || `conv_${Date.now()}`;
 
     // Retrieve conversation history from database
     let conversationHistory = [];
@@ -782,14 +782,27 @@ exports.chatWithAssistant = async (req, res) => {
       }
     });
 
+    // Add specific doctor recommendation based on symptoms
+    const analysis = analyzeSymptoms(message);
+    const bodyParts = extractBodyParts(message.toLowerCase());
+    const symptoms = extractSymptoms(message.toLowerCase());
+    const painLevel = extractPainLevel(message);
+    const severity = calculateSeverity(painLevel, symptoms);
+    
+    // Add doctor recommendation if symptoms are detected
+    if (symptoms.length > 0 || bodyParts.length > 0) {
+      const doctorRecommendation = addDoctorRecommendation(bodyParts, symptoms, severity, language);
+      aiResponse += doctorRecommendation;
+    }
+
     // Add medical disclaimer if not present
     const hasDisclaimer = aiResponse.includes('⚠️') && 
       (aiResponse.includes('professionnel de santé') || aiResponse.includes('طبيب مختص'));
     
     if (!hasDisclaimer) {
     const disclaimer = language === 'ar' 
-      ? "\n\n⚠️ تذكير: هاد المحادثة غير للمعلومات فقط. شوف طبيب مختص لأي مشكل صحي."
-      : "\n\n⚠️ Rappel: Cette conversation est à titre informatif uniquement. Consultez un professionnel de santé pour tout problème médical.";
+      ? "\n\n⚠️ <strong>تذكير</strong>: هاد المحادثة غير للمعلومات فقط. <strong>شوف طبيب مختص</strong> لأي مشكل صحي."
+      : "\n\n⚠️ <strong>Rappel</strong>: Cette conversation est à titre informatif uniquement. <strong>Consultez un professionnel de santé</strong> pour tout problème médical.";
     
     aiResponse += disclaimer;
     }
@@ -1092,15 +1105,15 @@ function addDoctorRecommendation(bodyParts, symptoms, severity, language = 'fr')
   
   if (language === 'ar') {
     const doctorTypeAr = getDoctorTypeInArabic(doctorType);
-    recommendation = `\n\n👨‍⚕️ **نصيحة طبية**: نصحك تشوف **${doctorTypeAr}**`;
+    recommendation = `\n\n👨‍⚕️ <strong>نصيحة طبية</strong>: نصحك تشوف <strong>${doctorTypeAr}</strong>`;
     if (reason) {
       recommendation += ` ${reason}`;
     }
     recommendation += '.\n\n';
   } else {
-    recommendation = `\n\n👨‍⚕️ **Recommandation médicale**: Je vous conseille de consulter un **${doctorType}**`;
+    recommendation = `\n\n👨‍⚕️ <strong>Recommandation médicale</strong>: Je vous conseille de consulter un <strong>${doctorType}</strong>`;
     if (reason) {
-      recommendation += ` **${reason}**`;
+      recommendation += ` <strong>${reason}</strong>`;
     }
     recommendation += '.\n\n';
   }
@@ -1108,16 +1121,16 @@ function addDoctorRecommendation(bodyParts, symptoms, severity, language = 'fr')
   // Add urgency note based on severity
   if (severity === 'high') {
     recommendation += language === 'ar' 
-      ? '⚠️ **مهم**: خاصك تشوف **الطبيب بسرعة** أو تمشي **للمستعجلات**!'
-      : '⚠️ **IMPORTANT**: **Consultez rapidement** ou rendez-vous aux **urgences**!';
+      ? '⚠️ <strong>مهم</strong>: خاصك تشوف <strong>الطبيب بسرعة</strong> أو تمشي <strong>للمستعجلات</strong>!'
+      : '⚠️ <strong>IMPORTANT</strong>: <strong>Consultez rapidement</strong> ou rendez-vous aux <strong>urgences</strong>!';
   } else if (severity === 'medium') {
     recommendation += language === 'ar'
-      ? '📅 **نصيحة**: شوف الطبيب في أقرب وقت ممكن (**خلال 24-48 ساعة**).'
-      : '📅 **Conseil**: Prenez rendez-vous dans les prochains jours (**24-48h**).';
+      ? '📅 <strong>نصيحة</strong>: شوف الطبيب في أقرب وقت ممكن (<strong>خلال 24-48 ساعة</strong>).'
+      : '📅 <strong>Conseil</strong>: Prenez rendez-vous dans les prochains jours (<strong>24-48h</strong>).';
   } else {
     recommendation += language === 'ar'
-      ? '📅 **نصيحة**: شوف الطبيب إذا **استمرت الأعراض** أو **تطورت**.'
-      : '📅 **Conseil**: Consultez si les **symptômes persistent** ou **s\'aggravent**.';
+      ? '📅 <strong>نصيحة</strong>: شوف الطبيب إذا <strong>استمرت الأعراض</strong> أو <strong>تطورت</strong>.'
+      : '📅 <strong>Conseil</strong>: Consultez si les <strong>symptômes persistent</strong> ou <strong>s\'aggravent</strong>.';
   }
 
   return recommendation;

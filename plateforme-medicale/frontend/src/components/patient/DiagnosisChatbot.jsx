@@ -40,8 +40,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   Psychology as PsychologyIcon,
   Science as ScienceIcon,
-  Add as AddIcon,
-  Language as LanguageIcon
+  Add as AddIcon
 } from '@mui/icons-material';
 import axios from '../../services/axiosConfig';
 
@@ -51,12 +50,15 @@ const DiagnosisChatbot = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [currentView, setCurrentView] = useState('chat'); // 'chat', 'symptoms', 'history'
   
+  // Language state
+  const [language, setLanguage] = useState('fr'); // 'fr' for French, 'ar' for Arabic
+  
   // Chat state
   const [messages, setMessages] = useState([
     {
       id: 1,
       type: 'assistant',
-      message: 'أهلا وسهلا! أنا المساعد الطبي الافتراضي ديالك. يمكنني نعاونك باش تحلل الأعراض ديالك ونجاوب على الأسئلة ديالك على الصحة. كيفاش يمكنني نعاونك اليوم؟\n\nBonjour ! Je suis votre assistant médical virtuel. Je peux vous aider à analyser vos symptômes et répondre à vos questions de santé. Comment puis-je vous aider aujourd\'hui ?',
+      message: 'Bonjour ! Je suis votre assistant médical virtuel. Je peux vous aider à analyser vos symptômes et répondre à vos questions de santé. Comment puis-je vous aider aujourd\'hui ?',
       timestamp: new Date().toISOString()
     }
   ]);
@@ -83,9 +85,28 @@ const DiagnosisChatbot = () => {
   // UI state
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [error, setError] = useState('');
-  const [language, setLanguage] = useState('fr'); // 'fr' for French, 'ar' for Darija
   
   const messagesEndRef = useRef(null);
+
+  // Function to get welcome message based on language
+  const getWelcomeMessage = (lang) => {
+    return lang === 'fr' 
+      ? 'Bonjour ! Je suis votre assistant médical virtuel. Je peux vous aider à analyser vos symptômes et répondre à vos questions de santé. Comment puis-je vous aider aujourd\'hui ?'
+      : 'أهلا وسهلا! أنا المساعد الطبي الذكي ديالك. يمكنني نعاونك باش تحلل الأعراض ديالك ونجاوب على الأسئلة ديال الصحة. كيفاش يمكنني نعاونك اليوم؟';
+  };
+
+  // Function to handle language change
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    // Update the welcome message
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === 1 
+          ? { ...msg, message: getWelcomeMessage(newLanguage) }
+          : msg
+      )
+    );
+  };
 
   useEffect(() => {
     if (isOpen && currentView === 'symptoms') {
@@ -176,7 +197,9 @@ const DiagnosisChatbot = () => {
         const errorMessage = {
           id: Date.now() + 1,
           type: 'assistant',
-          message: 'Veuillez vous connecter pour utiliser l\'assistant médical.',
+          message: language === 'fr' 
+            ? 'Veuillez vous connecter pour utiliser l\'assistant médical.'
+            : 'خاصك تدخل باش تستعمل المساعد الطبي.',
           timestamp: new Date().toISOString(),
           isError: true
         };
@@ -188,7 +211,7 @@ const DiagnosisChatbot = () => {
       const response = await axios.post('/patient/diagnosis/chat', {
         message: inputMessage,
         conversationId,
-        language: language // Add language preference
+        language
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -208,14 +231,22 @@ const DiagnosisChatbot = () => {
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      let errorMessage = 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer plus tard.';
+      let errorMessage = language === 'fr' 
+        ? 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer plus tard.'
+        : 'سماح لي، كاين مشكل تقني. عاود المحاولة من بعد.';
       
       if (error.response?.status === 401) {
-        errorMessage = 'Session expirée. Veuillez vous reconnecter pour continuer.';
+        errorMessage = language === 'fr' 
+          ? 'Session expirée. Veuillez vous reconnecter pour continuer.'
+          : 'انتهت الجلسة. خاصك تدخل من جديد باش تكمل.';
       } else if (error.response?.status === 403) {
-        errorMessage = 'Accès non autorisé. Cette fonctionnalité est réservée aux patients.';
+        errorMessage = language === 'fr' 
+          ? 'Accès non autorisé. Cette fonctionnalité est réservée aux patients.'
+          : 'ما عندكش الصلاحية. هاد الخدمة خاصة بالمرضى فقط.';
       } else if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        errorMessage = 'Impossible de se connecter au serveur. Vérifiez que le serveur backend est démarré.';
+        errorMessage = language === 'fr' 
+          ? 'Impossible de se connecter au serveur. Vérifiez que le serveur backend est démarré.'
+          : 'ما قدرناش نتصلو بالسيرفر. تأكد أن السيرفر خدام.';
       }
       
       const errorMsg = {
@@ -972,7 +1003,7 @@ const DiagnosisChatbot = () => {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
                 }}>
-                  {language === 'fr' ? 'Votre santé, notre priorité' : 'صحتك أولويتنا'}
+                  {language === 'fr' ? 'Votre santé, notre priorité' : 'صحتك، أولويتنا'}
                 </Typography>
               )}
             </Box>
@@ -981,7 +1012,7 @@ const DiagnosisChatbot = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, position: 'relative', zIndex: 1 }}>
             {!isMinimized && (
               <>
-                <Tooltip title="Chat">
+                <Tooltip title={language === 'fr' ? 'Chat' : 'محادثة'}>
                   <IconButton
                     size="small"
                     sx={{ 
@@ -997,7 +1028,7 @@ const DiagnosisChatbot = () => {
                     <ChatIcon sx={{ fontSize: 16 }} />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Symptômes">
+                <Tooltip title={language === 'fr' ? 'Symptômes' : 'الأعراض'}>
                   <IconButton
                     size="small"
                     sx={{ 
@@ -1013,7 +1044,7 @@ const DiagnosisChatbot = () => {
                     <PsychologyIcon sx={{ fontSize: 16 }} />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Historique">
+                <Tooltip title={language === 'fr' ? 'Historique' : 'التاريخ'}>
                   <IconButton
                     size="small"
                     sx={{ 
@@ -1033,21 +1064,7 @@ const DiagnosisChatbot = () => {
               </>
             )}
             
-            <Tooltip title={language === 'fr' ? 'التبديل إلى الدارجة' : 'Passer au français'}>
-              <IconButton
-                size="small"
-                sx={{ 
-                  color: 'white',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
-                  transition: 'all 0.2s ease',
-                  width: 32,
-                  height: 32
-                }}
-                onClick={() => setLanguage(language === 'fr' ? 'ar' : 'fr')}
-              >
-                <LanguageIcon sx={{ fontSize: 16 }} />
-              </IconButton>
-            </Tooltip>
+
             
             <Tooltip title={isMinimized ? "Agrandir" : "Réduire"}>
               <IconButton
