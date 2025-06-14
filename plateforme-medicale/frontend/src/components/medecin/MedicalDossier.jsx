@@ -476,7 +476,7 @@ const MedicalDossier = () => {
                   <ListItem>
                     <ListItemText 
                       primary="Date de naissance" 
-                      secondary={formatDate(patient.date_naissance)} 
+                      secondary={`${formatDate(patient.date_naissance)} (${calculateAge(patient.date_naissance)} ans)`} 
                     />
                   </ListItem>
                   <ListItem>
