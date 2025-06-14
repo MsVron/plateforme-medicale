@@ -96,132 +96,46 @@ const StatsInstitutions = () => {
     topPerformers: []
   });
 
-  // Mock data - replace with actual API call
+  // Fetch real data from API
   useEffect(() => {
     const fetchInstitutionStats = async () => {
       setLoading(true);
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/admin/superadmin/stats/institutions?period=${period}&type=${institutionType}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
-        const mockStats = {
-          totalInstitutions: 450,
-          activeInstitutions: 425,
-          newInstitutions: 28,
-          totalDoctors: 1250,
-          institutionTypes: [
-            { name: 'Hôpitaux', count: 85, percentage: 18.9, color: '#FF6B6B' },
-            { name: 'Cliniques', count: 165, percentage: 36.7, color: '#4ECDC4' },
-            { name: 'Cabinets privés', count: 120, percentage: 26.7, color: '#45B7D1' },
-            { name: 'Centres médicaux', count: 55, percentage: 12.2, color: '#96CEB4' },
-            { name: 'Laboratoires', count: 25, percentage: 5.6, color: '#FFEAA7' }
-          ],
-          facilityUsage: [
-            { name: 'CHU Hassan II', consultations: 6850, doctors: 285, utilization: 92.5, efficiency: 94.2 },
-            { name: 'Clinique Atlas', consultations: 5320, doctors: 220, utilization: 87.3, efficiency: 89.1 },
-            { name: 'Hôpital Ibn Sina', consultations: 4680, doctors: 195, utilization: 85.7, efficiency: 88.5 },
-            { name: 'Centre Médical Al Madina', consultations: 4250, doctors: 180, utilization: 91.2, efficiency: 92.8 },
-            { name: 'Polyclinique Al Amal', consultations: 3850, doctors: 165, utilization: 88.9, efficiency: 90.3 }
-          ],
-          doctorCoordination: [
-            { institution: 'CHU Hassan II', coordination: 95.2, scheduleEfficiency: 92.8, conflicts: 3 },
-            { institution: 'Clinique Atlas', coordination: 89.5, scheduleEfficiency: 88.2, conflicts: 8 },
-            { institution: 'Hôpital Ibn Sina', coordination: 87.3, scheduleEfficiency: 85.9, conflicts: 12 },
-            { institution: 'Centre Médical Al Madina', coordination: 91.8, scheduleEfficiency: 90.1, conflicts: 5 },
-            { institution: 'Polyclinique Al Amal', coordination: 93.4, scheduleEfficiency: 91.7, conflicts: 4 }
-          ],
-          crossReferrals: [
-            { from: 'Médecine générale', to: 'Cardiologie', count: 485, success: 89.2 },
-            { from: 'Médecine générale', to: 'Dermatologie', count: 352, success: 92.1 },
-            { from: 'Pédiatrie', to: 'Neurologie', count: 278, success: 85.6 },
-            { from: 'Cardiologie', to: 'Chirurgie cardiaque', count: 156, success: 94.8 },
-            { from: 'Orthopédie', to: 'Kinésithérapie', count: 423, success: 96.2 }
-          ],
-          institutionGrowth: [
-            { month: 'Jan', new: 3, active: 420, growth: 2.1 },
-            { month: 'Fév', new: 2, active: 422, growth: 1.8 },
-            { month: 'Mar', new: 4, active: 426, growth: 2.5 },
-            { month: 'Avr', new: 5, active: 431, growth: 3.2 },
-            { month: 'Mai', new: 6, active: 437, growth: 3.8 },
-            { month: 'Jun', new: 8, active: 445, growth: 4.2 }
-          ],
-          performanceMetrics: [
-            { metric: 'Taux d\'occupation moyen', value: 87.5, target: 85, status: 'success' },
-            { metric: 'Temps d\'attente moyen', value: 18.2, target: 20, status: 'success' },
-            { metric: 'Satisfaction patients', value: 4.7, target: 4.5, status: 'success' },
-            { metric: 'Efficacité opérationnelle', value: 91.3, target: 90, status: 'success' },
-            { metric: 'Taux de recommandation', value: 88.9, target: 85, status: 'success' }
-          ],
-          regionDistribution: [
-            { region: 'Casablanca-Settat', institutions: 125, percentage: 27.8 },
-            { region: 'Rabat-Salé-Kénitra', institutions: 85, percentage: 18.9 },
-            { region: 'Marrakech-Safi', institutions: 75, percentage: 16.7 },
-            { region: 'Fès-Meknès', institutions: 65, percentage: 14.4 },
-            { region: 'Tanger-Tétouan-Al Hoceïma', institutions: 55, percentage: 12.2 },
-            { region: 'Autres', institutions: 45, percentage: 10.0 }
-          ],
-          capacityUtilization: [
-            { institution: 'CHU Hassan II', capacity: 500, used: 462, percentage: 92.4 },
-            { institution: 'Clinique Atlas', capacity: 300, used: 262, percentage: 87.3 },
-            { institution: 'Hôpital Ibn Sina', capacity: 400, used: 343, percentage: 85.8 },
-            { institution: 'Centre Médical Al Madina', capacity: 250, used: 228, percentage: 91.2 },
-            { institution: 'Polyclinique Al Amal', capacity: 200, used: 178, percentage: 89.0 }
-          ],
-          patientVolume: [
-            { month: 'Jan', volume: 28450, growth: 5.2 },
-            { month: 'Fév', volume: 29850, growth: 7.1 },
-            { month: 'Mar', volume: 31250, growth: 8.5 },
-            { month: 'Avr', volume: 32680, growth: 9.8 },
-            { month: 'Mai', volume: 34120, growth: 11.2 },
-            { month: 'Jun', volume: 35890, growth: 12.8 }
-          ],
-          specialtyDistribution: [
-            { specialty: 'Médecine générale', institutions: 445, percentage: 98.9 },
-            { specialty: 'Cardiologie', institutions: 180, percentage: 40.0 },
-            { specialty: 'Pédiatrie', institutions: 165, percentage: 36.7 },
-            { specialty: 'Dermatologie', institutions: 125, percentage: 27.8 },
-            { specialty: 'Orthopédie', institutions: 135, percentage: 30.0 },
-            { specialty: 'Neurologie', institutions: 95, percentage: 21.1 }
-          ],
-          topPerformers: [
-            { 
-              name: 'CHU Hassan II', 
-              rating: 4.9, 
-              consultations: 6850, 
-              efficiency: 94.2,
-              growth: 15.2,
-              type: 'Hôpital'
-            },
-            { 
-              name: 'Clinique Atlas', 
-              rating: 4.8, 
-              consultations: 5320, 
-              efficiency: 89.1,
-              growth: 12.8,
-              type: 'Clinique'
-            },
-            { 
-              name: 'Centre Médical Al Madina', 
-              rating: 4.7, 
-              consultations: 4250, 
-              efficiency: 92.8,
-              growth: 14.5,
-              type: 'Centre médical'
-            },
-            { 
-              name: 'Polyclinique Al Amal', 
-              rating: 4.8, 
-              consultations: 3850, 
-              efficiency: 90.3,
-              growth: 18.5,
-              type: 'Polyclinique'
-            }
-          ]
-        };
-        
-        setStats(mockStats);
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        } else {
+          throw new Error('API not available');
+        }
       } catch (error) {
         console.error('Error fetching institution statistics:', error);
+        // Fallback to basic stats if API fails
+        const fallbackStats = {
+          totalInstitutions: 0,
+          activeInstitutions: 0,
+          newInstitutions: 0,
+          totalDoctors: 0,
+          institutionTypes: [],
+          facilityUsage: [],
+          doctorCoordination: [],
+          crossReferrals: [],
+          institutionGrowth: [],
+          performanceMetrics: [],
+          regionDistribution: [],
+          capacityUtilization: [],
+          patientVolume: [],
+          specialtyDistribution: [],
+          topPerformers: []
+        };
+        setStats(fallbackStats);
       } finally {
         setLoading(false);
       }

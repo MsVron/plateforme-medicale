@@ -101,15 +101,35 @@ const StatsDashboards = () => {
     alerts: []
   });
 
-  // Mock data - replace with actual API call
+  // Fetch real data from API
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/admin/superadmin/stats/dashboards?filters=${JSON.stringify(filters)}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
-        const mockDashboards = [
+        if (response.ok) {
+          const data = await response.json();
+          setDashboards(data.dashboards || []);
+          setCurrentDashboard(data.dashboards?.[0] || null);
+          setMetrics(data.metrics || {
+            realTimeData: {},
+            reports: [],
+            alerts: []
+          });
+        } else {
+          throw new Error('API not available');
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // Fallback to basic data if API fails
+        const fallbackDashboards = [
           {
             id: 'overview',
             name: 'Vue d\'ensemble',
@@ -117,118 +137,25 @@ const StatsDashboards = () => {
             widgets: ['total_users', 'appointments', 'revenue', 'satisfaction'],
             isDefault: true,
             lastUpdated: new Date().toISOString()
-          },
-          {
-            id: 'medical',
-            name: 'Activité Médicale',
-            description: 'Suivi de l\'activité médicale et des consultations',
-            widgets: ['consultations', 'prescriptions', 'lab_results', 'procedures'],
-            isDefault: false,
-            lastUpdated: new Date().toISOString()
-          },
-          {
-            id: 'financial',
-            name: 'Performance Financière',
-            description: 'Indicateurs financiers et de rentabilité',
-            widgets: ['revenue', 'costs', 'profit_margin', 'billing'],
-            isDefault: false,
-            lastUpdated: new Date().toISOString()
-          },
-          {
-            id: 'operations',
-            name: 'Opérations',
-            description: 'Efficacité opérationnelle et utilisation des ressources',
-            widgets: ['capacity', 'efficiency', 'wait_times', 'utilization'],
-            isDefault: false,
-            lastUpdated: new Date().toISOString()
           }
         ];
-
-        const mockRealTimeData = {
-          activeUsers: 2456,
-          ongoingConsultations: 127,
-          systemLoad: 68.5,
-          alertsCount: 3,
-          recentActivity: [
-            { time: '14:32', event: 'Nouvelle consultation - Dr. Ahmed', type: 'info' },
-            { time: '14:28', event: 'Système de sauvegarde complété', type: 'success' },
-            { time: '14:25', event: 'Pic d\'utilisation détecté', type: 'warning' },
-            { time: '14:20', event: 'Nouveau patient inscrit', type: 'info' }
-          ],
-          performanceMetrics: [
-            { metric: 'Disponibilité système', value: 99.8, status: 'excellent' },
-            { metric: 'Temps de réponse API', value: 245, status: 'good', unit: 'ms' },
-            { metric: 'Satisfaction utilisateurs', value: 4.7, status: 'excellent', max: 5 },
-            { metric: 'Taux d\'erreur', value: 0.2, status: 'excellent', unit: '%' }
-          ]
+        
+        const fallbackMetrics = {
+          realTimeData: {
+            activeUsers: 0,
+            ongoingConsultations: 0,
+            systemLoad: 0,
+            alertsCount: 0,
+            recentActivity: [],
+            performanceMetrics: []
+          },
+          reports: [],
+          alerts: []
         };
-
-        const mockReports = [
-          {
-            id: 1,
-            name: 'Rapport Mensuel - Activité Médicale',
-            type: 'medical_activity',
-            period: 'Juin 2024',
-            status: 'ready',
-            size: '2.4 MB',
-            generated: '2024-06-30T10:30:00'
-          },
-          {
-            id: 2,
-            name: 'Analyse Performance Institutions',
-            type: 'institution_performance',
-            period: 'T2 2024',
-            status: 'generating',
-            size: null,
-            generated: null
-          },
-          {
-            id: 3,
-            name: 'Rapport Conformité GDPR',
-            type: 'compliance',
-            period: 'Juin 2024',
-            status: 'ready',
-            size: '1.1 MB',
-            generated: '2024-06-28T15:45:00'
-          }
-        ];
-
-        const mockAlerts = [
-          {
-            id: 1,
-            type: 'warning',
-            title: 'Pic d\'utilisation détecté',
-            message: 'Le système atteint 85% de sa capacité',
-            timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-            priority: 'medium'
-          },
-          {
-            id: 2,
-            type: 'error',
-            title: 'Connexion base de données interrompue',
-            message: 'Tentative de reconnexion en cours',
-            timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-            priority: 'high'
-          },
-          {
-            id: 3,
-            type: 'info',
-            title: 'Sauvegarde planifiée terminée',
-            message: 'Sauvegarde nocturne effectuée avec succès',
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            priority: 'low'
-          }
-        ];
-
-        setDashboards(mockDashboards);
-        setCurrentDashboard(mockDashboards[0]);
-        setMetrics({
-          realTimeData: mockRealTimeData,
-          reports: mockReports,
-          alerts: mockAlerts
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        
+        setDashboards(fallbackDashboards);
+        setCurrentDashboard(fallbackDashboards[0]);
+        setMetrics(fallbackMetrics);
       } finally {
         setLoading(false);
       }

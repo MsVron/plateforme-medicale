@@ -130,7 +130,6 @@ const StatsAudit = () => {
     const fetchAuditStats = async () => {
       setLoading(true);
       try {
-        // Try to fetch from API first
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/admin/superadmin/stats/audit?period=${period}&type=${auditType}`, {
           headers: {
@@ -147,97 +146,56 @@ const StatsAudit = () => {
         }
       } catch (error) {
         console.error('Error fetching audit statistics:', error);
-        // Use mock data as fallback
-        const mockStats = {
+        // Fallback to basic stats if API fails
+        const fallbackStats = {
           systemHealth: {
-            uptime: 99.8,
-            totalIncidents: 12,
-            criticalIncidents: 2,
-            averageResponseTime: 245,
-            systemLoad: 78.5,
-            diskUsage: 65.2,
-            memoryUsage: 82.3,
-            apiHealth: 96.7
+            uptime: 0,
+            totalIncidents: 0,
+            criticalIncidents: 0,
+            averageResponseTime: 0,
+            systemLoad: 0,
+            diskUsage: 0,
+            memoryUsage: 0,
+            apiHealth: 0
           },
           securityMetrics: {
-            totalEvents: 1247,
-            suspiciousActivities: 28,
-            blockedAttempts: 156,
-            failedLogins: 89,
-            successfulLogins: 12458,
-            passwordResets: 45,
-            accountLockouts: 12,
-            privilegeEscalations: 3
+            totalEvents: 0,
+            suspiciousActivities: 0,
+            blockedAttempts: 0,
+            failedLogins: 0,
+            successfulLogins: 0,
+            passwordResets: 0,
+            accountLockouts: 0,
+            privilegeEscalations: 0
           },
           apiPerformance: {
-            totalRequests: 156789,
-            averageResponseTime: 245,
-            errorRate: 0.8,
-            slowQueries: 23,
-            timeoutRequests: 5,
-            peakLoad: 1250,
-            cacheHitRate: 89.5,
-            throughput: 125.6
+            totalRequests: 0,
+            averageResponseTime: 0,
+            errorRate: 0,
+            slowQueries: 0,
+            timeoutRequests: 0,
+            peakLoad: 0,
+            cacheHitRate: 0,
+            throughput: 0
           },
           complianceMetrics: {
-            gdprScore: 94.5,
-            dataProcessingEvents: 2456,
-            consentManagement: 98.2,
-            dataRetentionCompliance: 96.8,
-            accessRequests: 45,
-            deletionRequests: 12,
-            portabilityRequests: 8,
+            gdprScore: 0,
+            dataProcessingEvents: 0,
+            consentManagement: 0,
+            dataRetentionCompliance: 0,
+            accessRequests: 0,
+            deletionRequests: 0,
+            portabilityRequests: 0,
             breachIncidents: 0
           },
-          auditTrail: [
-            { id: 1, timestamp: '2024-01-15 14:30:25', user: 'admin@system.com', action: 'User Login', ip: '192.168.1.100', status: 'success', severity: 'info' },
-            { id: 2, timestamp: '2024-01-15 14:28:12', user: 'superadmin@system.com', action: 'Database Access', ip: '192.168.1.101', status: 'success', severity: 'medium' },
-            { id: 3, timestamp: '2024-01-15 14:25:08', user: 'unknown', action: 'Failed Login Attempt', ip: '203.45.67.89', status: 'blocked', severity: 'high' },
-            { id: 4, timestamp: '2024-01-15 14:20:45', user: 'doctor@hospital.com', action: 'Patient Data Access', ip: '192.168.1.102', status: 'success', severity: 'medium' },
-            { id: 5, timestamp: '2024-01-15 14:18:30', user: 'system', action: 'Automated Backup', ip: 'localhost', status: 'success', severity: 'low' }
-          ],
-          incidentHistory: [
-            { month: 'Jan', critical: 2, high: 8, medium: 15, low: 25, resolved: 48, pending: 2 },
-            { month: 'Fév', critical: 1, high: 6, medium: 12, low: 28, resolved: 45, pending: 2 },
-            { month: 'Mar', critical: 3, high: 10, medium: 18, low: 22, resolved: 50, pending: 3 },
-            { month: 'Avr', critical: 0, high: 4, medium: 14, low: 30, resolved: 46, pending: 2 },
-            { month: 'Mai', critical: 2, high: 7, medium: 16, low: 26, resolved: 49, pending: 2 },
-            { month: 'Jun', critical: 1, high: 5, medium: 13, low: 24, resolved: 41, pending: 2 }
-          ],
-          complianceChecks: [
-            { category: 'RGPD/GDPR', score: 94.5, status: 'Conforme', lastCheck: '2024-01-15', issues: 2 },
-            { category: 'ISO 27001', score: 92.8, status: 'Conforme', lastCheck: '2024-01-14', issues: 3 },
-            { category: 'HDS (Hébergement Données Santé)', score: 96.2, status: 'Conforme', lastCheck: '2024-01-13', issues: 1 },
-            { category: 'Sécurité des Données', score: 89.5, status: 'Attention', lastCheck: '2024-01-15', issues: 5 },
-            { category: 'Traçabilité', score: 97.1, status: 'Conforme', lastCheck: '2024-01-15', issues: 1 },
-            { category: 'Contrôle d\'Accès', score: 91.3, status: 'Conforme', lastCheck: '2024-01-14', issues: 4 }
-          ],
-          systemMetrics: [
-            { time: '00:00', cpu: 45, memory: 68, disk: 65, network: 234 },
-            { time: '04:00', cpu: 32, memory: 62, disk: 65, network: 189 },
-            { time: '08:00', cpu: 78, memory: 82, disk: 66, network: 567 },
-            { time: '12:00', cpu: 85, memory: 89, disk: 67, network: 789 },
-            { time: '16:00', cpu: 92, memory: 91, disk: 68, network: 892 },
-            { time: '20:00', cpu: 76, memory: 78, disk: 68, network: 654 }
-          ],
-          securityEvents: [
-            { type: 'Tentatives de connexion échouées', count: 89, trend: 'stable', severity: 'medium' },
-            { type: 'Accès non autorisés', count: 12, trend: 'decreasing', severity: 'high' },
-            { type: 'Modifications de privilèges', count: 3, trend: 'stable', severity: 'high' },
-            { type: 'Accès aux données sensibles', count: 456, trend: 'increasing', severity: 'medium' },
-            { type: 'Tentatives d\'injection SQL', count: 8, trend: 'decreasing', severity: 'critical' },
-            { type: 'Scan de ports suspects', count: 23, trend: 'stable', severity: 'medium' }
-          ],
-          performanceMetrics: [
-            { endpoint: '/api/patients', avgResponse: 125, requests: 12450, errorRate: 0.2 },
-            { endpoint: '/api/appointments', avgResponse: 89, requests: 8760, errorRate: 0.5 },
-            { endpoint: '/api/doctors', avgResponse: 156, requests: 6890, errorRate: 0.3 },
-            { endpoint: '/api/institutions', avgResponse: 203, requests: 3450, errorRate: 0.8 },
-            { endpoint: '/api/auth', avgResponse: 345, requests: 15670, errorRate: 2.1 },
-            { endpoint: '/api/admin', avgResponse: 278, requests: 2340, errorRate: 0.1 }
-          ]
+          auditTrail: [],
+          incidentHistory: [],
+          complianceChecks: [],
+          systemMetrics: [],
+          securityEvents: [],
+          performanceMetrics: []
         };
-        setStats(mockStats);
+        setStats(fallbackStats);
       } finally {
         setLoading(false);
       }

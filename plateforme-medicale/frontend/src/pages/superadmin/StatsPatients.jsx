@@ -93,110 +93,49 @@ const StatsPatients = () => {
     patientJourney: []
   });
 
-  // Mock data - replace with actual API call
+  // Fetch real data from API
   useEffect(() => {
     const fetchPatientStats = async () => {
       setLoading(true);
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/admin/superadmin/stats/patients?period=${period}&ageGroup=${ageGroup}&region=${region}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
-        const mockStats = {
-          totalPatients: 12500,
-          activePatients: 8950,
-          newPatients: 324,
-          verifiedPatients: 11850,
-          patientActivity: [
-            { activity: 'Recherche de médecins', count: 2850, percentage: 22.8, icon: 'search' },
-            { activity: 'Prise de RDV', count: 2450, percentage: 19.6, icon: 'event' },
-            { activity: 'Consultation dossier', count: 1950, percentage: 15.6, icon: 'timeline' },
-            { activity: 'Ajout aux favoris', count: 1250, percentage: 10.0, icon: 'favorite' },
-            { activity: 'Évaluations', count: 850, percentage: 6.8, icon: 'star' }
-          ],
-          demographicBreakdown: [
-            { ageGroup: '18-25', male: 850, female: 950, total: 1800 },
-            { ageGroup: '26-35', male: 1250, female: 1450, total: 2700 },
-            { ageGroup: '36-45', male: 1150, female: 1350, total: 2500 },
-            { ageGroup: '46-55', male: 1050, female: 1250, total: 2300 },
-            { ageGroup: '56-65', male: 950, female: 1150, total: 2100 },
-            { ageGroup: '65+', male: 750, female: 850, total: 1600 }
-          ],
-          healthTrends: [
-            { condition: 'Hypertension', count: 1250, percentage: 10.0, trend: '+2.3%' },
-            { condition: 'Diabète Type 2', count: 980, percentage: 7.8, trend: '+1.8%' },
-            { condition: 'Anxiété/Stress', count: 850, percentage: 6.8, trend: '+4.2%' },
-            { condition: 'Allergies', count: 720, percentage: 5.8, trend: '+0.9%' },
-            { condition: 'Asthme', count: 650, percentage: 5.2, trend: '-0.5%' },
-            { condition: 'Troubles sommeil', count: 580, percentage: 4.6, trend: '+3.1%' }
-          ],
-          favoriteMetrics: [
-            { metric: 'Patients avec médecins favoris', value: 6850, percentage: 54.8 },
-            { metric: 'Moyenne médecins favoris/patient', value: 2.3, percentage: null },
-            { metric: 'RDV répétés avec favoris', value: 78.5, percentage: 78.5 },
-            { metric: 'Taux de recommandation', value: 87.2, percentage: 87.2 }
-          ],
-          bookingPatterns: [
-            { day: 'Lundi', bookings: 420, cancellations: 28, success: 92.3 },
-            { day: 'Mardi', bookings: 450, cancellations: 31, success: 91.1 },
-            { day: 'Mercredi', bookings: 480, cancellations: 29, success: 93.0 },
-            { day: 'Jeudi', bookings: 465, cancellations: 35, success: 90.8 },
-            { day: 'Vendredi', bookings: 520, cancellations: 42, success: 89.2 },
-            { day: 'Samedi', bookings: 320, cancellations: 18, success: 94.4 },
-            { day: 'Dimanche', bookings: 180, cancellations: 12, success: 93.3 }
-          ],
-          ageDistribution: [
-            { name: '18-25', value: 1800, color: '#FF6B6B' },
-            { name: '26-35', value: 2700, color: '#4ECDC4' },
-            { name: '36-45', value: 2500, color: '#45B7D1' },
-            { name: '46-55', value: 2300, color: '#96CEB4' },
-            { name: '56-65', value: 2100, color: '#FFEAA7' },
-            { name: '65+', value: 1600, color: '#DDA0DD' }
-          ],
-          genderDistribution: [
-            { name: 'Femmes', value: 7000, color: '#FF69B4' },
-            { name: 'Hommes', value: 5500, color: '#4169E1' }
-          ],
-          locationDistribution: [
-            { region: 'Casablanca-Settat', patients: 3250, percentage: 26.0 },
-            { region: 'Rabat-Salé-Kénitra', patients: 2180, percentage: 17.4 },
-            { region: 'Marrakech-Safi', patients: 1850, percentage: 14.8 },
-            { region: 'Fès-Meknès', patients: 1520, percentage: 12.2 },
-            { region: 'Tanger-Tétouan-Al Hoceïma', patients: 1280, percentage: 10.2 },
-            { region: 'Autres', patients: 2420, percentage: 19.4 }
-          ],
-          engagementMetrics: [
-            { metric: 'Fréquence de connexion', value: 85.2, change: 8.5 },
-            { metric: 'Temps moyen sur app', value: 12.5, change: 2.3 },
-            { metric: 'Actions par session', value: 4.8, change: 1.2 },
-            { metric: 'Taux de rétention 30j', value: 73.4, change: 5.8 }
-          ],
-          topConditions: [
-            { condition: 'Consultation générale', count: 3250, specialty: 'Médecine générale' },
-            { condition: 'Contrôle tension', count: 1850, specialty: 'Cardiologie' },
-            { condition: 'Suivi diabète', count: 1520, specialty: 'Endocrinologie' },
-            { condition: 'Troubles anxieux', count: 1280, specialty: 'Psychiatrie' },
-            { condition: 'Douleurs dorsales', count: 1150, specialty: 'Orthopédie' }
-          ],
-          patientJourney: [
-            { stage: 'Inscription', patients: 12500, conversion: 100 },
-            { stage: 'Vérification', patients: 11850, conversion: 94.8 },
-            { stage: 'Première recherche', patients: 10200, conversion: 86.1 },
-            { stage: 'Premier RDV', patients: 8950, conversion: 87.7 },
-            { stage: 'Deuxième RDV', patients: 6850, conversion: 76.5 },
-            { stage: 'Fidélisation', patients: 5200, conversion: 75.9 }
-          ]
-        };
-        
-        setStats(mockStats);
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        } else {
+          throw new Error('API not available');
+        }
       } catch (error) {
         console.error('Error fetching patient statistics:', error);
+        // Fallback to basic stats if API fails
+        const fallbackStats = {
+          totalPatients: 0,
+          activePatients: 0,
+          newPatients: 0,
+          verifiedPatients: 0,
+          patientActivity: [],
+          demographicBreakdown: [],
+          healthTrends: [],
+          locationDistribution: [],
+          engagementMetrics: [],
+          topConditions: [],
+          patientJourney: []
+        };
+        setStats(fallbackStats);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPatientStats();
-  }, [period]);
+  }, [period, ageGroup, region]);
 
   const getActivityIcon = (iconName) => {
     const icons = {

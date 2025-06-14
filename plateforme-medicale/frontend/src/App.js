@@ -216,6 +216,19 @@ function App() {
               }
             />
 
+            {/* System Failures Route */}
+            <Route
+              path="/superadmin/stats/system-failures"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <div style={{ padding: '20px' }}>
+                    <h2>Statistiques des Pannes Système</h2>
+                    <p>Cette page affiche les statistiques détaillées des échecs système et permet aux administrateurs de surveiller la santé de la plateforme.</p>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Doctor routes */}
             <Route
               path="/medecin"

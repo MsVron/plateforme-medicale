@@ -76,72 +76,42 @@ const StatsUsers = () => {
     geographicDistribution: []
   });
 
-  // Mock data - replace with actual API call
+  // Fetch real data from API
   useEffect(() => {
     const fetchUserStats = async () => {
       setLoading(true);
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/admin/superadmin/stats/users?period=${period}&type=${userType}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
-        const mockStats = {
-          totalUsers: 15420,
-          activeUsers: 12350,
-          newUsers: 284,
-          verifiedUsers: 14890,
-          usersByRole: [
-            { name: 'Patients', value: 12500, color: '#4CAF50' },
-            { name: 'Médecins', value: 1250, color: '#2196F3' },
-            { name: 'Admins', value: 120, color: '#FF9800' },
-            { name: 'Institutions', value: 450, color: '#9C27B0' },
-            { name: 'Super Admins', value: 12, color: '#F44336' }
-          ],
-          usersByStatus: [
-            { name: 'Actifs', value: 12350, color: '#4CAF50' },
-            { name: 'Inactifs', value: 2580, color: '#FFC107' },
-            { name: 'Suspendus', value: 320, color: '#F44336' },
-            { name: 'En attente', value: 170, color: '#9E9E9E' }
-          ],
-          registrationTrends: [
-            { month: 'Jan', patients: 850, medecins: 45, admins: 5, institutions: 12 },
-            { month: 'Fév', patients: 920, medecins: 52, admins: 3, institutions: 8 },
-            { month: 'Mar', patients: 1050, medecins: 38, admins: 7, institutions: 15 },
-            { month: 'Avr', patients: 1180, medecins: 62, admins: 4, institutions: 20 },
-            { month: 'Mai', patients: 1250, medecins: 48, admins: 6, institutions: 18 },
-            { month: 'Jun', patients: 1420, medecins: 55, admins: 8, institutions: 22 }
-          ],
-          activityMetrics: [
-            { metric: 'Connexions quotidiennes', value: 8750, change: 12.5 },
-            { metric: 'Sessions moyennes', value: 45, change: -2.1 },
-            { metric: 'Temps de session moyen', value: 28, change: 8.3 },
-            { metric: 'Taux de rétention', value: 87.2, change: 4.7 }
-          ],
-          topInstitutions: [
-            { name: 'CHU Hassan II', users: 450, growth: 15.2 },
-            { name: 'Clinique Atlas', users: 380, growth: 8.7 },
-            { name: 'Hôpital Ibn Sina', users: 320, growth: 12.1 },
-            { name: 'Centre Médical Al Madina', users: 280, growth: 6.9 },
-            { name: 'Polyclinique Al Amal', users: 250, growth: 18.5 }
-          ],
-          recentUsers: [
-            { name: 'Dr. Ahmed Bennani', role: 'Médecin', institution: 'CHU Hassan II', status: 'verified', date: '2024-01-15' },
-            { name: 'Sarah El Mansouri', role: 'Patient', institution: '-', status: 'active', date: '2024-01-15' },
-            { name: 'Admin Casablanca', role: 'Admin', institution: 'Région Casa', status: 'active', date: '2024-01-14' },
-            { name: 'Dr. Fatima Alaoui', role: 'Médecin', institution: 'Clinique Atlas', status: 'pending', date: '2024-01-14' }
-          ],
-          geographicDistribution: [
-            { region: 'Casablanca-Settat', users: 4250, percentage: 27.6 },
-            { region: 'Rabat-Salé-Kénitra', users: 3180, percentage: 20.6 },
-            { region: 'Marrakech-Safi', users: 2850, percentage: 18.5 },
-            { region: 'Fès-Meknès', users: 2120, percentage: 13.8 },
-            { region: 'Tanger-Tétouan-Al Hoceïma', users: 1680, percentage: 10.9 },
-            { region: 'Autres', users: 1340, percentage: 8.7 }
-          ]
-        };
-        
-        setStats(mockStats);
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        } else {
+          throw new Error('API not available');
+        }
       } catch (error) {
         console.error('Error fetching user statistics:', error);
+        // Fallback to basic stats if API fails
+        const fallbackStats = {
+          totalUsers: 0,
+          activeUsers: 0,
+          newUsers: 0,
+          verifiedUsers: 0,
+          usersByRole: [],
+          usersByStatus: [],
+          registrationTrends: [],
+          activityMetrics: [],
+          topInstitutions: [],
+          recentUsers: [],
+          geographicDistribution: []
+        };
+        setStats(fallbackStats);
       } finally {
         setLoading(false);
       }

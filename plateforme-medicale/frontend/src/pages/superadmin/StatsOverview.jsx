@@ -11,7 +11,8 @@ import {
   AlertTitle,
   Paper,
   Chip,
-  LinearProgress
+  LinearProgress,
+  Divider
 } from '@mui/material';
 import {
   BarChart,
@@ -40,7 +41,10 @@ import {
   Assessment,
   Timeline,
   Speed,
-  LocalHospital
+  LocalHospital,
+  Warning as WarningIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon
 } from '@mui/icons-material';
 
 const StatsOverview = () => {
@@ -55,7 +59,7 @@ const StatsOverview = () => {
   const fetchOverviewStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/superadmin/stats/overview', {
+      const response = await fetch('/api/admin/superadmin/stats/overview', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -81,6 +85,18 @@ const StatsOverview = () => {
     return new Intl.NumberFormat('fr-FR').format(num);
   };
 
+  const getSystemHealthColor = (failureRate) => {
+    if (failureRate < 1) return '#4CAF50'; // Green
+    if (failureRate < 5) return '#FF9800'; // Orange
+    return '#F44336'; // Red
+  };
+
+  const getSystemHealthStatus = (failureRate) => {
+    if (failureRate < 1) return 'Excellent';
+    if (failureRate < 5) return 'Attention';
+    return 'Critique';
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -91,359 +107,386 @@ const StatsOverview = () => {
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
+      <Alert severity="error">
         <AlertTitle>Erreur</AlertTitle>
         {error}
       </Alert>
     );
   }
 
+  if (!stats) {
+    return (
+      <Alert severity="info">
+        <AlertTitle>Aucune donnée</AlertTitle>
+        Aucune statistique disponible pour le moment.
+      </Alert>
+    );
+  }
+
   return (
     <Box sx={{ p: 3 }}>
-      <Box display="flex" alignItems="center" gap={2} mb={3}>
-        <Dashboard sx={{ fontSize: 32, color: 'primary.main' }} />
-        <Typography variant="h4" component="h1">
-          Vue d'ensemble - Statistiques Avancées
-        </Typography>
-      </Box>
+      <Typography variant="h4" gutterBottom>
+        Vue d'ensemble - Statistiques Générales
+      </Typography>
 
-      {/* Key Performance Indicators */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
+      {/* System Failures Alert */}
+      {stats.systemFailures && stats.systemFailures.failure_rate > 5 && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          <AlertTitle>Alerte Système Critique</AlertTitle>
+          Taux d'échec élevé détecté: {stats.systemFailures.failure_rate?.toFixed(2)}% 
+          ({stats.systemFailures.failures_24h} échecs dans les dernières 24h)
+        </Alert>
+      )}
+
+      {/* Main Overview Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white'
-          }}>
+          <Card>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                    Utilisateurs Totaux
+                  <Typography color="textSecondary" gutterBottom>
+                    Patients
                   </Typography>
-                  <Typography variant="h4" component="div" fontWeight="bold">
-                    {formatNumber(stats?.overview?.totalUsers || 0)}
+                  <Typography variant="h4">
+                    {formatNumber(stats.patients?.total || 0)}
                   </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                    +{stats?.overview?.userGrowthPercent || 0}% ce mois
+                  <Typography variant="body2" color="textSecondary">
+                    +{stats.patients?.new_this_month || 0} ce mois
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={(stats.patients?.complete_profiles / stats.patients?.total) * 100 || 0} 
+                    sx={{ mt: 1 }}
+                  />
+                  <Typography variant="caption" color="textSecondary">
+                    {((stats.patients?.complete_profiles / stats.patients?.total) * 100 || 0).toFixed(1)}% profils complets
                   </Typography>
                 </Box>
-                <People sx={{ fontSize: 48, opacity: 0.8 }} />
+                <People color="primary" sx={{ fontSize: 40 }} />
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            color: 'white'
-          }}>
+          <Card>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                    Rendez-vous Actifs
+                  <Typography color="textSecondary" gutterBottom>
+                    Médecins
                   </Typography>
-                  <Typography variant="h4" component="div" fontWeight="bold">
-                    {formatNumber(stats?.overview?.activeAppointments || 0)}
+                  <Typography variant="h4">
+                    {formatNumber(stats.doctors?.total || 0)}
                   </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                    {stats?.overview?.completionRate || 0}% taux de réalisation
+                  <Typography variant="body2" color="textSecondary">
+                    +{stats.doctors?.new_this_month || 0} ce mois
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={(stats.doctors?.accepting_patients / stats.doctors?.total) * 100 || 0} 
+                    sx={{ mt: 1 }}
+                  />
+                  <Typography variant="caption" color="textSecondary">
+                    {((stats.doctors?.accepting_patients / stats.doctors?.total) * 100 || 0).toFixed(1)}% acceptent nouveaux patients
                   </Typography>
                 </Box>
-                <Event sx={{ fontSize: 48, opacity: 0.8 }} />
+                <MedicalServices color="primary" sx={{ fontSize: 40 }} />
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            color: 'white'
-          }}>
+          <Card>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                    Médecins Actifs
-                  </Typography>
-                  <Typography variant="h4" component="div" fontWeight="bold">
-                    {formatNumber(stats?.overview?.activeDoctors || 0)}
-                  </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                    {stats?.overview?.doctorUtilization || 0}% d'utilisation
-                  </Typography>
-                </Box>
-                <MedicalServices sx={{ fontSize: 48, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-            color: 'white'
-          }}>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                  <Typography color="textSecondary" gutterBottom>
                     Institutions
                   </Typography>
-                  <Typography variant="h4" component="div" fontWeight="bold">
-                    {formatNumber(stats?.overview?.totalInstitutions || 0)}
+                  <Typography variant="h4">
+                    {formatNumber(stats.institutions?.total || 0)}
                   </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                    {stats?.overview?.institutionEfficiency || 0}% efficacité
+                  <Typography variant="body2" color="textSecondary">
+                    +{stats.institutions?.new_this_month || 0} ce mois
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    {stats.institutions?.unique_types || 0} types différents
                   </Typography>
                 </Box>
-                <Business sx={{ fontSize: 48, opacity: 0.8 }} />
+                <Business color="primary" sx={{ fontSize: 40 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Rendez-vous
+                  </Typography>
+                  <Typography variant="h4">
+                    {formatNumber(stats.appointments?.total || 0)}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    +{stats.appointments?.this_month || 0} ce mois
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={(stats.appointments?.completed / stats.appointments?.total) * 100 || 0} 
+                    sx={{ mt: 1 }}
+                  />
+                  <Typography variant="caption" color="textSecondary">
+                    {((stats.appointments?.completed / stats.appointments?.total) * 100 || 0).toFixed(1)}% terminés
+                  </Typography>
+                </Box>
+                <Event color="primary" sx={{ fontSize: 40 }} />
               </Box>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* System Health Indicators */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={6}>
+      {/* System Health & Performance */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={8}>
           <Card>
-            <CardHeader 
-              title={
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Speed />
-                  <Typography variant="h6">Santé du Système</Typography>
-                </Box>
-              }
-            />
+            <CardHeader title="Santé du Système" />
             <CardContent>
-              <Box sx={{ mb: 2 }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="body2">Performance Base de Données</Typography>
-                  <Typography variant="body2" color="primary">
-                    {stats?.systemHealth?.dbPerformance || 95}%
-                  </Typography>
-                </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={stats?.systemHealth?.dbPerformance || 95} 
-                  sx={{ height: 8, borderRadius: 4 }}
-                />
-              </Box>
-
-              <Box sx={{ mb: 2 }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="body2">Taux de Disponibilité</Typography>
-                  <Typography variant="body2" color="success.main">
-                    {stats?.systemHealth?.uptime || 99.8}%
-                  </Typography>
-                </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={stats?.systemHealth?.uptime || 99.8} 
-                  color="success"
-                  sx={{ height: 8, borderRadius: 4 }}
-                />
-              </Box>
-
-              <Box>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="body2">Utilisation Serveur</Typography>
-                  <Typography variant="body2" color="warning.main">
-                    {stats?.systemHealth?.serverUsage || 73}%
-                  </Typography>
-                </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={stats?.systemHealth?.serverUsage || 73} 
-                  color="warning"
-                  sx={{ height: 8, borderRadius: 4 }}
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader title="Répartition des Utilisateurs par Rôle" />
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={stats?.usersByRole || []}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="count"
-                  >
-                    {(stats?.usersByRole || []).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Activity Trends */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} lg={8}>
-          <Card>
-            <CardHeader 
-              title={
-                <Box display="flex" alignItems="center" gap={1}>
-                  <TrendingUp />
-                  <Typography variant="h6">Tendances d'Activité (30 derniers jours)</Typography>
-                </Box>
-              }
-            />
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={stats?.activityTrends || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="appointments" 
-                    stackId="1"
-                    stroke="#8884d8" 
-                    fill="#8884d8" 
-                    name="Rendez-vous"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="newUsers" 
-                    stackId="1"
-                    stroke="#82ca9d" 
-                    fill="#82ca9d" 
-                    name="Nouveaux Utilisateurs"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="consultations" 
-                    stackId="1"
-                    stroke="#ffc658" 
-                    fill="#ffc658" 
-                    name="Consultations"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} lg={4}>
-          <Card>
-            <CardHeader 
-              title={
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Assessment />
-                  <Typography variant="h6">Métriques Clés</Typography>
-                </Box>
-              }
-            />
-            <CardContent>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Paper sx={{ p: 2, bgcolor: 'primary.50' }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <LocalHospital color="primary" />
-                      <Typography fontWeight="medium">Temps moyen de consultation</Typography>
-                    </Box>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <Box textAlign="center">
+                    <Typography variant="h6" color="textSecondary">
+                      Taux de Réussite
+                    </Typography>
+                    <Typography 
+                      variant="h3" 
+                      sx={{ 
+                        color: getSystemHealthColor(stats.systemFailures?.failure_rate || 0),
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {(100 - (stats.systemFailures?.failure_rate || 0)).toFixed(1)}%
+                    </Typography>
                     <Chip 
-                      label={`${stats?.keyMetrics?.avgConsultationTime || 45} min`} 
-                      color="primary" 
-                      variant="outlined"
+                      label={getSystemHealthStatus(stats.systemFailures?.failure_rate || 0)}
+                      color={stats.systemFailures?.failure_rate < 1 ? 'success' : stats.systemFailures?.failure_rate < 5 ? 'warning' : 'error'}
+                      icon={stats.systemFailures?.failure_rate < 1 ? <CheckCircleIcon /> : <WarningIcon />}
                     />
                   </Box>
-                </Paper>
-
-                <Paper sx={{ p: 2, bgcolor: 'success.50' }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Event color="success" />
-                      <Typography fontWeight="medium">Taux de présence</Typography>
-                    </Box>
-                    <Chip 
-                      label={`${stats?.keyMetrics?.attendanceRate || 87}%`} 
-                      color="success" 
-                      variant="outlined"
-                    />
-                  </Box>
-                </Paper>
-
-                <Paper sx={{ p: 2, bgcolor: 'warning.50' }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Timeline color="warning" />
-                      <Typography fontWeight="medium">Temps d'attente moyen</Typography>
-                    </Box>
-                    <Chip 
-                      label={`${stats?.keyMetrics?.avgWaitTime || 23} min`} 
-                      color="warning" 
-                      variant="outlined"
-                    />
-                  </Box>
-                </Paper>
-
-                <Paper sx={{ p: 2, bgcolor: 'info.50' }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <People color="info" />
-                      <Typography fontWeight="medium">Satisfaction patient</Typography>
-                    </Box>
-                    <Chip 
-                      label={`${stats?.keyMetrics?.patientSatisfaction || 4.2}/5`} 
-                      color="info" 
-                      variant="outlined"
-                    />
-                  </Box>
-                </Paper>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Recent Alerts */}
-      {stats?.recentAlerts && stats.recentAlerts.length > 0 && (
-        <Card>
-          <CardHeader title="Alertes Récentes du Système" />
-          <CardContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {stats.recentAlerts.map((alert, index) => (
-                <Alert 
-                  key={index} 
-                  severity={alert.severity || 'info'}
-                  sx={{ 
-                    borderRadius: 2,
-                    '& .MuiAlert-message': { width: '100%' }
-                  }}
-                >
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="body2">{alert.message}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(alert.timestamp).toLocaleString('fr-FR')}
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Box textAlign="center">
+                    <Typography variant="h6" color="textSecondary">
+                      Échecs 24h
+                    </Typography>
+                    <Typography variant="h3" color="error.main">
+                      {formatNumber(stats.systemFailures?.failures_24h || 0)}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      sur {formatNumber(stats.systemFailures?.total_operations || 0)} opérations
                     </Typography>
                   </Box>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Box textAlign="center">
+                    <Typography variant="h6" color="textSecondary">
+                      Échecs 7 jours
+                    </Typography>
+                    <Typography variant="h3" color="warning.main">
+                      {formatNumber(stats.systemFailures?.failures_7d || 0)}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Tendance hebdomadaire
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardHeader title="Activité Utilisateurs" />
+            <CardContent>
+              <Box mb={2}>
+                <Typography variant="h6" color="textSecondary">
+                  Utilisateurs Actifs
+                </Typography>
+                <Typography variant="h4">
+                  {formatNumber(stats.systemMetrics?.active_users_24h || 0)}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Dernières 24h
+                </Typography>
+              </Box>
+              <Divider sx={{ my: 2 }} />
+              <Box>
+                <Typography variant="h6" color="textSecondary">
+                  Total Utilisateurs
+                </Typography>
+                <Typography variant="h4">
+                  {formatNumber(stats.systemMetrics?.total_users || 0)}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Tous rôles confondus
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Medical Activity Overview */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12}>
+          <Card>
+            <CardHeader title="Activité Médicale" />
+            <CardContent>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={3}>
+                  <Box textAlign="center">
+                    <LocalHospital color="primary" sx={{ fontSize: 40, mb: 1 }} />
+                    <Typography variant="h6" color="textSecondary">
+                      Consultations
+                    </Typography>
+                    <Typography variant="h4">
+                      {formatNumber(stats.medicalActivity?.total_consultations || 0)}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      +{stats.medicalActivity?.consultations_this_month || 0} ce mois
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <Box textAlign="center">
+                    <Assessment color="secondary" sx={{ fontSize: 40, mb: 1 }} />
+                    <Typography variant="h6" color="textSecondary">
+                      Analyses
+                    </Typography>
+                    <Typography variant="h4">
+                      {formatNumber(stats.medicalActivity?.total_analyses || 0)}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Laboratoire
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <Box textAlign="center">
+                    <Timeline color="success" sx={{ fontSize: 40, mb: 1 }} />
+                    <Typography variant="h6" color="textSecondary">
+                      Prescriptions
+                    </Typography>
+                    <Typography variant="h4">
+                      {formatNumber(stats.medicalActivity?.total_prescriptions || 0)}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Médicaments
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <Box textAlign="center">
+                    <Speed color="warning" sx={{ fontSize: 40, mb: 1 }} />
+                    <Typography variant="h6" color="textSecondary">
+                      Performance
+                    </Typography>
+                    <Typography variant="h4" color="success.main">
+                      {(100 - (stats.systemFailures?.failure_rate || 0)).toFixed(0)}%
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Disponibilité
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Quick Actions & Alerts */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardHeader title="Alertes Système" />
+            <CardContent>
+              {stats.systemFailures?.failure_rate > 1 ? (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  <AlertTitle>Attention</AlertTitle>
+                  Taux d'échec supérieur à la normale: {stats.systemFailures.failure_rate.toFixed(2)}%
                 </Alert>
-              ))}
-            </Box>
-          </CardContent>
-        </Card>
-      )}
+              ) : (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  <AlertTitle>Système Stable</AlertTitle>
+                  Tous les systèmes fonctionnent normalement
+                </Alert>
+              )}
+              
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="body2">Opérations réussies</Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {((100 - (stats.systemFailures?.failure_rate || 0))).toFixed(1)}%
+                </Typography>
+              </Box>
+              <LinearProgress 
+                variant="determinate" 
+                value={100 - (stats.systemFailures?.failure_rate || 0)} 
+                color="success"
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardHeader title="Résumé Rapide" />
+            <CardContent>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="textSecondary">
+                    Nouveaux patients
+                  </Typography>
+                  <Typography variant="h6">
+                    +{stats.patients?.new_this_month || 0}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="textSecondary">
+                    Nouveaux médecins
+                  </Typography>
+                  <Typography variant="h6">
+                    +{stats.doctors?.new_this_month || 0}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="textSecondary">
+                    RDV ce mois
+                  </Typography>
+                  <Typography variant="h6">
+                    {formatNumber(stats.appointments?.this_month || 0)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="textSecondary">
+                    Institutions actives
+                  </Typography>
+                  <Typography variant="h6">
+                    {formatNumber(stats.institutions?.active || 0)}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
