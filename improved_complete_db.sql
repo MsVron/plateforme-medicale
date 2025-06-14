@@ -1063,3 +1063,657 @@ CREATE TABLE IF NOT EXISTS diagnosis_feedback (
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
     INDEX idx_suggestion_rating (suggestion_id, rating)
 ); 
+
+-- ENHANCED HOSPITAL MANAGEMENT
+-- Extended hospital functionality for patient care, surgeries, and multi-doctor assignments
+
+-- Table for tracking surgeries and procedures
+CREATE TABLE hospital_surgeries (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  hospital_assignment_id INT NOT NULL,
+  primary_surgeon_id INT NOT NULL,
+  surgery_type VARCHAR(200) NOT NULL,
+  surgery_description TEXT,
+  scheduled_date DATETIME NOT NULL,
+  actual_start_time DATETIME,
+  actual_end_time DATETIME,
+  duration_minutes INT,
+  operating_room VARCHAR(50),
+  anesthesia_type ENUM('local', 'general', 'regional', 'sedation') DEFAULT 'general',
+  status ENUM('scheduled', 'in_progress', 'completed', 'cancelled', 'postponed') DEFAULT 'scheduled',
+  complications TEXT,
+  post_op_notes TEXT,
+  recovery_notes TEXT,
+  created_by_user_id INT NOT NULL,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  date_modified DATETIME DEFAULT NULL,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (hospital_assignment_id) REFERENCES hospital_assignments(id),
+  FOREIGN KEY (primary_surgeon_id) REFERENCES medecins(id),
+  FOREIGN KEY (created_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_hospital_surgeries_patient (patient_id),
+  INDEX idx_hospital_surgeries_assignment (hospital_assignment_id),
+  INDEX idx_hospital_surgeries_surgeon (primary_surgeon_id),
+  INDEX idx_hospital_surgeries_status (status),
+  INDEX idx_hospital_surgeries_date (scheduled_date)
+);
+
+-- Table for additional surgeons/assistants in surgeries
+CREATE TABLE surgery_team (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  surgery_id INT NOT NULL,
+  medecin_id INT NOT NULL,
+  role ENUM('assistant_surgeon', 'anesthesiologist', 'nurse', 'resident', 'other') NOT NULL,
+  role_description VARCHAR(100),
+  FOREIGN KEY (surgery_id) REFERENCES hospital_surgeries(id) ON DELETE CASCADE,
+  FOREIGN KEY (medecin_id) REFERENCES medecins(id),
+  UNIQUE KEY unique_surgery_doctor_role (surgery_id, medecin_id, role),
+  INDEX idx_surgery_team_surgery (surgery_id),
+  INDEX idx_surgery_team_medecin (medecin_id)
+);
+
+-- Enhanced hospital visits tracking (separate from assignments for outpatient visits)
+CREATE TABLE hospital_visits (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  hospital_id INT NOT NULL,
+  attending_medecin_id INT NOT NULL,
+  visit_type ENUM('emergency', 'outpatient', 'follow_up', 'consultation', 'procedure') NOT NULL,
+  arrival_time DATETIME NOT NULL,
+  departure_time DATETIME,
+  visit_duration_minutes INT,
+  chief_complaint TEXT,
+  triage_level ENUM('1_critical', '2_urgent', '3_less_urgent', '4_standard', '5_non_urgent'),
+  department VARCHAR(100),
+  room_number VARCHAR(20),
+  visit_notes TEXT,
+  discharge_instructions TEXT,
+  follow_up_required BOOLEAN DEFAULT FALSE,
+  follow_up_date DATE,
+  status ENUM('active', 'completed', 'left_without_treatment') DEFAULT 'active',
+  created_by_user_id INT NOT NULL,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (hospital_id) REFERENCES institutions(id),
+  FOREIGN KEY (attending_medecin_id) REFERENCES medecins(id),
+  FOREIGN KEY (created_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_hospital_visits_patient (patient_id),
+  INDEX idx_hospital_visits_hospital (hospital_id),
+  INDEX idx_hospital_visits_medecin (attending_medecin_id),
+  INDEX idx_hospital_visits_date (arrival_time),
+  INDEX idx_hospital_visits_status (status)
+);
+
+-- Table for multiple doctor assignments per hospital patient
+CREATE TABLE hospital_patient_doctors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  hospital_assignment_id INT NOT NULL,
+  medecin_id INT NOT NULL,
+  role ENUM('primary', 'consulting', 'specialist', 'resident', 'intern') NOT NULL,
+  specialty_focus VARCHAR(100),
+  assignment_date DATETIME NOT NULL,
+  end_date DATETIME,
+  is_active BOOLEAN DEFAULT TRUE,
+  notes TEXT,
+  assigned_by_user_id INT NOT NULL,
+  FOREIGN KEY (hospital_assignment_id) REFERENCES hospital_assignments(id),
+  FOREIGN KEY (medecin_id) REFERENCES medecins(id),
+  FOREIGN KEY (assigned_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_hospital_patient_doctors_assignment (hospital_assignment_id),
+  INDEX idx_hospital_patient_doctors_medecin (medecin_id),
+  INDEX idx_hospital_patient_doctors_active (is_active)
+);
+
+-- Hospital bed management
+CREATE TABLE hospital_beds (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  hospital_id INT NOT NULL,
+  bed_number VARCHAR(20) NOT NULL,
+  ward_name VARCHAR(100) NOT NULL,
+  room_number VARCHAR(20),
+  bed_type ENUM('standard', 'icu', 'emergency', 'maternity', 'pediatric', 'isolation') DEFAULT 'standard',
+  is_occupied BOOLEAN DEFAULT FALSE,
+  current_patient_assignment_id INT DEFAULT NULL,
+  last_cleaned DATETIME,
+  maintenance_status ENUM('available', 'maintenance', 'out_of_service') DEFAULT 'available',
+  FOREIGN KEY (hospital_id) REFERENCES institutions(id),
+  FOREIGN KEY (current_patient_assignment_id) REFERENCES hospital_assignments(id),
+  UNIQUE KEY unique_hospital_bed (hospital_id, bed_number),
+  INDEX idx_hospital_beds_hospital (hospital_id),
+  INDEX idx_hospital_beds_availability (is_occupied, maintenance_status)
+);
+
+-- Hospital indexes for performance
+CREATE INDEX idx_hospital_assignments_dates ON hospital_assignments(admission_date, discharge_date);
+CREATE INDEX idx_hospital_assignments_active ON hospital_assignments(status, discharge_date); 
+
+-- ENHANCED PHARMACY MANAGEMENT
+-- Extended pharmacy functionality for medication dispensing, history tracking, and cross-pharmacy visibility
+
+-- Table for detailed medication dispensing records
+CREATE TABLE medication_dispensing (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  prescription_id INT NOT NULL, -- References traitements(id)
+  patient_id INT NOT NULL,
+  pharmacy_id INT NOT NULL,
+  dispensed_by_user_id INT NOT NULL,
+  medicament_id INT NOT NULL,
+  quantity_prescribed DECIMAL(8,2) NOT NULL,
+  quantity_dispensed DECIMAL(8,2) NOT NULL,
+  quantity_remaining DECIMAL(8,2) NOT NULL,
+  unit_type VARCHAR(50) NOT NULL, -- tablets, ml, boxes, etc.
+  dispensing_date DATETIME NOT NULL,
+  batch_number VARCHAR(50),
+  expiry_date DATE,
+  unit_price DECIMAL(8,2),
+  total_price DECIMAL(8,2),
+  insurance_covered BOOLEAN DEFAULT FALSE,
+  insurance_percentage DECIMAL(5,2),
+  patient_copay DECIMAL(8,2),
+  dispensing_notes TEXT,
+  is_partial_dispensing BOOLEAN DEFAULT FALSE,
+  original_dispensing_id INT DEFAULT NULL, -- For tracking partial dispensings
+  pharmacist_verification_id INT, -- Pharmacist who verified the dispensing
+  status ENUM('dispensed', 'returned', 'expired', 'recalled') DEFAULT 'dispensed',
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (prescription_id) REFERENCES traitements(id),
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (pharmacy_id) REFERENCES institutions(id),
+  FOREIGN KEY (dispensed_by_user_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (medicament_id) REFERENCES medicaments(id),
+  FOREIGN KEY (original_dispensing_id) REFERENCES medication_dispensing(id),
+  FOREIGN KEY (pharmacist_verification_id) REFERENCES utilisateurs(id),
+  INDEX idx_medication_dispensing_prescription (prescription_id),
+  INDEX idx_medication_dispensing_patient (patient_id),
+  INDEX idx_medication_dispensing_pharmacy (pharmacy_id),
+  INDEX idx_medication_dispensing_date (dispensing_date),
+  INDEX idx_medication_dispensing_status (status)
+);
+
+-- Table for pharmacy inventory management
+CREATE TABLE pharmacy_inventory (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  pharmacy_id INT NOT NULL,
+  medicament_id INT NOT NULL,
+  batch_number VARCHAR(50) NOT NULL,
+  quantity_in_stock DECIMAL(8,2) NOT NULL,
+  unit_type VARCHAR(50) NOT NULL,
+  purchase_price DECIMAL(8,2),
+  selling_price DECIMAL(8,2),
+  expiry_date DATE NOT NULL,
+  supplier_name VARCHAR(100),
+  date_received DATE,
+  minimum_stock_level DECIMAL(8,2) DEFAULT 0,
+  is_controlled_substance BOOLEAN DEFAULT FALSE,
+  storage_requirements TEXT,
+  last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (pharmacy_id) REFERENCES institutions(id),
+  FOREIGN KEY (medicament_id) REFERENCES medicaments(id),
+  UNIQUE KEY unique_pharmacy_med_batch (pharmacy_id, medicament_id, batch_number),
+  INDEX idx_pharmacy_inventory_pharmacy (pharmacy_id),
+  INDEX idx_pharmacy_inventory_medicament (medicament_id),
+  INDEX idx_pharmacy_inventory_expiry (expiry_date),
+  INDEX idx_pharmacy_inventory_stock_level (quantity_in_stock)
+);
+
+-- Table for medication interaction warnings
+CREATE TABLE medication_interactions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  medicament_1_id INT NOT NULL,
+  medicament_2_id INT NOT NULL,
+  interaction_type ENUM('major', 'moderate', 'minor', 'contraindicated') NOT NULL,
+  interaction_description TEXT NOT NULL,
+  clinical_significance TEXT,
+  management_recommendation TEXT,
+  severity_score INT DEFAULT 1 CHECK (severity_score BETWEEN 1 AND 10),
+  is_active BOOLEAN DEFAULT TRUE,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (medicament_1_id) REFERENCES medicaments(id),
+  FOREIGN KEY (medicament_2_id) REFERENCES medicaments(id),
+  UNIQUE KEY unique_interaction (medicament_1_id, medicament_2_id),
+  INDEX idx_medication_interactions_med1 (medicament_1_id),
+  INDEX idx_medication_interactions_med2 (medicament_2_id),
+  INDEX idx_medication_interactions_type (interaction_type)
+);
+
+-- Table for prescription refill tracking
+CREATE TABLE prescription_refills (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  original_prescription_id INT NOT NULL,
+  patient_id INT NOT NULL,
+  prescribing_medecin_id INT NOT NULL,
+  refill_number INT NOT NULL,
+  refill_date DATE NOT NULL,
+  quantity_authorized DECIMAL(8,2) NOT NULL,
+  refills_remaining INT NOT NULL,
+  authorized_by_user_id INT NOT NULL,
+  notes TEXT,
+  status ENUM('authorized', 'dispensed', 'expired', 'cancelled') DEFAULT 'authorized',
+  expiry_date DATE,
+  FOREIGN KEY (original_prescription_id) REFERENCES traitements(id),
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (prescribing_medecin_id) REFERENCES medecins(id),
+  FOREIGN KEY (authorized_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_prescription_refills_original (original_prescription_id),
+  INDEX idx_prescription_refills_patient (patient_id),
+  INDEX idx_prescription_refills_status (status)
+);
+
+-- Enhanced prescription access logs for better pharmacy tracking
+CREATE TABLE enhanced_prescription_access (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  prescription_id INT NOT NULL,
+  accessing_institution_id INT NOT NULL,
+  accessing_user_id INT NOT NULL,
+  access_type ENUM('view', 'dispense', 'modify', 'refill') NOT NULL,
+  patient_cne VARCHAR(20) NOT NULL,
+  patient_full_name VARCHAR(150) NOT NULL,
+  prescription_details JSON, -- Store prescription snapshot
+  access_reason VARCHAR(255) NOT NULL,
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+  session_id VARCHAR(100),
+  access_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (prescription_id) REFERENCES traitements(id),
+  FOREIGN KEY (accessing_institution_id) REFERENCES institutions(id),
+  FOREIGN KEY (accessing_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_enhanced_prescription_access_patient (patient_id),
+  INDEX idx_enhanced_prescription_access_institution (accessing_institution_id),
+  INDEX idx_enhanced_prescription_access_timestamp (access_timestamp),
+  INDEX idx_enhanced_prescription_access_type (access_type)
+);
+
+-- Table for medication adherence tracking
+CREATE TABLE medication_adherence (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  prescription_id INT NOT NULL,
+  medicament_id INT NOT NULL,
+  expected_dose_date DATE NOT NULL,
+  actual_dose_date DATE,
+  dose_taken BOOLEAN DEFAULT FALSE,
+  dose_amount DECIMAL(8,2),
+  adherence_percentage DECIMAL(5,2),
+  missed_dose_reason VARCHAR(255),
+  side_effects_reported TEXT,
+  pharmacy_follow_up_id INT,
+  tracking_method ENUM('patient_report', 'pharmacy_refill', 'electronic_monitoring', 'pill_count') DEFAULT 'patient_report',
+  notes TEXT,
+  date_recorded TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (prescription_id) REFERENCES traitements(id),
+  FOREIGN KEY (medicament_id) REFERENCES medicaments(id),
+  FOREIGN KEY (pharmacy_follow_up_id) REFERENCES institutions(id),
+  INDEX idx_medication_adherence_patient (patient_id),
+  INDEX idx_medication_adherence_prescription (prescription_id),
+  INDEX idx_medication_adherence_date (expected_dose_date)
+); 
+
+-- ENHANCED LABORATORY MANAGEMENT
+-- Extended laboratory functionality for better workflow, imaging requests, and technician management
+
+-- Enhanced imaging requests with better status tracking
+CREATE TABLE imaging_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  prescribing_medecin_id INT NOT NULL,
+  type_imagerie_id INT NOT NULL,
+  requesting_institution_id INT DEFAULT NULL,
+  performing_laboratory_id INT DEFAULT NULL,
+  request_date DATETIME NOT NULL,
+  scheduled_date DATETIME,
+  completed_date DATETIME,
+  priority ENUM('routine', 'urgent', 'stat', 'emergency') DEFAULT 'routine',
+  clinical_indication TEXT NOT NULL,
+  patient_preparation_instructions TEXT,
+  contrast_required BOOLEAN DEFAULT FALSE,
+  contrast_type VARCHAR(100),
+  special_instructions TEXT,
+  request_status ENUM('requested', 'scheduled', 'in_progress', 'completed', 'cancelled', 'no_show') DEFAULT 'requested',
+  technician_assigned_id INT DEFAULT NULL,
+  radiologist_assigned_id INT DEFAULT NULL,
+  equipment_used VARCHAR(100),
+  study_instance_uid VARCHAR(255), -- DICOM identifier
+  accession_number VARCHAR(50),
+  referring_physician_notes TEXT,
+  patient_history_relevant TEXT,
+  allergies_contrast BOOLEAN DEFAULT FALSE,
+  pregnancy_status ENUM('unknown', 'not_pregnant', 'pregnant', 'possibly_pregnant') DEFAULT 'unknown',
+  created_by_user_id INT NOT NULL,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  date_modified DATETIME DEFAULT NULL,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (prescribing_medecin_id) REFERENCES medecins(id),
+  FOREIGN KEY (type_imagerie_id) REFERENCES types_imagerie(id),
+  FOREIGN KEY (requesting_institution_id) REFERENCES institutions(id),
+  FOREIGN KEY (performing_laboratory_id) REFERENCES institutions(id),
+  FOREIGN KEY (technician_assigned_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (radiologist_assigned_id) REFERENCES medecins(id),
+  FOREIGN KEY (created_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_imaging_requests_patient (patient_id),
+  INDEX idx_imaging_requests_status (request_status),
+  INDEX idx_imaging_requests_laboratory (performing_laboratory_id),
+  INDEX idx_imaging_requests_priority (priority),
+  INDEX idx_imaging_requests_date (request_date)
+);
+
+-- Laboratory technician assignments and specializations
+CREATE TABLE laboratory_technicians (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  laboratory_id INT NOT NULL,
+  employee_id VARCHAR(50),
+  specializations JSON, -- Array of specializations like ["hematology", "biochemistry", "microbiology"]
+  certifications JSON, -- Array of certifications
+  shift_schedule JSON, -- Weekly schedule
+  is_active BOOLEAN DEFAULT TRUE,
+  hire_date DATE,
+  supervisor_id INT DEFAULT NULL,
+  access_level ENUM('basic', 'advanced', 'supervisor', 'manager') DEFAULT 'basic',
+  can_validate_results BOOLEAN DEFAULT FALSE,
+  max_concurrent_tests INT DEFAULT 10,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (laboratory_id) REFERENCES institutions(id),
+  FOREIGN KEY (supervisor_id) REFERENCES laboratory_technicians(id),
+  UNIQUE KEY unique_user_laboratory (user_id, laboratory_id),
+  INDEX idx_laboratory_technicians_laboratory (laboratory_id),
+  INDEX idx_laboratory_technicians_active (is_active),
+  INDEX idx_laboratory_technicians_specializations (specializations(255))
+);
+
+-- Enhanced analysis workflow tracking
+CREATE TABLE analysis_workflow (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  analysis_request_id INT NOT NULL, -- References resultats_analyses(id)
+  patient_id INT NOT NULL,
+  laboratory_id INT NOT NULL,
+  workflow_step ENUM('received', 'sample_prep', 'testing', 'quality_control', 'validation', 'reporting', 'completed') NOT NULL,
+  step_status ENUM('pending', 'in_progress', 'completed', 'failed', 'skipped') DEFAULT 'pending',
+  assigned_technician_id INT DEFAULT NULL,
+  step_start_time DATETIME,
+  step_end_time DATETIME,
+  duration_minutes INT,
+  equipment_used VARCHAR(100),
+  reagent_batch VARCHAR(50),
+  quality_control_passed BOOLEAN DEFAULT NULL,
+  step_notes TEXT,
+  error_code VARCHAR(50),
+  error_description TEXT,
+  supervisor_review_required BOOLEAN DEFAULT FALSE,
+  supervisor_reviewed_by INT DEFAULT NULL,
+  supervisor_review_date DATETIME,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (analysis_request_id) REFERENCES resultats_analyses(id),
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (laboratory_id) REFERENCES institutions(id),
+  FOREIGN KEY (assigned_technician_id) REFERENCES laboratory_technicians(id),
+  FOREIGN KEY (supervisor_reviewed_by) REFERENCES laboratory_technicians(id),
+  INDEX idx_analysis_workflow_request (analysis_request_id),
+  INDEX idx_analysis_workflow_laboratory (laboratory_id),
+  INDEX idx_analysis_workflow_step (workflow_step, step_status),
+  INDEX idx_analysis_workflow_technician (assigned_technician_id)
+);
+
+-- Laboratory equipment management
+CREATE TABLE laboratory_equipment (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  laboratory_id INT NOT NULL,
+  equipment_name VARCHAR(100) NOT NULL,
+  equipment_type VARCHAR(100) NOT NULL,
+  model VARCHAR(100),
+  serial_number VARCHAR(100),
+  manufacturer VARCHAR(100),
+  installation_date DATE,
+  last_maintenance_date DATE,
+  next_maintenance_date DATE,
+  calibration_date DATE,
+  next_calibration_date DATE,
+  status ENUM('operational', 'maintenance', 'out_of_service', 'calibration') DEFAULT 'operational',
+  location_in_lab VARCHAR(100),
+  supported_test_types JSON, -- Array of test types this equipment can perform
+  maintenance_notes TEXT,
+  warranty_expiry_date DATE,
+  service_contract_info TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  FOREIGN KEY (laboratory_id) REFERENCES institutions(id),
+  INDEX idx_laboratory_equipment_laboratory (laboratory_id),
+  INDEX idx_laboratory_equipment_status (status),
+  INDEX idx_laboratory_equipment_maintenance (next_maintenance_date)
+);
+
+-- Sample tracking and chain of custody
+CREATE TABLE sample_tracking (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  analysis_request_id INT NOT NULL,
+  patient_id INT NOT NULL,
+  sample_id VARCHAR(50) NOT NULL,
+  sample_type ENUM('blood', 'urine', 'stool', 'saliva', 'tissue', 'swab', 'other') NOT NULL,
+  collection_date DATETIME NOT NULL,
+  collection_site VARCHAR(100),
+  collected_by_user_id INT,
+  collection_method VARCHAR(100),
+  sample_volume DECIMAL(8,2),
+  sample_unit VARCHAR(20),
+  container_type VARCHAR(50),
+  preservation_method VARCHAR(100),
+  transport_conditions VARCHAR(100),
+  received_at_lab_date DATETIME,
+  received_by_technician_id INT,
+  sample_condition_on_receipt ENUM('good', 'acceptable', 'poor', 'rejected') DEFAULT 'good',
+  rejection_reason TEXT,
+  storage_location VARCHAR(100),
+  storage_temperature DECIMAL(5,2),
+  expiry_date DATETIME,
+  disposal_date DATETIME,
+  chain_of_custody_notes TEXT,
+  barcode VARCHAR(100),
+  FOREIGN KEY (analysis_request_id) REFERENCES resultats_analyses(id),
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (collected_by_user_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (received_by_technician_id) REFERENCES laboratory_technicians(id),
+  UNIQUE KEY unique_sample_id (sample_id),
+  INDEX idx_sample_tracking_analysis (analysis_request_id),
+  INDEX idx_sample_tracking_patient (patient_id),
+  INDEX idx_sample_tracking_collection_date (collection_date),
+  INDEX idx_sample_tracking_barcode (barcode)
+);
+
+-- Laboratory quality control
+CREATE TABLE laboratory_quality_control (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  laboratory_id INT NOT NULL,
+  test_type_id INT NOT NULL,
+  control_type ENUM('internal', 'external', 'proficiency') NOT NULL,
+  control_date DATE NOT NULL,
+  control_batch VARCHAR(50),
+  expected_value DECIMAL(10,3),
+  actual_value DECIMAL(10,3),
+  acceptable_range_min DECIMAL(10,3),
+  acceptable_range_max DECIMAL(10,3),
+  result_status ENUM('pass', 'fail', 'warning') NOT NULL,
+  deviation_percentage DECIMAL(5,2),
+  corrective_action_required BOOLEAN DEFAULT FALSE,
+  corrective_action_taken TEXT,
+  technician_id INT NOT NULL,
+  supervisor_reviewed BOOLEAN DEFAULT FALSE,
+  supervisor_id INT DEFAULT NULL,
+  equipment_used VARCHAR(100),
+  reagent_lot VARCHAR(50),
+  environmental_conditions TEXT,
+  notes TEXT,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (laboratory_id) REFERENCES institutions(id),
+  FOREIGN KEY (test_type_id) REFERENCES types_analyses(id),
+  FOREIGN KEY (technician_id) REFERENCES laboratory_technicians(id),
+  FOREIGN KEY (supervisor_id) REFERENCES laboratory_technicians(id),
+  INDEX idx_laboratory_qc_laboratory (laboratory_id),
+  INDEX idx_laboratory_qc_test_type (test_type_id),
+  INDEX idx_laboratory_qc_date (control_date),
+  INDEX idx_laboratory_qc_status (result_status)
+);
+
+-- INSTITUTION USER MANAGEMENT
+-- Enhanced user management for different types of institutions (hospitals, pharmacies, laboratories)
+
+-- Table for institution staff profiles
+CREATE TABLE institution_staff (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  institution_id INT NOT NULL,
+  staff_type ENUM('pharmacist', 'pharmacy_technician', 'hospital_admin', 'hospital_nurse', 'hospital_receptionist', 'lab_technician', 'lab_manager', 'radiologist', 'other') NOT NULL,
+  employee_id VARCHAR(50),
+  first_name VARCHAR(50) NOT NULL,
+  last_name VARCHAR(50) NOT NULL,
+  professional_license VARCHAR(100),
+  license_expiry_date DATE,
+  department VARCHAR(100),
+  position_title VARCHAR(100),
+  hire_date DATE,
+  employment_status ENUM('active', 'inactive', 'suspended', 'terminated') DEFAULT 'active',
+  supervisor_id INT DEFAULT NULL,
+  shift_pattern VARCHAR(100),
+  access_permissions JSON, -- Specific permissions for this staff member
+  emergency_contact_name VARCHAR(100),
+  emergency_contact_phone VARCHAR(20),
+  notes TEXT,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  date_modified DATETIME DEFAULT NULL,
+  FOREIGN KEY (user_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (institution_id) REFERENCES institutions(id),
+  FOREIGN KEY (supervisor_id) REFERENCES institution_staff(id),
+  UNIQUE KEY unique_user_institution (user_id, institution_id),
+  INDEX idx_institution_staff_institution (institution_id),
+  INDEX idx_institution_staff_type (staff_type),
+  INDEX idx_institution_staff_status (employment_status),
+  INDEX idx_institution_staff_license (professional_license)
+);
+
+-- Table for institution-specific permissions and roles
+CREATE TABLE institution_permissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  institution_type ENUM('pharmacy', 'hospital', 'laboratory', 'clinic') NOT NULL,
+  permission_name VARCHAR(100) NOT NULL,
+  permission_description TEXT,
+  permission_category ENUM('patient_access', 'prescription_management', 'analysis_management', 'administrative', 'reporting', 'system') NOT NULL,
+  is_sensitive BOOLEAN DEFAULT FALSE,
+  requires_audit_log BOOLEAN DEFAULT FALSE,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_institution_permission (institution_type, permission_name),
+  INDEX idx_institution_permissions_type (institution_type),
+  INDEX idx_institution_permissions_category (permission_category)
+);
+
+-- Table for staff permission assignments
+CREATE TABLE staff_permissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  staff_id INT NOT NULL,
+  permission_id INT NOT NULL,
+  granted_by_user_id INT NOT NULL,
+  granted_date DATETIME NOT NULL,
+  expiry_date DATETIME DEFAULT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  notes TEXT,
+  FOREIGN KEY (staff_id) REFERENCES institution_staff(id),
+  FOREIGN KEY (permission_id) REFERENCES institution_permissions(id),
+  FOREIGN KEY (granted_by_user_id) REFERENCES utilisateurs(id),
+  UNIQUE KEY unique_staff_permission (staff_id, permission_id),
+  INDEX idx_staff_permissions_staff (staff_id),
+  INDEX idx_staff_permissions_permission (permission_id),
+  INDEX idx_staff_permissions_active (is_active)
+);
+
+-- Table for institution working hours and availability
+CREATE TABLE institution_schedules (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  institution_id INT NOT NULL,
+  day_of_week ENUM('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday') NOT NULL,
+  open_time TIME,
+  close_time TIME,
+  is_closed BOOLEAN DEFAULT FALSE,
+  break_start_time TIME DEFAULT NULL,
+  break_end_time TIME DEFAULT NULL,
+  emergency_hours BOOLEAN DEFAULT FALSE, -- For hospitals that are 24/7
+  special_notes TEXT,
+  effective_date DATE NOT NULL,
+  end_date DATE DEFAULT NULL,
+  FOREIGN KEY (institution_id) REFERENCES institutions(id),
+  INDEX idx_institution_schedules_institution (institution_id),
+  INDEX idx_institution_schedules_day (day_of_week),
+  INDEX idx_institution_schedules_effective (effective_date, end_date)
+);
+
+-- Table for institution services offered
+CREATE TABLE institution_services (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  institution_id INT NOT NULL,
+  service_type ENUM('prescription_dispensing', 'medication_counseling', 'emergency_care', 'outpatient_care', 'inpatient_care', 'surgery', 'diagnostic_imaging', 'laboratory_testing', 'blood_work', 'radiology', 'pathology', 'other') NOT NULL,
+  service_name VARCHAR(100) NOT NULL,
+  service_description TEXT,
+  is_available BOOLEAN DEFAULT TRUE,
+  requires_appointment BOOLEAN DEFAULT FALSE,
+  average_wait_time_minutes INT DEFAULT NULL,
+  cost_estimate DECIMAL(8,2) DEFAULT NULL,
+  insurance_accepted BOOLEAN DEFAULT TRUE,
+  special_requirements TEXT,
+  equipment_needed VARCHAR(255),
+  staff_required JSON, -- Array of required staff types
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (institution_id) REFERENCES institutions(id),
+  INDEX idx_institution_services_institution (institution_id),
+  INDEX idx_institution_services_type (service_type),
+  INDEX idx_institution_services_available (is_available)
+);
+
+-- Table for patient search audit (for GDPR compliance across all institution types)
+CREATE TABLE patient_search_audit (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  searching_user_id INT NOT NULL,
+  searching_institution_id INT NOT NULL,
+  search_criteria JSON NOT NULL, -- Store search parameters (name, CNE, etc.)
+  search_results_count INT NOT NULL,
+  patient_accessed_id INT DEFAULT NULL, -- If a specific patient was accessed
+  search_reason VARCHAR(255) NOT NULL,
+  search_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+  session_id VARCHAR(100),
+  FOREIGN KEY (searching_user_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (searching_institution_id) REFERENCES institutions(id),
+  FOREIGN KEY (patient_accessed_id) REFERENCES patients(id),
+  INDEX idx_patient_search_audit_user (searching_user_id),
+  INDEX idx_patient_search_audit_institution (searching_institution_id),
+  INDEX idx_patient_search_audit_timestamp (search_timestamp),
+  INDEX idx_patient_search_audit_patient (patient_accessed_id)
+);
+
+-- Insert default permissions for different institution types
+INSERT INTO institution_permissions (institution_type, permission_name, permission_description, permission_category, is_sensitive, requires_audit_log) VALUES
+-- Pharmacy permissions
+('pharmacy', 'view_prescriptions', 'View patient prescriptions', 'prescription_management', TRUE, TRUE),
+('pharmacy', 'dispense_medications', 'Dispense medications to patients', 'prescription_management', TRUE, TRUE),
+('pharmacy', 'modify_prescription_status', 'Update prescription dispensing status', 'prescription_management', TRUE, TRUE),
+('pharmacy', 'view_medication_history', 'View patient medication history across pharmacies', 'patient_access', TRUE, TRUE),
+('pharmacy', 'manage_inventory', 'Manage pharmacy inventory', 'administrative', FALSE, FALSE),
+('pharmacy', 'generate_reports', 'Generate pharmacy reports', 'reporting', FALSE, FALSE),
+
+-- Hospital permissions
+('hospital', 'admit_patients', 'Admit patients to hospital', 'patient_access', TRUE, TRUE),
+('hospital', 'assign_doctors', 'Assign doctors to patients', 'patient_access', TRUE, TRUE),
+('hospital', 'schedule_surgeries', 'Schedule surgical procedures', 'patient_access', TRUE, TRUE),
+('hospital', 'manage_bed_assignments', 'Manage hospital bed assignments', 'administrative', FALSE, TRUE),
+('hospital', 'view_patient_records', 'View complete patient medical records', 'patient_access', TRUE, TRUE),
+('hospital', 'update_visit_records', 'Update patient visit information', 'patient_access', TRUE, TRUE),
+('hospital', 'discharge_patients', 'Discharge patients from hospital', 'patient_access', TRUE, TRUE),
+
+-- Laboratory permissions
+('laboratory', 'receive_test_requests', 'Receive and process test requests', 'analysis_management', FALSE, TRUE),
+('laboratory', 'perform_tests', 'Perform laboratory tests', 'analysis_management', FALSE, TRUE),
+('laboratory', 'upload_results', 'Upload test results', 'analysis_management', TRUE, TRUE),
+('laboratory', 'validate_results', 'Validate and approve test results', 'analysis_management', TRUE, TRUE),
+('laboratory', 'manage_samples', 'Manage sample tracking and storage', 'analysis_management', FALSE, TRUE),
+('laboratory', 'operate_equipment', 'Operate laboratory equipment', 'analysis_management', FALSE, FALSE),
+('laboratory', 'quality_control', 'Perform quality control procedures', 'analysis_management', FALSE, TRUE);
