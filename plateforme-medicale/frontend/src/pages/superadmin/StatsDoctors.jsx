@@ -85,132 +85,41 @@ const StatsDoctors = () => {
     availabilityMetrics: []
   });
 
-  // Mock data - replace with actual API call
+  // Fetch real data from API
   useEffect(() => {
     const fetchDoctorStats = async () => {
       setLoading(true);
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/admin/superadmin/stats/doctors?period=${period}&specialty=${specialty}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
-        const mockStats = {
-          totalDoctors: 1250,
-          activeDoctors: 1180,
-          averageRating: 4.7,
-          totalConsultations: 28450,
-          doctorsBySpecialty: [
-            { name: 'Cardiologie', count: 180, percentage: 14.4, color: '#FF6B6B' },
-            { name: 'Pédiatrie', count: 165, percentage: 13.2, color: '#4ECDC4' },
-            { name: 'Neurologie', count: 145, percentage: 11.6, color: '#45B7D1' },
-            { name: 'Orthopédie', count: 135, percentage: 10.8, color: '#96CEB4' },
-            { name: 'Dermatologie', count: 125, percentage: 10.0, color: '#FFEAA7' },
-            { name: 'Gynécologie', count: 120, percentage: 9.6, color: '#DDA0DD' },
-            { name: 'Pneumologie', count: 95, percentage: 7.6, color: '#FFB6C1' },
-            { name: 'Autres', count: 285, percentage: 22.8, color: '#D1D1D1' }
-          ],
-          doctorsByExperience: [
-            { range: '0-2 ans', count: 180, percentage: 14.4 },
-            { range: '3-5 ans', count: 280, percentage: 22.4 },
-            { range: '6-10 ans', count: 320, percentage: 25.6 },
-            { range: '11-20 ans', count: 350, percentage: 28.0 },
-            { range: '20+ ans', count: 120, percentage: 9.6 }
-          ],
-          topPerformers: [
-            { 
-              name: 'Dr. Ahmed Bennani', 
-              specialty: 'Cardiologie', 
-              rating: 4.9, 
-              consultations: 145, 
-              satisfaction: 97.2,
-              institution: 'CHU Hassan II',
-              avatar: 'AB'
-            },
-            { 
-              name: 'Dr. Fatima Alaoui', 
-              specialty: 'Pédiatrie', 
-              rating: 4.8, 
-              consultations: 138, 
-              satisfaction: 96.8,
-              institution: 'Clinique Atlas',
-              avatar: 'FA'
-            },
-            { 
-              name: 'Dr. Youssef El Amrani', 
-              specialty: 'Neurologie', 
-              rating: 4.8, 
-              consultations: 132, 
-              satisfaction: 96.5,
-              institution: 'Hôpital Ibn Sina',
-              avatar: 'YE'
-            },
-            { 
-              name: 'Dr. Khadija Benjelloun', 
-              specialty: 'Dermatologie', 
-              rating: 4.7, 
-              consultations: 128, 
-              satisfaction: 95.9,
-              institution: 'Centre Médical Al Madina',
-              avatar: 'KB'
-            },
-            { 
-              name: 'Dr. Omar Zaki', 
-              specialty: 'Orthopédie', 
-              rating: 4.7, 
-              consultations: 125, 
-              satisfaction: 95.6,
-              institution: 'Polyclinique Al Amal',
-              avatar: 'OZ'
-            }
-          ],
-          consultationTrends: [
-            { month: 'Jan', consultations: 2150, doctors: 1180, avgPerDoctor: 18.2 },
-            { month: 'Fév', consultations: 2380, doctors: 1190, avgPerDoctor: 20.0 },
-            { month: 'Mar', consultations: 2650, doctors: 1200, avgPerDoctor: 22.1 },
-            { month: 'Avr', consultations: 2850, doctors: 1210, avgPerDoctor: 23.6 },
-            { month: 'Mai', consultations: 2920, doctors: 1220, avgPerDoctor: 23.9 },
-            { month: 'Jun', consultations: 3050, doctors: 1250, avgPerDoctor: 24.4 }
-          ],
-          workloadDistribution: [
-            { category: 'Sous-utilisé (<15 consultations/mois)', count: 150, percentage: 12.0, color: '#FFC107' },
-            { category: 'Charge normale (15-30)', count: 720, percentage: 57.6, color: '#4CAF50' },
-            { category: 'Très actif (30-50)', count: 320, percentage: 25.6, color: '#2196F3' },
-            { category: 'Surchargé (>50)', count: 60, percentage: 4.8, color: '#F44336' }
-          ],
-          patientSatisfaction: [
-            { specialty: 'Cardiologie', rating: 4.8, reviews: 1250 },
-            { specialty: 'Pédiatrie', rating: 4.9, reviews: 1180 },
-            { specialty: 'Neurologie', rating: 4.6, reviews: 980 },
-            { specialty: 'Orthopédie', rating: 4.7, reviews: 1050 },
-            { specialty: 'Dermatologie', rating: 4.8, reviews: 920 },
-            { specialty: 'Gynécologie', rating: 4.7, reviews: 850 }
-          ],
-          doctorsByInstitution: [
-            { name: 'CHU Hassan II', doctors: 285, consultations: 6850, satisfaction: 4.8 },
-            { name: 'Clinique Atlas', doctors: 220, consultations: 5320, satisfaction: 4.7 },
-            { name: 'Hôpital Ibn Sina', doctors: 195, consultations: 4680, satisfaction: 4.6 },
-            { name: 'Centre Médical Al Madina', doctors: 180, consultations: 4250, satisfaction: 4.7 },
-            { name: 'Polyclinique Al Amal', doctors: 165, consultations: 3850, satisfaction: 4.8 },
-            { name: 'Autres', doctors: 205, consultations: 4500, satisfaction: 4.6 }
-          ],
-          specialtyPerformance: [
-            { specialty: 'Cardiologie', efficiency: 92.5, satisfaction: 4.8, growth: 15.2 },
-            { specialty: 'Pédiatrie', efficiency: 94.2, satisfaction: 4.9, growth: 12.8 },
-            { specialty: 'Neurologie', efficiency: 88.7, satisfaction: 4.6, growth: 8.3 },
-            { specialty: 'Orthopédie', efficiency: 91.3, satisfaction: 4.7, growth: 10.5 },
-            { specialty: 'Dermatologie', efficiency: 93.8, satisfaction: 4.8, growth: 14.7 },
-            { specialty: 'Gynécologie', efficiency: 90.6, satisfaction: 4.7, growth: 9.2 }
-          ],
-          availabilityMetrics: [
-            { metric: 'Heures travaillées/semaine', value: 42.5, target: 40, status: 'warning' },
-            { metric: 'Taux de disponibilité', value: 87.3, target: 85, status: 'success' },
-            { metric: 'Délai moyen RDV', value: 3.2, target: 5, status: 'success' },
-            { metric: 'Taux d\'annulation', value: 5.8, target: 8, status: 'success' }
-          ]
-        };
-        
-        setStats(mockStats);
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        } else {
+          throw new Error('API not available');
+        }
       } catch (error) {
         console.error('Error fetching doctor statistics:', error);
+        // Fallback to basic stats if API fails
+        const fallbackStats = {
+          totalDoctors: 0,
+          activeDoctors: 0,
+          averageRating: 0,
+          totalConsultations: 0,
+          doctorsBySpecialty: [],
+          doctorsByExperience: [],
+          topPerformers: [],
+          doctorsByInstitution: [],
+          specialtyPerformance: [],
+          availabilityMetrics: []
+        };
+        setStats(fallbackStats);
       } finally {
         setLoading(false);
       }

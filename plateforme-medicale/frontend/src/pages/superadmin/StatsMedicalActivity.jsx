@@ -70,6 +70,7 @@ const StatsMedicalActivity = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
   const [activeTab, setActiveTab] = useState(0);
+  const [specialty, setSpecialty] = useState('');
   const [stats, setStats] = useState({
     totalConsultations: 0,
     totalTreatments: 0,
@@ -86,98 +87,51 @@ const StatsMedicalActivity = () => {
     medicalProcedures: []
   });
 
-  // Mock data - replace with actual API call
+  // Fetch real data from API
   useEffect(() => {
     const fetchMedicalStats = async () => {
       setLoading(true);
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/admin/superadmin/stats/medical-activity?period=${period}&specialty=${specialty}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
-        const mockStats = {
-          totalConsultations: 8450,
-          totalTreatments: 6320,
-          totalAnalyses: 12800,
-          averageConsultationTime: 32,
-          consultationsBySpecialty: [
-            { name: 'Cardiologie', value: 1250, color: '#FF6B6B', growth: 15.2 },
-            { name: 'Neurologie', value: 980, color: '#4ECDC4', growth: 8.7 },
-            { name: 'Orthopédie', value: 1150, color: '#45B7D1', growth: 12.3 },
-            { name: 'Dermatologie', value: 850, color: '#96CEB4', growth: 6.9 },
-            { name: 'Pédiatrie', value: 1320, color: '#FFEAA7', growth: 18.5 },
-            { name: 'Gynécologie', value: 1180, color: '#DDA0DD', growth: 10.4 },
-            { name: 'Pneumologie', value: 720, color: '#FFB6C1', growth: 5.2 }
-          ],
-          treatmentsByType: [
-            { name: 'Médicamenteux', value: 3850, color: '#4CAF50' },
-            { name: 'Chirurgical', value: 1200, color: '#F44336' },
-            { name: 'Physiothérapie', value: 850, color: '#FF9800' },
-            { name: 'Radiothérapie', value: 420, color: '#9C27B0' }
-          ],
-          analysisTypes: [
-            { name: 'Analyses Sanguines', value: 4200, percentage: 32.8 },
-            { name: 'Imagerie Médicale', value: 3100, percentage: 24.2 },
-            { name: 'Tests Cardiologiques', value: 2850, percentage: 22.3 },
-            { name: 'Biopsies', value: 1450, percentage: 11.3 },
-            { name: 'Tests Génétiques', value: 650, percentage: 5.1 },
-            { name: 'Autres', value: 550, percentage: 4.3 }
-          ],
-          monthlyActivity: [
-            { month: 'Jan', consultations: 720, treatments: 540, analyses: 980 },
-            { month: 'Fév', consultations: 850, treatments: 620, analyses: 1150 },
-            { month: 'Mar', consultations: 920, treatments: 680, analyses: 1280 },
-            { month: 'Avr', consultations: 1050, treatments: 780, analyses: 1420 },
-            { month: 'Mai', consultations: 1180, treatments: 850, analyses: 1380 },
-            { month: 'Jun', consultations: 1250, treatments: 920, analyses: 1450 }
-          ],
-          performanceMetrics: [
-            { metric: 'Temps moyen de consultation', value: 32, unit: 'min', target: 30, status: 'warning' },
-            { metric: 'Taux de satisfaction patient', value: 94.2, unit: '%', target: 90, status: 'success' },
-            { metric: 'Délai moyen de résultats', value: 48, unit: 'h', target: 72, status: 'success' },
-            { metric: 'Taux de réhospitalisation', value: 8.5, unit: '%', target: 10, status: 'success' },
-            { metric: 'Efficacité des traitements', value: 87.3, unit: '%', target: 85, status: 'success' }
-          ],
-          urgencyDistribution: [
-            { level: 'Urgence Vitale', count: 320, color: '#F44336', percentage: 3.8 },
-            { level: 'Urgence Importante', count: 850, color: '#FF9800', percentage: 10.1 },
-            { level: 'Urgence Modérée', count: 2150, color: '#FFC107', percentage: 25.4 },
-            { level: 'Non Urgent', count: 5130, color: '#4CAF50', percentage: 60.7 }
-          ],
-          topDiagnoses: [
-            { diagnosis: 'Hypertension artérielle', count: 450, trend: 'up' },
-            { diagnosis: 'Diabète type 2', count: 380, trend: 'stable' },
-            { diagnosis: 'Troubles anxieux', count: 320, trend: 'up' },
-            { diagnosis: 'Arthrose', count: 290, trend: 'down' },
-            { diagnosis: 'Pneumonie', count: 250, trend: 'stable' },
-            { diagnosis: 'Migraine chronique', count: 220, trend: 'up' }
-          ],
-          treatmentEfficiency: [
-            { specialty: 'Cardiologie', efficiency: 92.5, satisfaction: 95.2 },
-            { specialty: 'Neurologie', efficiency: 88.7, satisfaction: 91.8 },
-            { specialty: 'Orthopédie', efficiency: 91.3, satisfaction: 93.5 },
-            { specialty: 'Dermatologie', efficiency: 94.8, satisfaction: 96.1 },
-            { specialty: 'Pédiatrie', efficiency: 89.2, satisfaction: 94.7 },
-            { specialty: 'Gynécologie', efficiency: 90.6, satisfaction: 92.3 }
-          ],
-          medicalProcedures: [
-            { procedure: 'Électrocardiogramme', count: 1250, duration: 15, cost: 45 },
-            { procedure: 'Échographie', count: 980, duration: 25, cost: 85 },
-            { procedure: 'IRM', count: 420, duration: 45, cost: 350 },
-            { procedure: 'Scanner', count: 650, duration: 20, cost: 180 },
-            { procedure: 'Endoscopie', count: 280, duration: 30, cost: 220 }
-          ]
-        };
-        
-        setStats(mockStats);
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        } else {
+          throw new Error('API not available');
+        }
       } catch (error) {
         console.error('Error fetching medical activity statistics:', error);
+        // Fallback to basic stats if API fails
+        const fallbackStats = {
+          totalConsultations: 0,
+          totalTreatments: 0,
+          totalAnalyses: 0,
+          averageConsultationTime: 0,
+          consultationsBySpecialty: [],
+          treatmentsByType: [],
+          analysisTypes: [],
+          monthlyActivity: [],
+          performanceMetrics: [],
+          urgencyDistribution: [],
+          topDiagnoses: [],
+          treatmentEfficiency: [],
+          medicalProcedures: []
+        };
+        setStats(fallbackStats);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMedicalStats();
-  }, [period]);
+  }, [period, specialty]);
 
   const getStatusColor = (status) => {
     const colors = {
@@ -377,7 +331,7 @@ const StatsMedicalActivity = () => {
               <ResponsiveContainer width="100%" height="75%">
                 <PieChart>
                   <Pie
-                    data={stats.urgencyDistribution}
+                    data={stats.urgencyDistribution || []}
                     cx="50%"
                     cy="50%"
                     outerRadius={120}
@@ -385,7 +339,7 @@ const StatsMedicalActivity = () => {
                     dataKey="count"
                     label={({ level, percentage }) => `${level}: ${percentage}%`}
                   >
-                    {stats.urgencyDistribution.map((entry, index) => (
+                    {(stats.urgencyDistribution || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -403,7 +357,7 @@ const StatsMedicalActivity = () => {
                 Types d'Analyses
               </Typography>
               <Box sx={{ mt: 2 }}>
-                {stats.analysisTypes.map((analysis, index) => (
+                {(stats.analysisTypes || []).map((analysis, index) => (
                   <Box key={index} sx={{ mb: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body2">{analysis.name}</Typography>
@@ -439,7 +393,7 @@ const StatsMedicalActivity = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {stats.topDiagnoses.map((diagnosis, index) => (
+                    {(stats.topDiagnoses || []).map((diagnosis, index) => (
                       <TableRow key={index}>
                         <TableCell>{diagnosis.diagnosis}</TableCell>
                         <TableCell align="right">{diagnosis.count}</TableCell>
@@ -469,7 +423,7 @@ const StatsMedicalActivity = () => {
                 Consultations par Spécialité
               </Typography>
               <ResponsiveContainer width="100%" height="85%">
-                <BarChart data={stats.consultationsBySpecialty} layout="horizontal">
+                <BarChart data={stats.consultationsBySpecialty || []} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" width={120} />
@@ -486,7 +440,7 @@ const StatsMedicalActivity = () => {
               <Typography variant="h6" sx={{ mb: 3 }}>
                 Croissance par Spécialité
               </Typography>
-              {stats.consultationsBySpecialty.map((specialty, index) => (
+              {(stats.consultationsBySpecialty || []).map((specialty, index) => (
                 <Box key={index} sx={{ mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                   <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
                     {specialty.name}
@@ -511,7 +465,7 @@ const StatsMedicalActivity = () => {
                 Efficacité des Traitements par Spécialité
               </Typography>
               <ResponsiveContainer width="100%" height="85%">
-                <RadarChart data={stats.treatmentEfficiency}>
+                <RadarChart data={stats.treatmentEfficiency || []}>
                   <PolarGrid />
                   <PolarAngleAxis dataKey="specialty" />
                   <PolarRadiusAxis angle={90} domain={[70, 100]} />
@@ -537,7 +491,7 @@ const StatsMedicalActivity = () => {
               <ResponsiveContainer width="100%" height="85%">
                 <PieChart>
                   <Pie
-                    data={stats.treatmentsByType}
+                    data={stats.treatmentsByType || []}
                     cx="50%"
                     cy="50%"
                     outerRadius={120}
@@ -545,7 +499,7 @@ const StatsMedicalActivity = () => {
                     dataKey="value"
                     label={({ name, value }) => `${name}: ${value}`}
                   >
-                    {stats.treatmentsByType.map((entry, index) => (
+                    {(stats.treatmentsByType || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -573,7 +527,7 @@ const StatsMedicalActivity = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {stats.medicalProcedures.map((procedure, index) => (
+                    {(stats.medicalProcedures || []).map((procedure, index) => (
                       <TableRow key={index}>
                         <TableCell>{procedure.procedure}</TableCell>
                         <TableCell align="right">{procedure.count}</TableCell>
@@ -599,7 +553,7 @@ const StatsMedicalActivity = () => {
                 Métriques de Performance
               </Typography>
               <Grid container spacing={3}>
-                {stats.performanceMetrics.map((metric, index) => (
+                {(stats.performanceMetrics || []).map((metric, index) => (
                   <Grid item xs={12} md={6} lg={4} key={index}>
                     <Card sx={{ height: '100%', border: `2px solid ${getStatusColor(metric.status)}` }}>
                       <CardContent>

@@ -75,6 +75,8 @@ const StatsPatients = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
   const [activeTab, setActiveTab] = useState(0);
+  const [ageGroup, setAgeGroup] = useState('all');
+  const [region, setRegion] = useState('all');
   const [stats, setStats] = useState({
     totalPatients: 0,
     activePatients: 0,

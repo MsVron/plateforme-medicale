@@ -40,16 +40,12 @@ const SidebarContainer = () => {
   if (user.role === 'super_admin') {
     menuItems = [
       { text: 'Gestion des Institutions', path: '/admin/institutions', icon: <BusinessIcon /> },
-      { text: 'Enregistrement Patient', path: '/admin/patient-registration', icon: <PersonAddIcon /> },
-      { text: 'Gestion des Pharmacies', path: '/admin/pharmacy-management', icon: <PharmacyIcon /> },
       { text: 'Statistiques', path: '/admin/statistics', icon: <BarChartIcon /> },
       { text: 'Gestion des Admins', path: '/admin/admin-management', icon: <ManageAccountsIcon /> },
     ];
   } else if (user.role === 'admin') {
     menuItems = [
       { text: 'Gestion des Institutions', path: '/admin/institutions', icon: <BusinessIcon /> },
-      { text: 'Enregistrement Patient', path: '/admin/patient-registration', icon: <PersonAddIcon /> },
-      { text: 'Gestion des Pharmacies', path: '/admin/pharmacy-management', icon: <PharmacyIcon /> },
       { text: 'Statistiques', path: '/admin/statistics', icon: <BarChartIcon /> },
     ];
   } else if (user.role === 'patient') {

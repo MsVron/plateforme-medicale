@@ -42,7 +42,7 @@ import StatsMedicalActivity from './pages/superadmin/StatsMedicalActivity';
 import StatsDoctors from './pages/superadmin/StatsDoctors';
 import StatsPatients from './pages/superadmin/StatsPatients';
 import StatsInstitutions from './pages/superadmin/StatsInstitutions';
-import StatsGeographic from './pages/superadmin/StatsGeographic';
+
 import StatsDashboards from './pages/superadmin/StatsDashboards';
 import StatsAudit from './pages/superadmin/StatsAudit';
 
@@ -191,14 +191,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/superadmin/stats/geographic"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsGeographic />
-                </ProtectedRoute>
-              }
-            />
+
             <Route
               path="/superadmin/stats/dashboards"
               element={
