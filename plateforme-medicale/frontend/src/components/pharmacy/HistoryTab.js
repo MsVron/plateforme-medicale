@@ -22,8 +22,7 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
-  DatePicker
+  MenuItem
 } from '@mui/material';
 import {
   History,
@@ -38,6 +37,7 @@ import {
 } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { fr } from 'date-fns/locale';
 import pharmacyService from '../../services/pharmacyService';
 
@@ -215,7 +215,11 @@ const HistoryTab = ({ onSuccess, onError, onRefresh }) => {
                   label="Date de début"
                   value={filters.dateFrom}
                   onChange={(date) => handleFilterChange('dateFrom', date)}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true
+                    }
+                  }}
                 />
               </Grid>
               <Grid item xs={12} md={3}>
@@ -223,7 +227,11 @@ const HistoryTab = ({ onSuccess, onError, onRefresh }) => {
                   label="Date de fin"
                   value={filters.dateTo}
                   onChange={(date) => handleFilterChange('dateTo', date)}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true
+                    }
+                  }}
                 />
               </Grid>
             </Grid>
