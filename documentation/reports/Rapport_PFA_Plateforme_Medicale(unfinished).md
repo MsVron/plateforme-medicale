@@ -27,25 +27,25 @@ Nous dédions notre travail à nos parents, qui sont pour nous une source de sou
 
 Dans le cadre des travaux de cette année, notre synthèse porte sur la présentation de notre application "Plateforme Médicale Intelligente". Cette plateforme web a été développée pour révolutionner la gestion des rendez-vous médicaux et des dossiers patients en intégrant des technologies d'intelligence artificielle avancées.
 
-La "Plateforme Médicale Intelligente" est une application web complète qui simplifie la procédure de prise de rendez-vous pour les patients, optimise la gestion des plannings pour les médecins, et centralise les dossiers médicaux de manière sécurisée. Le système intègre un assistant IA pour l'aide au diagnostic, un module de géolocalisation pour la recherche de praticiens, et un système de notifications automatisées pour améliorer la communication entre tous les acteurs de santé.
+La "Plateforme Médicale Intelligente" est une application web complète qui simplifie la procédure de prise de rendez-vous pour les patients, optimise la gestion des plannings pour les médecins, et centralise les dossiers médicaux de manière sécurisée. Le système intègre un assistant IA pour l'aide au diagnostic, un module de géolocalisation pour la recherche de médecins, et un système de notifications automatisées pour améliorer la communication entre tous les acteurs de santé. La plateforme supporte une architecture multi-institutionnelle permettant aux cabinets privés, hôpitaux, pharmacies et laboratoires d'accéder aux dossiers médicaux selon leurs rôles spécifiques, avec un système de thématisation dynamique qui adapte l'interface utilisateur selon le type d'établissement.
 
 Cette synthèse décrit les étapes que nous avons suivies pour développer les fonctionnalités avancées de l'application, incluant l'architecture full-stack JavaScript, l'intégration de services d'intelligence artificielle, et l'implémentation de mesures de sécurité conformes aux exigences médicales. Le projet démontre comment les technologies modernes peuvent transformer l'accessibilité et l'efficacité des soins de santé.
 
-**Mots-clés :** Plateforme médicale, Intelligence artificielle, Gestion rendez-vous, Dossiers patients, Full-stack JavaScript, Géolocalisation, Sécurité médicale
+**Mots-clés :** Plateforme médicale, Intelligence artificielle, Gestion rendez-vous, Dossiers patients, Full-stack JavaScript, Sécurité médicale, Architecture multi-institutionnelle, Système de thématisation
 
 ---
 
 ## ABSTRACT
 
-As part of this year's work, our dissertation presents our application "Intelligent Medical Platform". This web platform was developed to revolutionize medical appointment management and patient records by integrating advanced artificial intelligence technologies.
+As part of this year's work, our dissertation presents our application "BluePulse". This web platform was developed to revolutionize medical appointment management and patient records by integrating advanced artificial intelligence technologies.
 
-The "Intelligent Medical Platform" is a comprehensive web application that simplifies the appointment booking procedure for patients, optimizes schedule management for doctors, and centralizes medical records securely. The system integrates an AI assistant for diagnostic support, a geolocation module for practitioner search, and an automated notification system to improve communication between all healthcare stakeholders.
+The "BluePulse" is a comprehensive web application that simplifies the appointment booking procedure for patients, optimizes schedule management for doctors, and centralizes medical records securely. The system integrates an AI assistant for diagnostic support, a geolocation module for practitioner search, and an automated notification system to improve communication between all healthcare stakeholders.
 
 This dissertation describes the steps we went through to develop the application's advanced features, including full-stack JavaScript architecture, artificial intelligence services integration, and implementation of security measures compliant with medical requirements. The project demonstrates how modern technologies can transform healthcare accessibility and efficiency.
 
-The platform successfully addresses the challenges of healthcare digitalization by providing an intuitive interface for multiple user types, intelligent appointment scheduling with conflict prevention, secure medical records management, and AI-powered diagnostic assistance. The geolocation features enhance healthcare accessibility by enabling proximity-based practitioner search, while the comprehensive notification system ensures optimal communication flow.
+The platform successfully addresses the challenges of healthcare digitalization by providing an intuitive interface for multiple user types, intelligent appointment scheduling with conflict prevention, secure medical records management, and AI-powered diagnostic assistance. The geolocation features enhance healthcare accessibility by enabling proximity-based practitioner search, while the comprehensive notification system ensures optimal communication flow. The multi-institutional architecture enables private cabinets, hospitals, pharmacies, and laboratories to access patient medical records according to their specific roles and requirements, with a dynamic theming system that automatically adapts the user interface based on the institution type.
 
-**Keywords:** Medical platform, Artificial intelligence, Appointment management, Patient records, Full-stack JavaScript, Geolocation, Medical security
+**Keywords:** Medical platform, Artificial intelligence, Appointment management, Patient records, Full-stack JavaScript, Medical security, Multi-institutional architecture, Dynamic theming system
 
 ---
 
@@ -60,6 +60,10 @@ The platform successfully addresses the challenges of healthcare digitalization 
     1.2.2 Gestion des Rendez-vous .................................................. 8
     1.2.3 Dossiers Médicaux Numériques ............................................ 9
     1.2.4 Géolocalisation et Recherche ............................................ 10
+    1.2.5 Architecture Multi-Institutionnelle ..................................... 11
+    1.2.6 Système de Thématisation Dynamique ...................................... 12
+    1.2.7 Assistant Chatbot Intelligent ........................................... 13
+    1.2.8 Tableaux de Bord et Statistiques ........................................ 14
 1.3 Utilisateurs Cibles ........................................................... 11
 1.4 Objectifs du Projet ........................................................... 12
 1.5 Organisation du Projet ........................................................ 13
@@ -166,14 +170,14 @@ Parmi les solutions numériques existantes, Doctolib s'impose comme le leader du
 
 ### Solution Proposée
 
-Notre plateforme médicale propose une approche moderne et intégrée qui combine plusieurs éléments clés. L'interface intuitive s'adapte à tous les types d'utilisateurs, quel que soit leur niveau de compétence technologique. La gestion complète des rendez-vous intègre un système de créneaux automatisé qui facilite la planification et réduit les erreurs de saisie. Les dossiers médicaux numériques centralisés et sécurisés permettent un accès rapide et sûr aux informations patients. Le système multi-rôles accommode les besoins spécifiques des patients, médecins, administrateurs et institutions. L'architecture modulaire garantit l'évolutivité de la solution selon les besoins croissants des utilisateurs. La recherche géographique des médecins avec géolocalisation facilite l'accès aux soins pour les patients. Enfin, la gestion des patients walk-in répond aux besoins d'urgence et d'imprévus dans la pratique médicale quotidienne.
+Notre plateforme médicale propose une approche moderne et intégrée qui combine plusieurs éléments clés. L'interface intuitive s'adapte à tous les types d'utilisateurs, quel que soit leur niveau de compétence technologique, avec un système de thématisation dynamique qui personnalise l'expérience selon le type d'établissement. La gestion complète des rendez-vous intègre un système de créneaux automatisé qui facilite la planification et réduit les erreurs de saisie. Les dossiers médicaux numériques centralisés et sécurisés permettent un accès rapide et sûr aux informations patients, avec des permissions granulaires selon le rôle de l'utilisateur. Le système multi-institutionnel accommode les besoins spécifiques des cabinets privés, hôpitaux, pharmacies et laboratoires, chacun ayant accès aux informations pertinentes pour leur domaine d'activité. L'architecture modulaire garantit l'évolutivité de la solution selon les besoins croissants des utilisateurs. La recherche géographique des médecins avec géolocalisation facilite l'accès aux soins pour les patients. La gestion unifiée des patients walk-in répond aux besoins d'urgence et d'imprévus dans la pratique médicale quotidienne, réutilisable par tous les types d'établissements.
 
 ### Objectifs du Projet
 
-Objectif principal
+**Objectif principal**
 Développer une plateforme web complète de gestion médicale qui digitalise et optimise les processus de prise de rendez-vous et de gestion des dossiers patients.
 
-Objectifs spécifiques
+**Objectifs spécifiques**
 Le projet vise à créer une interface utilisateur moderne et responsive qui s'adapte à tous les dispositifs et navigateurs. Il s'agit d'implémenter un système de gestion des rendez-vous intelligent capable de gérer automatiquement les créneaux et les conflits. Le développement d'un module de dossiers médicaux sécurisé garantit la confidentialité et l'intégrité des données sensibles. L'intégration d'un système de géolocalisation pour la recherche de médecins améliore l'accessibilité des soins. La sécurité et la confidentialité des données médicales constituent une priorité absolue, avec le respect des réglementations en vigueur. Enfin, la solution se doit d'être évolutive et maintenable pour accompagner la croissance des besoins utilisateurs.
 
 ### Structure du Rapport
@@ -186,15 +190,15 @@ Ce rapport s'articule autour de quatre chapitres principaux. La présentation g�
 
 ### 1.1 Aperçu Général
 
-[Insert picture of the medical platform homepage/dashboard showing the main interface]
 
-La plateforme médicale développée est une application web full-stack moderne construite avec React.js et Node.js, destinée à révolutionner la gestion des établissements de santé. Elle s'adresse à huit types d'utilisateurs distincts : patients, médecins, administrateurs, super administrateurs, institutions médicales, pharmacies, hôpitaux et laboratoires. Cette solution intégrée utilise une architecture en trois tiers avec une base de données MySQL robuste comprenant plus de 25 tables interconnectées, visant à répondre aux défis contemporains de la digitalisation du secteur médical en proposant une approche centralisée, sécurisée et évolutive de la gestion des soins.
+
+La plateforme médicale développée est une application web full-stack moderne construite avec React.js et Node.js, destinée à révolutionner la gestion des établissements de santé. Elle s'adresse à huit types d'utilisateurs distincts : patients, médecins, administrateurs, super administrateurs, institutions médicales, pharmacies, hôpitaux et laboratoires. Cette solution intégrée utilise une architecture en trois tiers avec une base de données MySQL robuste comprenant plus de 25 tables interconnectées, visant à répondre aux défis contemporains de la digitalisation du secteur médical en proposant une approche centralisée, sécurisée et évolutive de la gestion des soins. L'architecture multi-institutionnelle permet à chaque type d'établissement d'accéder aux dossiers médicaux selon ses besoins spécifiques, avec un système de recherche unifié et des permissions granulaires. Le système de thématisation dynamique adapte automatiquement l'interface utilisateur selon le rôle de l'utilisateur, offrant une expérience personnalisée tout en maintenant la cohérence fonctionnelle.
 
 ### 1.2 Fonctionnalités Principales
 
 #### 1.2.1 Gestion des Utilisateurs et Authentification
 
-**Système Multi-Rôles Avancé :** Le système implémente une gestion différenciée selon huit types d'utilisateurs distincts définis dans l'énumération de la base de données : 'super_admin', 'admin', 'medecin', 'patient', 'institution', 'pharmacy', 'hospital', 'laboratory'. Les Super Administrateurs bénéficient d'une gestion globale du système avec création d'administrateurs délégués. Les Administrateurs gèrent les médecins et institutions dans leur périmètre géographique. Les Médecins disposent d'un accès complet aux dossiers patients avec possibilité de créer des profils patients (walk-in) et de modifier toutes leurs informations médicales. Les Patients peuvent prendre des rendez-vous, consulter leurs dossiers et gérer leurs favoris médecins. Les Institutions, Pharmacies, Hôpitaux et Laboratoires gèrent leurs établissements avec géolocalisation intégrée.
+**Système Multi-Rôles Avancé :** Le système implémente une gestion différenciée selon huit types d'utilisateurs distincts définis dans l'énumération de la base de données : 'super_admin', 'admin', 'medecin', 'patient', 'institution', 'pharmacy', 'hospital', 'laboratory'. Les Super Administrateurs bénéficient d'une gestion globale du système avec création d'administrateurs délégués. Les Administrateurs gèrent les médecins et institutions dans leur périmètre géographique. Les Médecins disposent d'un accès complet aux dossiers patients avec possibilité de créer des profils patients directes (walk-in) et de modifier toutes leurs informations médicales. Les Patients peuvent prendre des rendez-vous, consulter leurs dossiers et gérer leurs favoris médecins. Les Hôpitaux peuvent assigner des patients à un ou plusieurs médecins travaillant dans l'établissement, suivre les séjours, procédures et chirurgies. Les Pharmacies accèdent aux prescriptions médicales, gèrent la dispensation des médicaments et maintiennent un historique inter-pharmacies. Les Laboratoires visualisent les demandes d'analyses et d'imagerie, téléchargent les résultats et permettent aux médecins de consulter les rapports avec identification du laboratoire source.
 
 **Sécurité Renforcée :** La sécurité du système repose sur une architecture multi-couches robuste. L'authentification par JWT (JSON Web Tokens) avec middleware Express personnalisé garantit la sécurité des sessions et la gestion granulaire des droits d'accès. Le hashage des mots de passe utilise bcrypt avec salt pour une protection maximale contre les attaques par dictionnaire. La vérification par email utilise Nodemailer avec tokens temporaires stockés en base. Le système de récupération de mot de passe implémente des tokens à durée de vie limitée avec traçabilité complète des actions dans la table `historique_actions`.
 
@@ -202,13 +206,13 @@ La plateforme médicale développée est une application web full-stack moderne 
 
 **Pour les Patients :** Les patients bénéficient d'un système de réservation intelligent avec recherche multi-critères.
 
-[Insert picture of patient appointment booking interface showing search filters and available time slots]
 
-La recherche de médecins combine spécialité (table `specialites`), géolocalisation (coordonnées GPS), disponibilités en temps réel et tarifs de consultation. Le système de favoris (table `favoris_medecins`) permet un accès rapide aux praticiens habituels. L'historique complet des rendez-vous avec statuts détaillés ('confirmé', 'annulé', 'reporté', 'terminé', 'no_show') offre une traçabilité complète. Les notifications automatiques (table `notifications`) informent des confirmations, rappels et modifications via email et interface web.
 
-**Pour les Médecins :** Les praticiens disposent d'un système de gestion avancé avec planification flexible.
+La recherche de médecins combine spécialité (table `specialites`), géolocalisation (coordonnées GPS), disponibilités en temps réel et tarifs de consultation. Le système de favoris (table `favoris_medecins`) permet un accès rapide aux médecins habituels. L'historique complet des rendez-vous avec statuts détaillés ('confirmé', 'annulé', 'reporté', 'terminé', 'no_show') offre une traçabilité complète. Les notifications automatiques (table `notifications`) informent des confirmations, rappels et modifications via email et interface web.
 
-[Insert picture of doctor dashboard showing appointment calendar, patient list, and availability management]
+**Pour les Médecins :** Les médecins disposent d'un système de gestion avancé avec planification flexible.
+
+
 
 La table `disponibilites_medecin` permet la définition de créneaux récurrents par jour de semaine avec gestion des pauses déjeuner et intervalles personnalisables (15, 30, 60 minutes). Le système d'indisponibilités exceptionnelles (table `indisponibilites_exceptionnelles`) gère les congés et absences. La fonctionnalité walk-in permet l'enregistrement immédiat de nouveaux patients avec création automatique de profil complet. Le tableau de bord médecin affiche les rendez-vous du jour, patients en attente et statistiques d'activité en temps réel.
 
@@ -216,9 +220,9 @@ La table `disponibilites_medecin` permet la définition de créneaux récurrents
 
 **Gestion Complète et Modifiable :** Le système propose une gestion exhaustive des données médicales avec modification complète par les médecins.
 
-[Insert picture of patient medical record interface showing personal information, medical history, and treatment sections]
 
-La table `patients` centralise toutes les informations personnelles, médicales et sociales (profession, groupe sanguin, habitudes de vie) entièrement modifiables par les praticiens. Les antécédents médicaux (table `antecedents_medicaux`) sont catégorisés par type ('médical', 'chirurgical', 'familial', 'gynécologique', 'psychiatrique') avec dates et descriptions détaillées. Les allergies (tables `allergies` et `patient_allergies`) incluent niveau de sévérité, symptômes et date de découverte. Les traitements (table `traitements`) documentent posologie, durée, indications et effets secondaires avec suivi de l'observance.
+
+La table `patients` centralise toutes les informations personnelles, médicales et sociales (profession, groupe sanguin, habitudes de vie) entièrement modifiables par les médecins. Les antécédents médicaux (table `antecedents_medicaux`) sont catégorisés par type ('médical', 'chirurgical', 'familial', 'gynécologique', 'psychiatrique') avec dates et descriptions détaillées. Les allergies (tables `allergies` et `patient_allergies`) incluent niveau de sévérité, symptômes et date de découverte. Les traitements (table `traitements`) documentent posologie, durée, indications et effets secondaires avec suivi de l'observance.
 
 **Analyses et Imagerie Médicales :** Le système intègre un module complet d'analyses avec plus de 200 types d'examens organisés en catégories (Hématologie, Biochimie, Immunologie, Microbiologie, etc.). La table `resultats_analyses` stocke les résultats avec valeurs de référence, unités et interprétations. Le module d'imagerie (table `resultats_imagerie`) gère les examens radiologiques avec stockage des images et comptes-rendus. Les constantes vitales (table `constantes_vitales`) permettent un suivi longitudinal avec graphiques d'évolution.
 
@@ -226,29 +230,45 @@ La table `patients` centralise toutes les informations personnelles, médicales 
 
 #### 1.2.4 Géolocalisation et Recherche
 
-**Recherche Géographique Avancée :** Le système intègre React Leaflet avec OpenStreetMap pour une géolocalisation précise.
+**Recherche Géographique Avancée :** Le système intègre une cartographie interactive avec OpenStreetMap pour une géolocalisation précise.
 
-[Insert picture of interactive map showing doctor locations with markers and search filters]
 
-Les tables `medecins` et `institutions` stockent les coordonnées GPS (latitude/longitude) avec indexation spatiale pour des requêtes optimisées. L'algorithme de calcul de distance utilise la formule de Haversine côté backend pour des résultats précis. La carte interactive affiche les marqueurs des praticiens avec clustering automatique pour les performances. Les filtres combinés permettent la recherche par spécialité, distance (rayon configurable), disponibilité immédiate, tarifs et acceptation de nouveaux patients.
+
+Les tables `medecins` et `institutions` stockent les coordonnées GPS (latitude/longitude) avec indexation spatiale pour des requêtes optimisées. L'algorithme de calcul de distance utilise la formule de Haversine côté backend pour des résultats précis. La carte interactive affiche les marqueurs des médecins avec clustering automatique pour les performances. Les filtres combinés permettent la recherche par spécialité, distance (rayon configurable), disponibilité immédiate, tarifs et acceptation de nouveaux patients.
 
 **Recherche Intelligente :** Le système de recherche multi-critères combine recherche textuelle (nom, spécialité) et géographique avec auto-complétion. Les résultats sont triés par pertinence et distance avec pagination optimisée. La recherche sauvegarde les préférences utilisateur et propose des suggestions basées sur l'historique. L'intégration avec l'API HTML5 Geolocation permet la détection automatique de la position du patient pour des résultats personnalisés.
 
-#### 1.2.5 Assistant Chatbot Intelligent
+#### 1.2.5 Architecture Multi-Institutionnelle
+
+**Gestion Hospitalière Avancée :** Le système hospitalier permet l'assignation de patients à un ou plusieurs médecins travaillant dans l'établissement, avec suivi complet des séjours hospitaliers. Les hôpitaux disposent d'un système de recherche de patients utilisant les mêmes mécanismes que les médecins, avec recherche exacte par prénom, nom et CNE. La gestion des admissions et sorties est intégrée avec suivi des durées de séjour, procédures effectuées et chirurgies réalisées. Le système de gestion des lits permet l'optimisation de l'occupation et la planification des admissions. Les hôpitaux peuvent également ajouter des patients walk-in en réutilisant les fonctionnalités existantes, évitant ainsi la duplication de code et maintenant la cohérence du système.
+
+**Système Pharmaceutique Intégré :** Les pharmacies bénéficient d'un accès privilégié aux prescriptions médicales avec visualisation des dates de prescription et gestion de la dispensation des médicaments. Le système permet de marquer les médicaments dispensés et maintient un historique inter-pharmacies visible par tous les établissements pharmaceutiques participants. Cette approche collaborative améliore la sécurité pharmaceutique en évitant les interactions médicamenteuses et les surdosages. Les médecins peuvent consulter cet historique pour optimiser leurs prescriptions et assurer un suivi thérapeutique optimal. La recherche de patients utilise le même mécanisme unifié avec recherche exacte par prénom, nom et CNE, garantissant la cohérence et la sécurité des données.
+
+**Laboratoires et Imagerie Médicale :** Les laboratoires accèdent aux demandes d'analyses et d'imagerie prescrites par les médecins, avec possibilité de télécharger les résultats après identification du patient. Le système de recherche unifié permet aux laboratoires de localiser rapidement les patients par recherche exacte des critères d'identification. Une fois les résultats téléchargés, les médecins et hôpitaux peuvent consulter ces données avec identification claire du laboratoire source, facilitant la traçabilité et la communication inter-établissements. Cette intégration améliore significativement la continuité des soins et réduit les délais de prise en charge diagnostique.
+
+**Système de Recherche Unifié :** L'architecture multi-institutionnelle s'appuie sur un système de recherche de patients unifié et sécurisé, utilisé par tous les types d'établissements. Cette approche garantit la cohérence des données, évite la duplication de code et assure la conformité RGPD avec audit complet de tous les accès aux données patients. Le système de recherche exacte par prénom, nom et CNE protège la confidentialité des patients tout en permettant une identification précise et fiable.
+
+#### 1.2.6 Système de Thématisation Dynamique
+
+**Adaptation Visuelle par Rôle :** La plateforme intègre un système de thématisation dynamique qui adapte automatiquement l'interface utilisateur selon le type d'établissement et le rôle de l'utilisateur. Chaque rôle dispose de sa propre palette de couleurs professionnelle : vert médical pour les médecins, rouge d'urgence pour les hôpitaux, violet pharmaceutique pour les pharmacies, orange analytique pour les laboratoires, bleu professionnel pour les administrateurs, gris système pour les super administrateurs, et brun institutionnel pour les établissements génériques. Cette personnalisation visuelle améliore l'expérience utilisateur tout en maintenant l'identité professionnelle de chaque type d'établissement.
+
+**Architecture Technique de Thématisation :** Le système utilise une combinaison de thèmes Material-UI dynamiques et de variables CSS personnalisées pour assurer une transition fluide entre les différents thèmes. L'architecture technique s'appuie sur un gestionnaire de thèmes centralisé qui détecte automatiquement le rôle de l'utilisateur connecté et applique le thème correspondant en temps réel. Les variables CSS permettent une synchronisation parfaite entre les composants React et les éléments de style personnalisés, garantissant une cohérence visuelle complète sur l'ensemble de l'application.
+
+#### 1.2.7 Assistant Chatbot Intelligent
 
 **Interface Conversationnelle :** La plateforme intègre un assistant chatbot intelligent accessible via une interface minimisable et non-intrusive.
 
-[Insert picture of chatbot interface showing conversation flow with medical symptom analysis]
+
 
 Le chatbot utilise une architecture multi-services combinant Ollama pour l'exécution locale de modèles de langage médicaux, OpenAI GPT-3.5-turbo comme service de fallback, et Hugging Face BioGPT-Large pour l'analyse spécialisée. L'assistant analyse les symptômes rapportés par les patients en français, anglais et arabe dialectal marocain, fournissant des suggestions diagnostiques préliminaires tout en orientant systématiquement vers une consultation médicale professionnelle.
 
 **Fonctionnalités Avancées :** Le système de détection automatique d'urgences identifie les symptômes critiques (douleurs thoraciques, essoufflement sévère, pertes de conscience) et affiche immédiatement des avertissements prioritaires. L'analyse hybride combine règles prédéfinies, intelligence artificielle et analyse contextuelle pour maximiser la précision. Toutes les interactions sont tracées dans les tables `diagnosis_suggestions` et `diagnosis_feedback` pour amélioration continue et conformité médicale.
 
-#### 1.2.6 Tableaux de Bord et Statistiques
+#### 1.2.8 Tableaux de Bord et Statistiques
 
 **Statistiques Médecin :** Le tableau de bord médecin présente des métriques d'activité en temps réel avec visualisations graphiques.
 
-[Insert picture of doctor statistics dashboard showing charts and KPIs]
+
 
 Les indicateurs incluent le nombre de consultations par période, la répartition des patients par âge et pathologie, les taux de présence aux rendez-vous, et l'évolution de l'activité mensuelle. Les graphiques Chart.js affichent les tendances de consultation, la distribution des créneaux horaires les plus demandés, et les statistiques de patients walk-in. Le système génère automatiquement des rapports d'activité exportables en PDF pour les besoins administratifs et comptables.
 
@@ -260,10 +280,12 @@ Les indicateurs incluent le nombre de consultations par période, la répartitio
 La plateforme s'adresse aux particuliers avec inscription autonome ou création de profil par médecin (walk-in). Les patients bénéficient d'un tableau de bord personnalisé avec historique complet, favoris médecins et notifications automatiques. Le système gère les profils familiaux avec contacts d'urgence et médecins traitants. Les patients chroniques disposent d'un suivi longitudinal avec rappels automatiques et graphiques d'évolution des constantes vitales.
 
 #### 1.3.2 Professionnels de Santé
-Les médecins généralistes et spécialistes (plus de 50 spécialités référencées) constituent le cœur de la plateforme. Chaque médecin dispose d'un tableau de bord avec gestion des disponibilités, patients walk-in, consultations et statistiques d'activité. Le système permet la création et modification complète des dossiers patients avec accès aux antécédents, allergies, traitements et résultats d'analyses. Les praticiens peuvent gérer plusieurs institutions avec plannings différenciés.
+Les médecins généralistes et spécialistes (plus de 50 spécialités référencées) constituent le cœur de la plateforme. Chaque médecin dispose d'un tableau de bord avec gestion des disponibilités, patients walk-in, consultations et statistiques d'activité. Le système permet la création et modification complète des dossiers patients avec accès aux antécédents, allergies, traitements et résultats d'analyses. Les médecins peuvent gérer plusieurs institutions avec plannings différenciés.
 
 #### 1.3.3 Établissements de Santé Diversifiés
-Le système supporte huit types d'établissements : institutions médicales, pharmacies, hôpitaux, laboratoires, cliniques, cabinets privés, centres médicaux. Chaque établissement dispose d'une géolocalisation précise, d'horaires d'ouverture configurables et de gestion multi-médecins. Les institutions peuvent avoir un médecin propriétaire et gérer leurs affiliations avec les praticiens. Le système de statuts ('pending', 'approved', 'rejected') permet une validation administrative des nouveaux établissements.
+Le système supporte huit types d'établissements : institutions médicales, pharmacies, hôpitaux, laboratoires, cliniques, cabinets privés, centres médicaux. Chaque établissement dispose d'une géolocalisation précise, d'horaires d'ouverture configurables et de gestion multi-médecins. Les institutions peuvent avoir un médecin propriétaire et gérer leurs affiliations avec les médecins. Le système de statuts ('pending', 'approved', 'rejected') permet une validation administrative des nouveaux établissements.
+
+Les hôpitaux bénéficient de fonctionnalités spécialisées pour la gestion des admissions, assignations de patients aux médecins, suivi des séjours et gestion des lits. Les pharmacies disposent d'un accès privilégié aux prescriptions avec gestion de la dispensation et historique inter-pharmacies. Les laboratoires peuvent consulter les demandes d'analyses, télécharger les résultats et assurer la traçabilité des examens. Tous les établissements utilisent le même système de recherche unifié garantissant la cohérence et la sécurité des données patients.
 
 ### 1.4 Valeur Ajoutée du Projet
 
@@ -271,10 +293,13 @@ Le système supporte huit types d'établissements : institutions médicales, pha
 La valeur ajoutée pour les patients se manifeste à travers plusieurs dimensions d'amélioration de leur expérience de soins. La simplicité d'utilisation, garantie par une interface intuitive et responsive, démocratise l'accès aux outils numériques de santé. L'accessibilité 24/7 du système libère les patients des contraintes horaires traditionnelles de prise de rendez-vous téléphonique. La centralisation de tous les dossiers médicaux en un lieu unique facilite le suivi médical et améliore la coordination entre professionnels de santé. La transparence offerte par la consultation des tarifs et disponibilités en temps réel permet aux patients de faire des choix éclairés et de planifier leurs soins en fonction de leurs contraintes personnelles et financières.
 
 #### 1.4.2 Pour les Médecins
-Les bénéfices pour les praticiens se traduisent par une optimisation significative de leur exercice professionnel. L'optimisation du temps grâce à la gestion automatisée des créneaux libère les médecins des tâches administratives répétitives. L'accès centralisé aux dossiers permet une consultation rapide des informations patients, améliorant la qualité des consultations. La réduction des no-shows grâce au système de rappels automatiques optimise le taux de remplissage des plannings. La flexibilité offerte par la gestion des urgences avec les patients walk-in permet aux praticiens de répondre aux besoins imprévus tout en maintenant l'organisation de leur planning.
+Les bénéfices pour les médecins se traduisent par une optimisation significative de leur exercice professionnel. L'optimisation du temps grâce à la gestion automatisée des créneaux libère les médecins des tâches administratives répétitives. L'accès centralisé aux dossiers permet une consultation rapide des informations patients, améliorant la qualité des consultations. La réduction des no-shows grâce au système de rappels automatiques optimise le taux de remplissage des plannings. La flexibilité offerte par la gestion des urgences avec les patients walk-in permet aux médecins de répondre aux besoins imprévus tout en maintenant l'organisation de leur planning.
 
 #### 1.4.3 Pour les Établissements
 L'efficacité opérationnelle constitue le principal bénéfice pour les institutions de santé. La réduction des tâches administratives permet de réallouer les ressources humaines vers des activités à plus forte valeur ajoutée. La visibilité renforcée par la présence en ligne améliore l'attractivité de l'établissement et facilite le recrutement de nouveaux patients. Les données analytiques fournies par le système permettent une meilleure compréhension de l'activité et facilitent la prise de décisions stratégiques. L'évolutivité de la solution garantit l'adaptation aux besoins croissants et aux changements organisationnels des établissements.
+
+#### 1.4.4 Pour l'Écosystème Multi-Institutionnel
+L'architecture multi-institutionnelle apporte une valeur ajoutée significative à l'ensemble de l'écosystème de santé. La coordination améliorée entre les différents types d'établissements facilite la continuité des soins et réduit les délais de prise en charge. Le partage sécurisé d'informations entre médecins, hôpitaux, pharmacies et laboratoires optimise les parcours de soins et améliore la sécurité des patients. La standardisation des processus de recherche et d'accès aux données garantit une expérience utilisateur cohérente tout en respectant les spécificités de chaque type d'établissement. Le système de thématisation dynamique renforce l'identité professionnelle de chaque institution tout en maintenant l'unité fonctionnelle de la plateforme.
 
 ### 1.5 Planification
 
@@ -326,7 +351,9 @@ Les défis fonctionnels reflètent la complexité du domaine médical. La gestio
 
 **Dossiers Médicaux Complets :** La table `patients` centralise toutes les informations modifiables par les médecins (profession, groupe sanguin, habitudes). Les antécédents sont catégorisés par type avec dates précises. Le système d'allergies inclut sévérité et symptômes. Les traitements documentent posologie, durée et observance. Plus de 200 types d'analyses sont organisés en catégories avec valeurs de référence. Les constantes vitales permettent un suivi graphique longitudinal.
 
-**Recherche Géospatiale Intelligente :** L'intégration React Leaflet + OpenStreetMap offre une cartographie interactive. Les coordonnées GPS sont indexées pour des requêtes optimisées. L'algorithme Haversine calcule les distances précises. Le clustering automatique améliore les performances d'affichage. Les filtres combinés (spécialité, distance, tarifs, disponibilité) utilisent des requêtes SQL optimisées avec pagination.
+**Recherche Géospatiale Intelligente :** L'intégration d'une cartographie interactive avec OpenStreetMap offre une visualisation géographique optimisée. Les coordonnées GPS sont indexées pour des requêtes optimisées. L'algorithme Haversine calcule les distances précises. Le clustering automatique améliore les performances d'affichage. Les filtres combinés (spécialité, distance, tarifs, disponibilité) utilisent des requêtes SQL optimisées avec pagination.
+
+**Gestion Multi-Institutionnelle :** Le système implémente une architecture permettant aux hôpitaux, pharmacies et laboratoires d'accéder aux dossiers patients selon leurs rôles spécifiques. Les hôpitaux gèrent les admissions, assignations de médecins et suivi des séjours via les tables `hospital_assignments`, `hospital_beds` et `hospital_stays`. Les pharmacies accèdent aux prescriptions via `prescriptions` et `prescription_medications`, avec gestion de la dispensation dans `medication_dispensing`. Les laboratoires consultent les demandes via `test_requests` et `imaging_requests`, et téléchargent les résultats dans `test_results` et `imaging_results`. Un système de recherche unifié utilise l'utilitaire partagé `patientSearch.js` pour garantir la cohérence et la sécurité RGPD.
 
 #### 2.1.2 Besoins Non Fonctionnels
 
@@ -371,7 +398,7 @@ Les diagrammes de séquence détaillent les interactions temporelles entre les o
 **Séquence 4 : Recherche Géolocalisée de Médecins**
 
 **[PLACEHOLDER - Diagramme de Séquence : Recherche Géolocalisée]**
-*Figure 2.5 : Séquence de recherche géographique de praticiens*
+*Figure 2.5 : Séquence de recherche géographique de médecins*
 *Ce diagramme montrera l'interaction avec l'API de géolocalisation, le calcul de distances, et l'affichage des résultats sur la carte interactive.*
 
 #### 2.2.3 Modèle Conceptuel de Données (MCD)
@@ -405,6 +432,18 @@ Entités d'Analyses :
 ├─► Types_analyses (id, categorie_id, nom, valeur_reference_min, valeur_reference_max, unite)
 ├─► Resultats_analyses (id, patient_id, type_analyse_id, valeur, date_analyse)
 └─► Resultats_imagerie (id, patient_id, type_examen, description, date_examen)
+
+Entités Multi-Institutionnelles :
+├─► Hospital_assignments (id, patient_id, hospital_id, doctor_id, admission_date, discharge_date, status)
+├─► Hospital_beds (id, hospital_id, bed_number, ward, status, patient_id)
+├─► Hospital_stays (id, assignment_id, stay_duration, procedures, surgeries, billing_info)
+├─► Prescription_medications (id, prescription_id, medication_id, quantity, dosage, dispensed_quantity)
+├─► Medication_dispensing (id, prescription_medication_id, pharmacy_id, quantity_dispensed, dispensing_date)
+├─► Test_requests (id, patient_id, doctor_id, test_type, urgency, status, request_date)
+├─► Imaging_requests (id, patient_id, doctor_id, imaging_type, urgency, status, request_date)
+├─► Test_results (id, test_request_id, laboratory_id, results, technician_notes, completion_date)
+├─► Imaging_results (id, imaging_request_id, laboratory_id, results, radiologist_report, completion_date)
+└─► Patient_search_audit (id, searching_user_id, searching_institution_id, search_criteria, results_count, timestamp)
 
 Entités IA et Statistiques :
 ├─► Diagnosis_suggestions (id, patient_id, symptomes_json, suggestions_json, niveau_confiance, date_analyse)
@@ -479,13 +518,13 @@ Les diagrammes d'états-transitions modélisent les changements d'état des obje
 
 #### 2.3.2 Module de Gestion des Rendez-vous
 
-**Fonctionnalités :** La création de créneaux par les médecins permet une gestion flexible de l'emploi du temps selon les contraintes personnelles et professionnelles de chaque praticien. La réservation par les patients s'effectue en temps réel avec vérification automatique de la disponibilité. La gestion des conflits prévient les doubles réservations et propose des alternatives en cas d'indisponibilité. Les notifications automatiques informent toutes les parties prenantes des créations, modifications ou annulations de rendez-vous.
+**Fonctionnalités :** La création de créneaux par les médecins permet une gestion flexible de l'emploi du temps selon les contraintes personnelles et professionnelles de chaque médecin. La réservation par les patients s'effectue en temps réel avec vérification automatique de la disponibilité. La gestion des conflits prévient les doubles réservations et propose des alternatives en cas d'indisponibilité. Les notifications automatiques informent toutes les parties prenantes des créations, modifications ou annulations de rendez-vous.
 
 **Règles Métier :** Le système empêche toute double réservation d'un même créneau horaire pour garantir l'intégrité du planning médical. L'annulation de rendez-vous reste possible jusqu'à 2 heures avant l'heure prévue pour permettre une réorganisation optimale. Les rappels automatiques sont envoyés 24 heures et 1 heure avant le rendez-vous pour réduire l'absentéisme. Les créneaux peuvent être configurés par intervalles de 15, 30 ou 60 minutes selon les besoins de chaque spécialité médicale.
 
 #### 2.3.3 Module de Recherche Géographique
 
-**Fonctionnalités :** La recherche par code postal ou ville permet aux patients de localiser facilement les praticiens dans leur zone géographique. Le calcul de distance automatique utilise les coordonnées GPS pour fournir des résultats précis et pertinents. Le filtrage par spécialité médicale affine les résultats selon les besoins spécifiques du patient. Le tri par proximité et disponibilité optimise l'affichage des résultats pour faciliter la prise de décision.
+**Fonctionnalités :** La recherche par code postal ou ville permet aux patients de localiser facilement les médecins dans leur zone géographique. Le calcul de distance automatique utilise les coordonnées GPS pour fournir des résultats précis et pertinents. Le filtrage par spécialité médicale affine les résultats selon les besoins spécifiques du patient. Le tri par proximité et disponibilité optimise l'affichage des résultats pour faciliter la prise de décision.
 
 **Règles Métier :** Le rayon de recherche par défaut est fixé à 50 kilomètres pour équilibrer pertinence géographique et choix disponibles. La géolocalisation nécessite le consentement explicite de l'utilisateur conformément aux réglementations sur la vie privée. Les coordonnées GPS sont stockées de manière sécurisée pour les médecins et institutions participant au système de géolocalisation.
 
@@ -501,7 +540,7 @@ Les diagrammes d'états-transitions modélisent les changements d'état des obje
 
 **Métriques Médecin :** Le système génère des statistiques d'activité personnalisées incluant le nombre de consultations par période (jour/semaine/mois), la répartition des patients par tranche d'âge et pathologie, les taux de présence aux rendez-vous avec analyse des no-shows, et l'évolution temporelle de l'activité. Les graphiques interactifs Chart.js permettent l'analyse des tendances et l'identification des créneaux horaires optimaux.
 
-**Métriques Administrateur :** L'interface administrative centralise les indicateurs globaux de performance : nombre d'utilisateurs actifs par type et période, statistiques d'utilisation des fonctionnalités principales, métriques de performance système (temps de réponse, disponibilité), et rapports géographiques de répartition des établissements. Les tableaux de bord analytiques facilitent la prise de décisions stratégiques et l'optimisation des ressources.
+**Métriques Administrateur :** L'interface administrative centralise les indicateurs globaux de performance : nombre d'utilisateurs actifs par type et période, statistiques d'utilisation des fonctionnalités, les métriques de performance système, et les rapports de géolocalisation des établissements. Les graphiques d'évolution temporelle permettent le suivi des tendances d'adoption et l'identification des pics d'activité pour l'optimisation des ressources.
 
 **Règles Métier :** Les données statistiques respectent l'anonymisation des informations patients. Les rapports sont générés en temps réel avec mise en cache pour optimiser les performances. L'export des données est sécurisé et tracé pour audit. Les métriques de géolocalisation respectent les contraintes de confidentialité des établissements.
 
@@ -509,9 +548,9 @@ Les diagrammes d'états-transitions modélisent les changements d'état des obje
 
 #### 2.4.1 Interface Patient
 
-**Tableau de Bord :** Le tableau de bord patient centralise l'information essentielle pour faciliter le suivi médical. L'affichage des prochains rendez-vous permet une planification efficace et évite les oublis. La liste des médecins favoris facilite la prise de rendez-vous avec les praticiens habituels. Les rappels médicaux alertent sur les examens ou consultations à programmer. L'accès rapide à la recherche permet de trouver immédiatement un nouveau praticien si nécessaire.
+**Tableau de Bord :** Le tableau de bord patient centralise l'information essentielle pour faciliter le suivi médical. L'affichage des prochains rendez-vous permet une planification efficace et évite les oublis. La liste des médecins favoris facilite la prise de rendez-vous avec les médecins habituels. Les rappels médicaux alertent sur les examens ou consultations à programmer. L'accès rapide à la recherche permet de trouver immédiatement un nouveau médecin si nécessaire.
 
-**Recherche de Médecin :** La barre de recherche intelligente propose une saisie intuitive avec auto-complétion et suggestions contextuelles. Les filtres avancés permettent de combiner spécialité, distance géographique et tarif pour affiner les résultats. La carte interactive avec marqueurs offre une visualisation géographique immédiate des praticiens disponibles. Les profils détaillés des médecins fournissent toutes les informations nécessaires à la prise de décision (formation, expérience, tarifs, avis patients).
+**Recherche de Médecin :** La barre de recherche intelligente propose une saisie intuitive avec auto-complétion et suggestions contextuelles. Les filtres avancés permettent de combiner spécialité, distance géographique et tarif pour affiner les résultats. La carte interactive avec marqueurs offre une visualisation géographique immédiate des médecins disponibles. Les profils détaillés des médecins fournissent toutes les informations nécessaires à la prise de décision (formation, expérience, tarifs, avis patients).
 
 **Assistant Chatbot :** L'interface chatbot se présente sous forme d'une fenêtre de discussion minimisable et non-intrusive, accessible depuis toutes les pages patient. L'interface conversationnelle guide l'utilisateur dans la description de ses symptômes avec des questions contextuelles intelligentes. Les réponses de l'assistant incluent des suggestions diagnostiques préliminaires, des recommandations d'urgence si nécessaire, et des orientations vers des spécialités médicales appropriées. L'historique des conversations est sauvegardé pour permettre un suivi longitudinal des préoccupations de santé.
 
@@ -527,7 +566,7 @@ Les diagrammes d'états-transitions modélisent les changements d'état des obje
 
 **Gestion Globale :** L'interface administrative centralise le pilotage de la plateforme. Le tableau de bord analytique fournit une vue d'ensemble de l'activité avec des indicateurs clés de performance. La gestion des utilisateurs permet l'administration des comptes et la résolution des problèmes d'accès. La configuration du système autorise l'adaptation de la plateforme aux besoins spécifiques. Les rapports d'activité génèrent des synthèses périodiques pour le suivi de la performance globale.
 
-**Tableaux de Bord Analytiques :** L'interface administrative intègre des tableaux de bord sophistiqués avec métriques globales de la plateforme. Les indicateurs incluent le nombre d'utilisateurs actifs par type et période, les statistiques d'utilisation des fonctionnalités principales, les métriques de performance système (temps de réponse, disponibilité), et les analyses géographiques de répartition des établissements. Les graphiques d'évolution temporelle permettent le suivi des tendances d'adoption et l'identification des pics d'activité pour l'optimisation des ressources. Les rapports de géolocalisation visualisent la densité des praticiens par région et facilitent l'analyse de couverture territoriale.
+**Tableaux de Bord Analytiques :** L'interface administrative intègre des tableaux de bord sophistiqués avec métriques globales de la plateforme. Les indicateurs incluent le nombre d'utilisateurs actifs par type et période, les statistiques d'utilisation des fonctionnalités principales, les métriques de performance système (temps de réponse, disponibilité), et les analyses géographiques de répartition des établissements. Les graphiques d'évolution temporelle permettent le suivi des tendances d'adoption et l'identification des pics d'activité pour l'optimisation des ressources. Les rapports de géolocalisation visualisent la densité des médecins par région et facilitent l'analyse de couverture territoriale.
 
 ### 2.5 Architecture Fonctionnelle
 
@@ -553,17 +592,17 @@ L'architecture fonctionnelle s'organise en quatre couches distinctes pour garant
 
 #### 2.5.2 API REST - Endpoints Principaux
 
-**Authentification :** Les endpoints d'authentification gèrent l'ensemble du cycle de vie des sessions utilisateur. POST /api/auth/login traite les demandes de connexion avec vérification des identifiants. POST /api/auth/register gère la création de nouveaux comptes utilisateur avec validation des données. POST /api/auth/logout termine proprement les sessions actives. POST /api/auth/reset-password permet la récupération sécurisée des comptes en cas d'oubli de mot de passe.
+**Authentification :** Les endpoints d'authentification gèrent l'ensemble du cycle de vie des sessions utilisateur. `POST /api/auth/login` traite les demandes de connexion avec vérification des identifiants. `POST /api/auth/register` gère la création de nouveaux comptes utilisateur avec validation des données. `POST /api/auth/logout` termine proprement les sessions actives. `POST /api/auth/reset-password` permet la récupération sécurisée des comptes en cas d'oubli de mot de passe.
 
-**Gestion des Rendez-vous :** Les endpoints de rendez-vous orchestrent la planification médicale. GET /api/appointments récupère la liste des rendez-vous selon les droits d'accès de l'utilisateur. POST /api/appointments crée de nouveaux rendez-vous avec vérification de disponibilité. PUT /api/appointments/:id modifie les rendez-vous existants en respectant les contraintes métier. DELETE /api/appointments/:id gère l'annulation des rendez-vous avec notification automatique.
+**Gestion des Rendez-vous :** Les endpoints de rendez-vous orchestrent la planification médicale. `GET /api/appointments` récupère la liste des rendez-vous selon les droits d'accès de l'utilisateur. `POST /api/appointments` crée de nouveaux rendez-vous avec vérification de disponibilité. `PUT /api/appointments/:id` modifie les rendez-vous existants en respectant les contraintes métier. `DELETE /api/appointments/:id` gère l'annulation des rendez-vous avec notification automatique.
 
-**Gestion des Médecins :** Les endpoints médecins facilitent la recherche et la consultation des profils professionnels. GET /api/medecins fournit la liste complète des praticiens avec filtrage possible. GET /api/medecins/search offre une recherche avancée par critères multiples. GET /api/medecins/:id/disponibilites récupère les créneaux disponibles d'un praticien spécifique.
+**Gestion des Médecins :** Les endpoints médecins facilitent la recherche et la consultation des profils professionnels. `GET /api/medecins` fournit la liste complète des médecins avec filtrage possible. `GET /api/medecins/search` offre une recherche avancée par critères multiples. `GET /api/medecins/:id/disponibilites` récupère les créneaux disponibles d'un médecin spécifique.
 
-**Gestion des Patients :** Les endpoints patients centralisent l'accès aux dossiers médicaux. GET /api/patients/:id/dossier récupère le dossier médical complet d'un patient. POST /api/patients/:id/consultation crée un nouveau compte-rendu de consultation. GET /api/patients/:id/historique fournit l'historique complet des interactions médicales du patient.
+**Gestion des Patients :** Les endpoints patients centralisent l'accès aux dossiers médicaux. `GET /api/patients/:id/dossier` récupère le dossier médical complet d'un patient. `POST /api/patients/:id/consultation` crée un nouveau compte-rendu de consultation. `GET /api/patients/:id/historique` fournit l'historique complet des interactions médicales du patient.
 
-**Assistant Chatbot IA :** Les endpoints de l'assistant IA gèrent l'analyse de symptômes et les interactions conversationnelles. POST /api/diagnosis/analyze traite l'analyse basique de symptômes avec règles prédéfinies. POST /api/diagnosis/ai-analyze effectue l'analyse avancée via les services IA externes. POST /api/diagnosis/chat gère les conversations avec l'assistant virtuel. GET /api/diagnosis/history récupère l'historique des analyses pour un patient. POST /api/diagnosis/feedback collecte les évaluations des patients sur la qualité des suggestions.
+**Assistant Chatbot IA :** Les endpoints de l'assistant IA gèrent l'analyse de symptômes et les interactions conversationnelles. `POST /api/diagnosis/analyze` traite l'analyse basique de symptômes avec règles prédéfinies. `POST /api/diagnosis/ai-analyze` effectue l'analyse avancée via les services IA externes. `POST /api/diagnosis/chat` gère les conversations avec l'assistant virtuel. `GET /api/diagnosis/history` récupère l'historique des analyses pour un patient. `POST /api/diagnosis/feedback` collecte les évaluations des patients sur la qualité des suggestions.
 
-**Statistiques et Métriques :** Les endpoints statistiques fournissent les données analytiques pour les tableaux de bord. GET /api/stats/medecin/:id génère les statistiques d'activité personnalisées pour un médecin. GET /api/stats/admin/global fournit les métriques globales de la plateforme. GET /api/stats/admin/users récupère les statistiques d'utilisation par type d'utilisateur. GET /api/stats/geolocation analyse la répartition géographique des établissements. POST /api/stats/export génère et exporte les rapports d'activité en PDF.
+**Statistiques et Métriques :** Les endpoints statistiques fournissent les données analytiques pour les tableaux de bord. `GET /api/stats/medecin/:id` génère les statistiques d'activité personnalisées pour un médecin. `GET /api/stats/admin/global` fournit les métriques globales de la plateforme. `GET /api/stats/admin/users` récupère les statistiques d'utilisation par type d'utilisateur. `GET /api/stats/geolocation` analyse la répartition géographique des établissements. `POST /api/stats/export` génère et exporte les rapports d'activité en PDF.
 
 ---
 
@@ -583,7 +622,7 @@ L'architecture du système suit un modèle en trois tiers moderne avec séparati
 │   Port: 3000           │◄──►│   Express.js Port: 5000 │◄──►│   MySQL                │
 │   • 45+ Composants     │    │   • 35+ Endpoints API   │    │   • 25+ Tables         │
 │   • Material-UI        │    │   • JWT Middleware      │    │   • Index Spatiaux     │
-│   • React Leaflet      │    │   • Nodemailer          │    │   • Contraintes FK     │
+│   • Cartographie       │    │   • Nodemailer          │    │   • Contraintes FK     │
 │   • Axios HTTP         │    │   • Bcrypt Security     │    │   • Audit Triggers     │
 └─────────────────────────┘    └─────────────────────────┘    └─────────────────────────┘
 ```
@@ -592,7 +631,7 @@ L'architecture du système suit un modèle en trois tiers moderne avec séparati
 
 [Insert picture of technology stack diagram showing all frameworks, libraries, and tools used]
 
-**Frontend Stack Moderne :** React.js 18.2.0 avec hooks et composants fonctionnels pour une architecture moderne et performante. Material-UI (MUI) 5.13.0 avec @mui/icons-material, @mui/lab et @mui/x-date-pickers pour une interface cohérente et professionnelle. React Router DOM 6.11.1 pour la navigation SPA avec protection des routes par rôle. Axios 1.4.0 pour les communications HTTP avec intercepteurs d'authentification. React Leaflet 5.0.0 + Leaflet 1.9.4 pour la cartographie interactive avec OpenStreetMap. Chart.js 4.4.9 + React-ChartJS-2 5.3.0 pour les graphiques de constantes vitales. Date-fns 2.30.0 pour la manipulation des dates et créneaux horaires.
+**Frontend Stack Moderne :** React.js 18.2.0 avec hooks et composants fonctionnels pour une architecture moderne et performante. Material-UI (MUI) 5.13.0 avec @mui/icons-material, @mui/lab et @mui/x-date-pickers pour une interface cohérente et professionnelle. React Router DOM 6.11.1 pour la navigation SPA avec protection des routes par rôle. Axios 1.4.0 pour les communications HTTP avec intercepteurs d'authentification. Cartographie interactive avec OpenStreetMap pour la géolocalisation des médecins et institutions. Chart.js 4.4.9 + React-ChartJS-2 5.3.0 pour les graphiques de constantes vitales. Date-fns 2.30.0 pour la manipulation des dates et créneaux horaires.
 
 **Backend Robuste :** Node.js avec Express.js 4.18.2 pour l'API REST avec architecture MVC (controllers, routes, middlewares). MySQL2 3.3.1 pour les connexions optimisées avec pool de connexions et requêtes préparées. JWT (jsonwebtoken 9.0.0) pour l'authentification stateless avec refresh tokens. Bcrypt 5.1.0 pour le hashage sécurisé des mots de passe avec salt. Nodemailer 6.9.2 pour l'envoi d'emails avec templates HTML et authentification SMTP. CORS 2.8.5 pour la sécurisation des requêtes cross-origin. Dotenv 16.0.3 pour la gestion sécurisée des variables d'environnement.
 
@@ -638,9 +677,19 @@ Le diagramme de communication présente les interactions entre les différents c
 
 La structure de l'application React suit une organisation modulaire avec séparation claire des responsabilités. Les composants sont organisés en dossiers thématiques (auth, patient, médecin, common) pour faciliter la maintenance et la réutilisation. La gestion des routes utilise React Router avec protection des accès selon les rôles utilisateur. Les hooks personnalisés centralisent la logique métier et la gestion d'état. Le système de thème Material-UI assure une cohérence visuelle sur l'ensemble de l'application. Les appels API sont centralisés dans des services dédiés avec gestion d'erreurs uniforme.
 
-L'interface patient privilégie la simplicité d'utilisation avec un tableau de bord intuitif présentant les informations essentielles. La recherche de médecins intègre des filtres avancés et une carte interactive basée sur Leaflet pour la géolocalisation. Le processus de prise de rendez-vous guide l'utilisateur étape par étape avec validation en temps réel. La gestion des favoris permet un accès rapide aux praticiens habituels.
+[Insert picture of the medical platform homepage/dashboard showing the main interface]
+
+L'interface patient privilégie la simplicité d'utilisation avec un tableau de bord intuitif présentant les informations essentielles. La recherche de médecins intègre des filtres avancés et une carte interactive pour la géolocalisation. Le processus de prise de rendez-vous guide l'utilisateur étape par étape avec validation en temps réel. La gestion des favoris permet un accès rapide aux médecins habituels.
+
+[Insert picture of patient appointment booking interface showing search filters and available time slots]
+
+[Insert picture of interactive map showing doctor locations with markers and search filters]
 
 L'interface médecin optimise la productivité avec un tableau de bord synthétique présentant l'activité du jour. La gestion des patients walk-in permet l'enregistrement rapide de nouveaux patients et la consultation immédiate de leurs dossiers. Les fonctionnalités de recherche de patients facilitent l'accès aux dossiers médicaux. Le module de consultation permet la saisie structurée des comptes-rendus avec gestion des antécédents et prescriptions.
+
+[Insert picture of doctor dashboard showing appointment calendar, patient list, and availability management]
+
+[Insert picture of patient medical record interface showing personal information, medical history, and treatment sections]
 
 #### 3.2.2 Développement Backend
 
@@ -664,13 +713,33 @@ L'assistant chatbot s'appuie sur une architecture modulaire avec le contrôleur 
 
 [Insert picture of chatbot architecture diagram showing AIManager, service fallback, and data flow]
 
+[Insert picture of chatbot interface showing conversation flow with medical symptom analysis]
+
 Le système d'analyse hybride combine trois approches : l'analyse basée sur des règles utilise une cartographie exhaustive de symptômes vers diagnostics potentiels couvrant plus de vingt symptômes courants, l'analyse par IA exploite des modèles pré-entraînés sur des corpus médicaux, et l'analyse contextuelle enrichit les suggestions selon l'intensité des symptômes et les combinaisons multi-systémiques. La persistance s'effectue via les tables `diagnosis_suggestions` et `diagnosis_feedback` pour traçabilité et amélioration continue.
 
-#### 3.2.5 Implémentation des Statistiques
+#### 3.2.5 Implémentation Multi-Institutionnelle
+
+L'architecture multi-institutionnelle s'appuie sur une approche modulaire avec des contrôleurs spécialisés pour chaque type d'établissement. Le système utilise un utilitaire de recherche partagé `patientSearch.js` qui garantit la cohérence et évite la duplication de code entre les différents modules. Cette approche centralisée assure la conformité RGPD avec audit complet de tous les accès aux données patients via la table `patient_search_audit`.
+
+**Gestion Hospitalière :** Le contrôleur `hospitalController.js` implémente les fonctionnalités spécialisées pour les hôpitaux, incluant la recherche de patients avec contexte d'admission, la gestion des assignations médecin-patient via la table `hospital_assignments`, et le suivi des séjours avec la table `hospital_stays`. Le système de gestion des lits utilise la table `hospital_beds` pour optimiser l'occupation et planifier les admissions. Les hôpitaux peuvent également ajouter des patients walk-in en réutilisant les fonctionnalités existantes, maintenant ainsi la cohérence du système.
+
+**Système Pharmaceutique :** Le contrôleur `pharmacyController.js` gère l'accès aux prescriptions via les tables `prescriptions` et `prescription_medications`, avec fonctionnalités de dispensation enregistrées dans `medication_dispensing`. Le système maintient un historique inter-pharmacies permettant à tous les établissements pharmaceutiques de consulter l'historique des médicaments dispensés. Cette approche collaborative améliore la sécurité pharmaceutique et permet aux médecins de consulter l'historique complet des traitements.
+
+**Gestion Laboratoire :** Le contrôleur `laboratoryController.js` permet l'accès aux demandes d'analyses via `test_requests` et `imaging_requests`, avec possibilité de télécharger les résultats dans `test_results` et `imaging_results`. Le système assure la traçabilité complète avec identification du laboratoire source, facilitant la communication inter-établissements et améliorant la continuité des soins.
+
+#### 3.2.6 Système de Thématisation Dynamique
+
+L'implémentation du système de thématisation s'appuie sur une architecture technique robuste combinant Material-UI et variables CSS personnalisées. Le fichier `src/styles/theme.js` centralise la gestion des thèmes avec un gestionnaire `createRoleTheme(role)` qui génère dynamiquement les thèmes selon le rôle utilisateur. Le composant `ThemeUpdater.js` synchronise les variables CSS avec les thèmes Material-UI, permettant une transition fluide entre les différentes palettes de couleurs.
+
+L'architecture technique utilise un système d'événements personnalisés pour détecter les changements de rôle utilisateur et appliquer automatiquement le thème correspondant. Les variables CSS permettent la synchronisation parfaite entre les composants React et les éléments de style personnalisés, garantissant une cohérence visuelle complète sur l'ensemble de l'application. Chaque rôle dispose de sa palette professionnelle : vert médical pour les médecins, rouge d'urgence pour les hôpitaux, violet pharmaceutique pour les pharmacies, orange analytique pour les laboratoires, et couleurs administratives pour les autres rôles.
+
+#### 3.2.7 Implémentation des Statistiques
 
 Le module statistiques utilise Chart.js avec React-ChartJS-2 pour générer des visualisations interactives et responsives. L'architecture backend comprend des contrôleurs spécialisés pour les métriques médecin et administrateur, avec requêtes SQL optimisées et mise en cache Redis pour les performances.
 
 [Insert picture of statistics dashboard showing various charts and KPIs]
+
+[Insert picture of doctor statistics dashboard showing charts and KPIs]
 
 Les statistiques médecin incluent des graphiques d'évolution temporelle des consultations, des diagrammes de répartition des patients par pathologie, des analyses de créneaux horaires optimaux, et des métriques de taux de présence. Les statistiques administrateur centralisent les indicateurs globaux avec graphiques d'utilisateurs actifs, métriques de performance système, et analyses géographiques de répartition des établissements. L'export PDF utilise la bibliothèque jsPDF avec génération de rapports formatés et sécurisés.
 
@@ -682,7 +751,7 @@ Les statistiques médecin incluent des graphiques d'évolution temporelle des co
 
 **Interface Utilisateur Avancée :** Material-UI (MUI) 5.13.0 fournit un système de design cohérent avec @mui/icons-material pour l'iconographie, @mui/lab pour les composants expérimentaux, @mui/x-date-pickers pour la gestion des dates, et @mui/utils pour les utilitaires. Le système de thème personnalisé assure une identité visuelle médicale professionnelle.
 
-**Cartographie et Visualisation :** React Leaflet 5.0.0 avec Leaflet 1.9.4 intègre OpenStreetMap pour la géolocalisation interactive des médecins et institutions. Chart.js 4.4.9 avec React-ChartJS-2 5.3.0 génère des graphiques statistiques dynamiques. Recharts 2.15.3 complète les visualisations avec des composants graphiques spécialisés.
+**Cartographie et Visualisation :** Cartographie interactive avec OpenStreetMap pour la géolocalisation des médecins et institutions. Chart.js 4.4.9 avec React-ChartJS-2 5.3.0 génère des graphiques statistiques dynamiques. Recharts 2.15.3 complète les visualisations avec des composants graphiques spécialisés.
 
 **Communication et Utilitaires :** Axios 1.4.0 gère les communications HTTP avec intercepteurs d'authentification et gestion d'erreurs centralisée. Date-fns 2.30.0 optimise la manipulation des dates et créneaux horaires. Lucide-react 0.511.0 enrichit l'iconographie avec des icônes modernes et cohérentes.
 
@@ -757,19 +826,23 @@ La validation du système a été réalisée par une approche de testing pragmat
 
 #### 3.3.2 Suite de Tests Backend Spécialisés
 
-La validation du système backend s'appuie sur une suite de tests spécialisés développés pour valider les fonctionnalités critiques de la plateforme. Le fichier `test-db.js` constitue le fondement de la validation de connectivité, vérifiant l'intégrité des connexions MySQL, l'exécution des requêtes complexes et le respect des contraintes référentielles. Ce module de test examine particulièrement les jointures multi-tables, les requêtes géospatiales et les performances des index optimisés, garantissant ainsi la robustesse de la couche de persistance.
+La validation du système backend s'appuie sur une suite de tests spécialisés développés pour valider les fonctionnalités critiques de la plateforme. Cette approche de testing modulaire comprend plusieurs catégories de tests adaptés aux différents aspects du système.
 
-Le module `test-appointments-api.js` valide exhaustivement l'ensemble des endpoints de gestion des rendez-vous, couvrant les opérations de création, modification, annulation et recherche de créneaux disponibles. Cette suite de tests examine spécifiquement les scénarios de gestion des conflits, les cas de double réservation et la logique complexe de disponibilités, assurant la fiabilité du système de planification médicale.
+**Tests de Connectivité et Base de Données :** Le fichier `test-db.js` constitue le fondement de la validation de connectivité, vérifiant l'intégrité des connexions MySQL, l'exécution des requêtes complexes et le respect des contraintes référentielles. Ce module examine particulièrement les jointures multi-tables, les requêtes géospatiales et les performances des index optimisés, garantissant la robustesse de la couche de persistance.
 
-La validation du système de communication s'effectue via le fichier `test-email.js`, qui confirme le bon fonctionnement du système Nodemailer avec différents templates de notification. Ce module teste les mécanismes de vérification, les rappels automatiques et les notifications diverses, validant également l'envoi d'emails avec pièces jointes et la gestion robuste des erreurs SMTP.
+**Tests d'API et Endpoints :** Le module `test-appointments-api.js` valide exhaustivement l'ensemble des endpoints de gestion des rendez-vous, couvrant les opérations de création, modification, annulation et recherche de créneaux disponibles. Cette suite examine spécifiquement les scénarios de gestion des conflits, les cas de double réservation et la logique complexe de disponibilités.
 
-Le fichier `test-slots.js` se concentre spécifiquement sur la validation de l'algorithme de génération des créneaux horaires, examinant la gestion des pauses déjeuner, les intervalles personnalisables et les mécanismes de prévention des conflits de planning. Cette validation assure que la logique métier complexe de planification fonctionne correctement dans tous les scénarios d'utilisation identifiés.
+**Tests de Communication :** La validation du système de communication s'effectue via le fichier `test-email.js`, qui confirme le bon fonctionnement du système Nodemailer avec différents templates de notification. Ce module teste les mécanismes de vérification, les rappels automatiques et la gestion robuste des erreurs SMTP.
 
-Enfin, le module `check-users.js` valide les mécanismes d'authentification et d'autorisation pour tous les types d'utilisateurs, testant les fonctionnalités JWT, le hashage bcrypt, la vérification des rôles et les autorisations d'accès granulaires selon les profils utilisateur.
+**Tests de Logique Métier :** Le fichier `test-slots.js` se concentre sur la validation de l'algorithme de génération des créneaux horaires, examinant la gestion des pauses déjeuner, les intervalles personnalisables et les mécanismes de prévention des conflits de planning.
+
+**Tests d'Intelligence Artificielle :** Le module `test-phi3-mini.js` valide spécifiquement l'intégration des modèles d'IA locaux, testant les interactions avec Ollama et la gestion des fallbacks vers les services externes. Ce test assure la fiabilité de l'assistant médical IA.
+
+**Tests de Performance :** Les modules `test-fast.js`, `test-optimized.js` et `test-quick.js` constituent une suite de tests de performance adaptés à différents scénarios. `test-fast.js` effectue des tests de performance rapides sur les fonctionnalités core, `test-optimized.js` exécute une suite de tests optimisés pour les performances système, et `test-quick.js` réalise des smoke tests pour la validation rapide des fonctionnalités de base.
 
 #### 3.3.3 Monitoring et Debugging Avancé
 
-Le système de logging intégré trace toutes les opérations critiques avec horodatage et niveau de sévérité. Les requêtes géospatiales sont monitorées pour optimiser les performances des calculs de distance Haversine. Le debugging des composants React Leaflet a nécessité un suivi précis des coordonnées GPS et du clustering des marqueurs. L'audit des actions utilisateur via la table `historique_actions` permet un debugging post-mortem des problèmes de données. Les métriques de performance des requêtes SQL complexes ont guidé l'optimisation des index composites.
+Le système de logging intégré trace toutes les opérations critiques avec horodatage et niveau de sévérité. Les requêtes géospatiales sont monitorées pour optimiser les performances des calculs de distance Haversine. Le debugging des composants de cartographie a nécessité un suivi précis des coordonnées GPS et du clustering des marqueurs. L'audit des actions utilisateur via la table `historique_actions` permet un debugging post-mortem des problèmes de données. Les métriques de performance des requêtes SQL complexes ont guidé l'optimisation des index composites.
 
 ---
 
@@ -943,7 +1016,7 @@ L'évaluation continue de la qualité s'appuie sur des revues de code régulièr
 
 Ce projet de développement d'une plateforme médicale de gestion des rendez-vous et dossiers patients a permis de créer une solution complète et moderne répondant aux défis de la digitalisation du secteur de la santé. L'objectif principal de développer une plateforme web complète digitalisant et optimisant les processus de prise de rendez-vous et de gestion des dossiers patients a été atteint avec succès.
 
-La solution développée propose une interface intuitive et responsive qui s'adapte aux besoins spécifiques des différents types d'utilisateurs (patients, médecins, administrateurs, institutions). Le système de gestion des rendez-vous intelligent intègre la vérification automatique des disponibilités et la prévention des conflits de planning. Le module de dossiers médicaux sécurisé centralise l'ensemble des informations de santé avec respect des normes de confidentialité. Le système de géolocalisation facilite l'accès aux soins en permettant la recherche de praticiens par proximité géographique.
+La solution développée propose une interface intuitive et responsive qui s'adapte aux besoins spécifiques des différents types d'utilisateurs (patients, médecins, administrateurs, institutions). Le système de gestion des rendez-vous intelligent intègre la vérification automatique des disponibilités et la prévention des conflits de planning. Le module de dossiers médicaux sécurisé centralise l'ensemble des informations de santé avec respect des normes de confidentialité. Le système de géolocalisation facilite l'accès aux soins en permettant la recherche de médecins par proximité géographique.
 
 ### Apports Techniques et Fonctionnels
 
@@ -997,7 +1070,7 @@ La plateforme développée constitue une base solide pour une éventuelle mise e
 
 **OpenStreetMap Foundation.** *OpenStreetMap Wiki - Technical Documentation*. [En ligne]. Disponible sur : https://wiki.openstreetmap.org/ [Consulté en 2024]. Cette documentation collaborative a permis l'intégration des fonctionnalités de géolocalisation et de cartographie interactive. Les spécifications des APIs de géocodage, les bonnes pratiques d'utilisation des tuiles cartographiques, et les algorithmes de calcul de distance ont été implémentés selon les standards de la fondation.
 
-**Leaflet Team.** *Leaflet Documentation - Interactive Maps*. [En ligne]. Disponible sur : https://leafletjs.com/reference.html [Consulté en 2024]. La documentation Leaflet a guidé l'implémentation des cartes interactives avec React Leaflet, incluant la gestion des marqueurs, le clustering automatique, et l'optimisation des performances d'affichage pour les grandes quantités de données géographiques.
+**OpenStreetMap Foundation.** *OpenStreetMap Documentation - Interactive Maps*. [En ligne]. Disponible sur : https://wiki.openstreetmap.org/ [Consulté en 2024]. La documentation OpenStreetMap a guidé l'implémentation des cartes interactives, incluant la gestion des marqueurs, le clustering automatique, et l'optimisation des performances d'affichage pour les grandes quantités de données géographiques.
 
 ### Frameworks et Bibliothèques
 
@@ -1035,6 +1108,29 @@ L'application React de la plateforme s'organise selon une architecture modulaire
 
 ### Annexe D : Fichiers de Test et Validation
 
-La suite de tests backend comprend plusieurs modules spécialisés assurant la validation complète des fonctionnalités critiques. Le module de test de connectivité base de données valide l'intégrité des connexions MySQL et l'exécution des requêtes complexes. Le système de test des endpoints de rendez-vous vérifie l'ensemble des opérations de planification médicale. Le module de validation email confirme le bon fonctionnement du système Nodemailer avec templates personnalisés. Le test des algorithmes de créneaux horaires assure la fiabilité de la logique de planification. Le module d'authentification valide les mécanismes de sécurité JWT et bcrypt. Les scripts utilitaires incluent la génération de données de test, la création automatique de comptes médecins, l'ajout d'échantillons de médicaments et l'intégration de types d'analyses médicales complets. Le système de migrations comprend des scripts de mise à jour de base de données et un gestionnaire automatisé de migrations pour assurer l'évolutivité de la structure de données.
+La suite de tests backend comprend plusieurs modules spécialisés assurant la validation complète des fonctionnalités critiques, organisés dans le répertoire `scripts/tests/` :
+
+**Tests de Base de Données et Connectivité :**
+- `test-db.js` : Validation de l'intégrité des connexions MySQL, exécution des requêtes complexes et respect des contraintes référentielles
+
+**Tests d'API et Endpoints :**
+- `test-appointments-api.js` : Vérification complète des opérations de planification médicale et gestion des conflits de rendez-vous
+
+**Tests de Communication :**
+- `test-email.js` : Validation du système Nodemailer avec templates personnalisés et gestion des erreurs SMTP
+
+**Tests de Logique Métier :**
+- `test-slots.js` : Validation des algorithmes de génération des créneaux horaires et prévention des conflits
+
+**Tests d'Intelligence Artificielle :**
+- `test-phi3-mini.js` : Validation de l'intégration des modèles IA locaux et gestion des fallbacks
+
+**Tests de Performance :**
+- `test-fast.js` : Tests de performance rapides sur les fonctionnalités core
+- `test-optimized.js` : Suite de tests optimisés pour les performances système
+- `test-quick.js` : Smoke tests pour validation rapide des fonctionnalités de base
+
+**Scripts Utilitaires :**
+Les scripts utilitaires incluent la génération de données de test, la création automatique de comptes médecins, l'ajout d'échantillons de médicaments et l'intégration de types d'analyses médicales complets. Le système de migrations comprend des scripts de mise à jour de base de données et un gestionnaire automatisé de migrations pour assurer l'évolutivité de la structure de données.
 
 --- 
