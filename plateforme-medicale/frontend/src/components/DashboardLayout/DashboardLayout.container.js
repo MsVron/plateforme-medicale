@@ -8,7 +8,7 @@ import {
   Lock,
   BarChart,
   Search,
-  Event,
+  Event as EventIcon,
   MedicalInformation,
   CalendarMonth,
   Favorite,
@@ -79,7 +79,7 @@ const DashboardLayoutContainer = () => {
     ],
     medecin: [
       { text: 'Mon espace', path: '/medecin', icon: <Dashboard /> },
-      { text: 'Rendez-vous', path: '/medecin/appointments', icon: <Event /> },
+      { text: 'Rendez-vous', path: '/medecin/appointments', icon: <EventIcon /> },
       { text: 'Rechercher un patient', path: '/medecin/patients/search', icon: <Search /> },
       { text: 'Dossiers médicaux', path: '/medecin/medical-records', icon: <MedicalInformation /> },
       { text: 'Calendrier', path: '/medecin/calendar', icon: <CalendarMonth /> }
@@ -88,7 +88,7 @@ const DashboardLayoutContainer = () => {
       { text: 'Mon espace', path: '/patient', icon: <Dashboard /> },
       { text: 'Mon dossier médical', path: '/patient/medical-record', icon: <Assignment /> },
       { text: 'Rechercher un médecin', path: '/patient/doctor-search', icon: <Search /> },
-      { text: 'Mes rendez-vous', path: '/patient/appointments', icon: <Event /> },
+      { text: 'Mes rendez-vous', path: '/patient/appointments', icon: <EventIcon /> },
       { text: 'Médecins favoris', path: '/patient/favorites', icon: <Favorite /> }
     ],
     institution: [

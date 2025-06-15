@@ -31,6 +31,7 @@ import {
   DialogActions,
   TextField
 } from '@mui/material';
+import axios from '../../services/axiosConfig';
 import DiagnosisChatbot from '../../components/patient/DiagnosisChatbot';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -76,31 +77,21 @@ const MedicalRecord = () => {
   const fetchMedicalRecord = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/patient/medical-record', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await axios.get('/patient/medical-record');
+      const data = response.data;
+      setMedicalRecord(data);
+      setPersonalInfo({
+        adresse: data.patient.adresse || '',
+        ville: data.patient.ville || '',
+        code_postal: data.patient.code_postal || '',
+        pays: data.patient.pays || '',
+        telephone: data.patient.telephone || '',
+        email: data.patient.email || '',
+        contact_urgence_nom: data.patient.contact_urgence_nom || '',
+        contact_urgence_telephone: data.patient.contact_urgence_telephone || '',
+        contact_urgence_relation: data.patient.contact_urgence_relation || '',
+        profession: data.patient.profession || ''
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMedicalRecord(data);
-        setPersonalInfo({
-          adresse: data.patient.adresse || '',
-          ville: data.patient.ville || '',
-          code_postal: data.patient.code_postal || '',
-          pays: data.patient.pays || '',
-          telephone: data.patient.telephone || '',
-          email: data.patient.email || '',
-          contact_urgence_nom: data.patient.contact_urgence_nom || '',
-          contact_urgence_telephone: data.patient.contact_urgence_telephone || '',
-          contact_urgence_relation: data.patient.contact_urgence_relation || '',
-          profession: data.patient.profession || ''
-        });
-      } else {
-        throw new Error('Failed to fetch medical record');
-      }
     } catch (err) {
       console.error('Error fetching medical record:', err);
       setError('Impossible de charger votre dossier médical. Veuillez réessayer plus tard.');
@@ -111,24 +102,11 @@ const MedicalRecord = () => {
 
   const handlePersonalInfoUpdate = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/patient/personal-info', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(personalInfo)
-      });
-
-      if (response.ok) {
-        setMessage('Informations personnelles mises à jour avec succès');
-        setEditingPersonalInfo(false);
-        fetchMedicalRecord();
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        setMessage('Erreur lors de la mise à jour');
-      }
+      const response = await axios.put('/patient/personal-info', personalInfo);
+      setMessage('Informations personnelles mises à jour avec succès');
+      setEditingPersonalInfo(false);
+      fetchMedicalRecord();
+      setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error updating personal info:', error);
       setMessage('Erreur lors de la mise à jour');
