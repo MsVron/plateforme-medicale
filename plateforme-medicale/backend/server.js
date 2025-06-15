@@ -19,6 +19,11 @@ const institutionRoutes = require('./routes/institutionRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 
+// Institution-specific routes
+const hospitalRoutes = require('./routes/hospitalRoutes');
+const pharmacyRoutes = require('./routes/pharmacyRoutes');
+const laboratoryRoutes = require('./routes/laboratoryRoutes');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', patientRoutes);
@@ -26,6 +31,11 @@ app.use('/api', medecinRoutes);
 app.use('/api', institutionRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/appointments', appointmentRoutes);
+
+// Institution-specific API routes
+app.use('/api/hospital', hospitalRoutes);
+app.use('/api/pharmacy', pharmacyRoutes);
+app.use('/api/laboratory', laboratoryRoutes);
 
 // Route de test
 app.get('/', (req, res) => {

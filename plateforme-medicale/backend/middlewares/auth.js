@@ -91,7 +91,39 @@ exports.isPatient = (req, res, next) => {
 
 // Institution, Admin ou Super Admin
 exports.isInstitution = (req, res, next) => {
-  if (!['institution', 'admin', 'super_admin'].includes(req.user.role)) {
+  if (!['institution', 'pharmacy', 'hospital', 'laboratory', 'admin', 'super_admin'].includes(req.user.role)) {
+    return res.status(403).json({ message: "Accès réservé aux institutions médicales" });
+  }
+  next();
+};
+
+// Pharmacy specific access
+exports.isPharmacy = (req, res, next) => {
+  if (!['pharmacy', 'admin', 'super_admin'].includes(req.user.role)) {
+    return res.status(403).json({ message: "Accès réservé aux pharmacies" });
+  }
+  next();
+};
+
+// Hospital specific access
+exports.isHospital = (req, res, next) => {
+  if (!['hospital', 'admin', 'super_admin'].includes(req.user.role)) {
+    return res.status(403).json({ message: "Accès réservé aux hôpitaux" });
+  }
+  next();
+};
+
+// Laboratory specific access
+exports.isLaboratory = (req, res, next) => {
+  if (!['laboratory', 'admin', 'super_admin'].includes(req.user.role)) {
+    return res.status(403).json({ message: "Accès réservé aux laboratoires" });
+  }
+  next();
+};
+
+// Medical institutions (hospitals, clinics, doctors)
+exports.isMedicalInstitution = (req, res, next) => {
+  if (!['medecin', 'hospital', 'admin', 'super_admin'].includes(req.user.role)) {
     return res.status(403).json({ message: "Accès réservé aux institutions médicales" });
   }
   next();

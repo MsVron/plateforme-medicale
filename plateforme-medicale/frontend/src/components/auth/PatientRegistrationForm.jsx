@@ -29,6 +29,13 @@ import {
   validatePostalCode,
   validateCNE,
   validateCNEConfirmationOptional,
+  validateEmail,
+  validateName,
+  validateBloodGroup,
+  validateAlcoholConsumption,
+  validatePhysicalActivity,
+  validateWeight,
+  validateHeight,
   isValidEmail,
 } from '../../utils/formValidation';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
@@ -50,8 +57,21 @@ const PatientRegistrationForm = () => {
     telephone: '',
     ville: '',
     code_postal: '',
+    pays: 'Maroc', // Updated to match common usage, but will validate against DB
     CNE: '',
     CNE_confirm: '',
+    // Additional fields matching database schema
+    adresse: '',
+    contact_urgence_nom: '',
+    contact_urgence_telephone: '',
+    contact_urgence_relation: '',
+    groupe_sanguin: '',
+    taille_cm: '',
+    poids_kg: '',
+    est_fumeur: false,
+    consommation_alcool: 'non',
+    activite_physique: 'sédentaire',
+    profession: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -62,47 +82,20 @@ const PatientRegistrationForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    
-    // Mark field as touched
-    if (!touchedFields[name]) {
-      setTouchedFields({ ...touchedFields, [name]: true });
-    }
-    
-    // Generate username from first and last name
-    if (name === 'prenom' || name === 'nom') {
-      if (formData.prenom && name === 'nom') {
-        const generatedUsername = `${formData.prenom.toLowerCase()}.${value.toLowerCase()}`;
-        setFormData({ ...formData, [name]: value, nom_utilisateur: generatedUsername });
-        // Validate the generated username
-        validateField('nom_utilisateur', generatedUsername);
-      } else if (formData.nom && name === 'prenom') {
-        const generatedUsername = `${value.toLowerCase()}.${formData.nom.toLowerCase()}`;
-        setFormData({ ...formData, [name]: value, nom_utilisateur: generatedUsername });
-        // Validate the generated username
-        validateField('nom_utilisateur', generatedUsername);
-      }
-    }
-    
-    // Validate the field
-    validateField(name, value);
-  };
-
-  const handleCityChange = (event, newValue) => {
-    setFormData({ ...formData, ville: newValue || '' });
-    // Mark field as touched
-    if (!touchedFields.ville) {
-      setTouchedFields({ ...touchedFields, ville: true });
-    }
-  };
-
-  // Function to prevent pasting in CNE confirmation field
-  const handleCNEConfirmPaste = (e) => {
-    e.preventDefault();
-    return false;
-  };
+  // ENUM options matching database schema
+  const bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  const alcoholConsumptionOptions = [
+    { value: 'non', label: 'Non' },
+    { value: 'occasionnel', label: 'Occasionnel' },
+    { value: 'régulier', label: 'Régulier' },
+    { value: 'quotidien', label: 'Quotidien' }
+  ];
+  const physicalActivityOptions = [
+    { value: 'sédentaire', label: 'Sédentaire' },
+    { value: 'légère', label: 'Légère' },
+    { value: 'modérée', label: 'Modérée' },
+    { value: 'intense', label: 'Intense' }
+  ];
 
   // Function to get field color based on validation state
   const getCNEFieldColor = (fieldName) => {
@@ -141,19 +134,13 @@ const PatientRegistrationForm = () => {
     switch (name) {
       case 'prenom':
       case 'nom':
-        if (!value) {
-          error = `Le ${name} est requis`;
-        } else if (value.length < 2) {
-          error = `Le ${name} doit contenir au moins 2 caractères`;
-        }
+        const nameValidation = validateName(value, name);
+        error = nameValidation.errorMessage;
         break;
         
       case 'email':
-        if (!value) {
-          error = "L'email est requis";
-        } else if (!isValidEmail(value)) {
-          error = "Format d'email invalide";
-        }
+        const emailValidation = validateEmail(value);
+        error = emailValidation.errorMessage;
         break;
         
       case 'nom_utilisateur':
@@ -219,6 +206,62 @@ const PatientRegistrationForm = () => {
         const cneConfirmValidation = validateCNEConfirmationOptional(formData.CNE, value);
         error = cneConfirmValidation.errorMessage;
         break;
+
+      case 'groupe_sanguin':
+        const bloodGroupValidation = validateBloodGroup(value);
+        error = bloodGroupValidation.errorMessage;
+        break;
+
+      case 'consommation_alcool':
+        const alcoholValidation = validateAlcoholConsumption(value);
+        error = alcoholValidation.errorMessage;
+        break;
+
+      case 'activite_physique':
+        const activityValidation = validatePhysicalActivity(value);
+        error = activityValidation.errorMessage;
+        break;
+
+      case 'poids_kg':
+        const weightValidation = validateWeight(value);
+        error = weightValidation.errorMessage;
+        break;
+
+      case 'taille_cm':
+        const heightValidation = validateHeight(value);
+        error = heightValidation.errorMessage;
+        break;
+
+      case 'contact_urgence_nom':
+        if (value && value.length > 100) {
+          error = 'Le nom du contact d\'urgence ne doit pas dépasser 100 caractères';
+        }
+        break;
+
+      case 'contact_urgence_telephone':
+        if (value) {
+          const contactPhoneValidation = validatePhoneNumber(value);
+          error = contactPhoneValidation.errorMessage;
+        }
+        break;
+
+      case 'contact_urgence_relation':
+        if (value && value.length > 50) {
+          error = 'La relation ne doit pas dépasser 50 caractères';
+        }
+        break;
+
+      case 'profession':
+        if (value && value.length > 100) {
+          error = 'La profession ne doit pas dépasser 100 caractères';
+        }
+        break;
+
+      case 'adresse':
+        if (value && value.length > 255) {
+          error = 'L\'adresse ne doit pas dépasser 255 caractères';
+        }
+        break;
         
       default:
         break;
@@ -258,6 +301,36 @@ const PatientRegistrationForm = () => {
     validateField(name, value);
   };
 
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleDateChange = (newValue) => {
+    setFormData(prev => ({
+      ...prev,
+      date_naissance: newValue
+    }));
+    
+    if (errors.date_naissance) {
+      setErrors(prev => ({
+        ...prev,
+        date_naissance: ''
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -286,41 +359,25 @@ const PatientRegistrationForm = () => {
       setRegistrationSuccess(true);
       // Don't navigate - show success message instead
     } catch (error) {
-      console.error('Registration error details:', error);
-      
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-        
-        if (error.response.data && error.response.data.message) {
-          setSubmitError(error.response.data.message);
-        } else {
-          setSubmitError(`Erreur: ${error.response.status} - Une erreur est survenue lors de l'inscription.`);
-        }
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        setSubmitError('Erreur de connexion au serveur. Veuillez vérifier votre connexion internet et réessayer.');
+      console.error('Registration error:', error);
+      if (error.response?.data?.message) {
+        setSubmitError(error.response.data.message);
       } else {
-        console.error('Error message:', error.message);
-        setSubmitError('Une erreur est survenue lors de l\'inscription. Veuillez réessayer plus tard.');
-      }
-      
-      // Scroll to error message
-      const errorElement = document.querySelector('.MuiAlert-root');
-      if (errorElement) {
-        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setSubmitError('Une erreur est survenue lors de l\'inscription');
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const shouldShowError = (fieldName) => touchedFields[fieldName] && errors[fieldName];
+
   if (registrationSuccess) {
     return (
       <Container maxWidth="sm">
         <Box
           sx={{
-            marginTop: 8,
+            marginY: 4,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -330,49 +387,32 @@ const PatientRegistrationForm = () => {
             boxShadow: '0 4px 20px rgba(44, 62, 80, 0.1)',
           }}
         >
-          <div className="text-center" style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-              <div style={{ 
-                position: 'relative',
-                background: '#00B01D',
-                borderRadius: '100%',
-                height: '120px',
-                width: '120px'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  transform: 'rotate(50deg) translate(-50%, -50%)',
-                  left: '27%',
-                  top: '43%',
-                  height: '60px',
-                  width: '25px',
-                  borderBottom: '5px solid #fff',
-                  borderRight: '5px solid #fff'
-                }}></div>
-              </div>
-            </div>
-            <Typography component="h2" variant="h4" sx={{ mt: 2, fontWeight: 'bold' }}>
-              Inscription réussie!
-            </Typography>
-            <Typography sx={{ mt: 4 }}>
-              Un email de vérification a été envoyé à <strong>{formData.email}</strong>. 
-              Veuillez cliquer sur le lien dans l'email pour activer votre compte.
-            </Typography>
-            <Box sx={{ mt: 6 }}>
-              <Link to="/login" style={{ color: '#4ca1af', textDecoration: 'none' }}>
-                Retour à la page de connexion
-              </Link>
-            </Box>
-          </div>
+          <Typography component="h1" variant="h4" sx={{ mb: 1, color: '#4ca1af' }}>
+            Inscription réussie !
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 3, textAlign: 'center' }}>
+            Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/login')}
+            sx={{
+              background: 'linear-gradient(45deg, #4ca1af 30%, #c4e0e5 90%)',
+              color: 'white',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #3a8a99 30%, #b0d4d9 90%)',
+              },
+            }}
+          >
+            Se connecter
+          </Button>
         </Box>
       </Container>
     );
   }
 
-  const shouldShowError = (fieldName) => touchedFields[fieldName] && errors[fieldName];
-
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="md">
       <Box
         sx={{
           marginY: 4,
@@ -399,37 +439,39 @@ const PatientRegistrationForm = () => {
         )}
         
         <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-          {/* Prénom */}
-          <TextField
-            required
-            fullWidth
-            id="prenom"
-            label="Prénom"
-            name="prenom"
-            value={formData.prenom}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={shouldShowError('prenom')}
-            helperText={shouldShowError('prenom') ? errors.prenom : ''}
-            sx={{ mb: 3 }}
-          />
+          {/* Basic Information */}
+          <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+            Informations de base
+          </Typography>
           
-          {/* Nom */}
-          <TextField
-            required
-            fullWidth
-            id="nom"
-            label="Nom"
-            name="nom"
-            value={formData.nom}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={shouldShowError('nom')}
-            helperText={shouldShowError('nom') ? errors.nom : ''}
-            sx={{ mb: 3 }}
-          />
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <TextField
+              required
+              fullWidth
+              id="prenom"
+              label="Prénom"
+              name="prenom"
+              value={formData.prenom}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('prenom')}
+              helperText={shouldShowError('prenom') ? errors.prenom : ''}
+            />
+            
+            <TextField
+              required
+              fullWidth
+              id="nom"
+              label="Nom"
+              name="nom"
+              value={formData.nom}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('nom')}
+              helperText={shouldShowError('nom') ? errors.nom : ''}
+            />
+          </Box>
           
-          {/* Email */}
           <TextField
             required
             fullWidth
@@ -445,50 +487,46 @@ const PatientRegistrationForm = () => {
             sx={{ mb: 3 }}
           />
           
-          {/* Date de naissance */}
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Date de naissance *"
-              value={formData.date_naissance}
-              onChange={(newValue) => {
-                handleChange({
-                  target: {
-                    name: 'date_naissance',
-                    value: newValue
-                  }
-                });
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  required
-                  fullWidth
-                  error={shouldShowError('date_naissance')}
-                  helperText={shouldShowError('date_naissance') ? errors.date_naissance : ''}
-                  sx={{ mb: 3 }}
-                />
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Date de naissance *"
+                value={formData.date_naissance}
+                onChange={handleDateChange}
+                slotProps={{ 
+                  textField: { 
+                    fullWidth: true,
+                    error: shouldShowError('date_naissance'),
+                    helperText: shouldShowError('date_naissance') ? errors.date_naissance : ''
+                  } 
+                }}
+                {...datePickerProps}
+              />
+            </LocalizationProvider>
+            
+            <FormControl fullWidth required error={shouldShowError('sexe')}>
+              <InputLabel>Sexe</InputLabel>
+              <Select
+                name="sexe"
+                value={formData.sexe}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                label="Sexe"
+              >
+                <MenuItem value="M">Masculin</MenuItem>
+                <MenuItem value="F">Féminin</MenuItem>
+              </Select>
+              {shouldShowError('sexe') && (
+                <FormHelperText>{errors.sexe}</FormHelperText>
               )}
-              {...datePickerProps}
-              maxDate={new Date()}
-            />
-          </LocalizationProvider>
+            </FormControl>
+          </Box>
+
+          {/* Account Information */}
+          <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+            Informations de compte
+          </Typography>
           
-          {/* Téléphone */}
-          <TextField
-            fullWidth
-            id="telephone"
-            label="Téléphone"
-            name="telephone"
-            value={formData.telephone}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={shouldShowError('telephone')}
-            helperText={shouldShowError('telephone') ? errors.telephone : "Format: +212612345678 ou 0612345678"}
-            placeholder="ex: +212612345678"
-            sx={{ mb: 3 }}
-          />
-          
-          {/* Nom d'utilisateur */}
           <TextField
             required
             fullWidth
@@ -499,159 +537,307 @@ const PatientRegistrationForm = () => {
             onChange={handleChange}
             onBlur={handleBlur}
             error={shouldShowError('nom_utilisateur')}
-            helperText={shouldShowError('nom_utilisateur') ? errors.nom_utilisateur : "Généré automatiquement à partir de votre prénom et nom, mais vous pouvez le modifier"}
+            helperText={shouldShowError('nom_utilisateur') ? errors.nom_utilisateur : 'Entre 3 et 50 caractères, lettres, chiffres, points et tirets bas uniquement'}
             sx={{ mb: 3 }}
           />
           
-          {/* Ville - Autocomplete */}
-          <Autocomplete
-            id="ville"
-            options={moroccanCities}
-            value={formData.ville}
-            onChange={handleCityChange}
-            renderInput={(params) => (
-              <TextField 
-                {...params} 
-                label="Ville" 
-                fullWidth
-                error={shouldShowError('ville')}
-                helperText={shouldShowError('ville') ? errors.ville : ''}
-                onBlur={() => setTouchedFields({ ...touchedFields, ville: true })}
-              />
-            )}
-            sx={{ mb: 3 }}
-            freeSolo
-          />
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <TextField
+              required
+              fullWidth
+              id="mot_de_passe"
+              label="Mot de passe"
+              name="mot_de_passe"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.mot_de_passe}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('mot_de_passe')}
+              helperText={shouldShowError('mot_de_passe') ? errors.mot_de_passe : ''}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            
+            <TextField
+              required
+              fullWidth
+              id="mot_de_passe_confirm"
+              label="Confirmer le mot de passe"
+              name="mot_de_passe_confirm"
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={formData.mot_de_passe_confirm}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('mot_de_passe_confirm')}
+              helperText={shouldShowError('mot_de_passe_confirm') ? errors.mot_de_passe_confirm : ''}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+
+          {/* Contact Information */}
+          <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+            Informations de contact
+          </Typography>
           
-          {/* Code postal */}
-          <TextField
-            fullWidth
-            id="code_postal"
-            label="Code postal"
-            name="code_postal"
-            value={formData.code_postal}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={shouldShowError('code_postal')}
-            helperText={shouldShowError('code_postal') ? errors.code_postal : ''}
-            sx={{ mb: 3 }}
-          />
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <TextField
+              fullWidth
+              id="telephone"
+              label="Téléphone"
+              name="telephone"
+              value={formData.telephone}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('telephone')}
+              helperText={shouldShowError('telephone') ? errors.telephone : 'Format: +212612345678 ou 0612345678'}
+            />
+            
+            <Autocomplete
+              fullWidth
+              options={moroccanCities}
+              value={formData.ville || null}
+              onChange={(event, newValue) => {
+                setFormData(prev => ({ ...prev, ville: newValue || '' }));
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Ville"
+                  name="ville"
+                  onBlur={handleBlur}
+                />
+              )}
+            />
+          </Box>
           
-          {/* CNE */}
-          <TextField
-            fullWidth
-            id="CNE"
-            label="CNE"
-            name="CNE"
-            value={formData.CNE}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={shouldShowError('CNE')}
-            helperText={shouldShowError('CNE') ? errors.CNE : "Format: 1 ou 2 lettres suivies d'au moins 6 caractères"}
-            sx={{ mb: 3, ...getCNEFieldColor('CNE') }}
-          />
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <TextField
+              fullWidth
+              id="adresse"
+              label="Adresse"
+              name="adresse"
+              value={formData.adresse}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('adresse')}
+              helperText={shouldShowError('adresse') ? errors.adresse : ''}
+            />
+            
+            <TextField
+              fullWidth
+              id="code_postal"
+              label="Code postal"
+              name="code_postal"
+              value={formData.code_postal}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('code_postal')}
+              helperText={shouldShowError('code_postal') ? errors.code_postal : ''}
+            />
+          </Box>
+
+          {/* CNE Information */}
+          <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+            Carte Nationale d'Étudiant (Optionnel)
+          </Typography>
           
-          {/* CNE Confirmation - Only show if CNE is filled */}
-          {formData.CNE && (
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <TextField
+              fullWidth
+              id="CNE"
+              label="CNE"
+              name="CNE"
+              value={formData.CNE}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('CNE')}
+              helperText={shouldShowError('CNE') ? errors.CNE : '1-2 lettres suivies de 6-18 caractères alphanumériques'}
+              sx={getCNEFieldColor('CNE')}
+            />
+            
             <TextField
               fullWidth
               id="CNE_confirm"
-              label="Confirmer le CNE"
+              label="Confirmer CNE"
               name="CNE_confirm"
               value={formData.CNE_confirm}
               onChange={handleChange}
               onBlur={handleBlur}
-              onPaste={handleCNEConfirmPaste}
               error={shouldShowError('CNE_confirm')}
-              helperText={shouldShowError('CNE_confirm') ? errors.CNE_confirm : "Saisissez à nouveau votre CNE pour confirmation (copier-coller désactivé)"}
-              sx={{ mb: 3, ...getCNEFieldColor('CNE_confirm') }}
+              helperText={shouldShowError('CNE_confirm') ? errors.CNE_confirm : ''}
+              sx={getCNEFieldColor('CNE_confirm')}
+              onPaste={(e) => e.preventDefault()}
             />
-          )}
+          </Box>
+
+          {/* Medical Information */}
+          <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+            Informations médicales (Optionnel)
+          </Typography>
           
-          {/* Sexe */}
-          <FormControl 
-            fullWidth 
-            required 
-            error={shouldShowError('sexe')} 
-            sx={{ mb: 3 }}
-          >
-            <InputLabel id="sexe-label">Sexe</InputLabel>
-            <Select
-              labelId="sexe-label"
-              id="sexe"
-              name="sexe"
-              value={formData.sexe}
-              label="Sexe"
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <FormControl fullWidth error={shouldShowError('groupe_sanguin')}>
+              <InputLabel>Groupe sanguin</InputLabel>
+              <Select
+                name="groupe_sanguin"
+                value={formData.groupe_sanguin}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                label="Groupe sanguin"
+              >
+                <MenuItem value="">Non spécifié</MenuItem>
+                {bloodGroupOptions.map((group) => (
+                  <MenuItem key={group} value={group}>{group}</MenuItem>
+                ))}
+              </Select>
+              {shouldShowError('groupe_sanguin') && (
+                <FormHelperText>{errors.groupe_sanguin}</FormHelperText>
+              )}
+            </FormControl>
+            
+            <TextField
+              fullWidth
+              id="taille_cm"
+              label="Taille (cm)"
+              name="taille_cm"
+              type="number"
+              value={formData.taille_cm}
               onChange={handleChange}
               onBlur={handleBlur}
-            >
-              <MenuItem value="M">Homme</MenuItem>
-              <MenuItem value="F">Femme</MenuItem>
-            </Select>
-            {shouldShowError('sexe') && (
-              <FormHelperText error>{errors.sexe}</FormHelperText>
-            )}
-          </FormControl>
+              error={shouldShowError('taille_cm')}
+              helperText={shouldShowError('taille_cm') ? errors.taille_cm : 'Entre 30 et 300 cm'}
+            />
+            
+            <TextField
+              fullWidth
+              id="poids_kg"
+              label="Poids (kg)"
+              name="poids_kg"
+              type="number"
+              step="0.1"
+              value={formData.poids_kg}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('poids_kg')}
+              helperText={shouldShowError('poids_kg') ? errors.poids_kg : 'Entre 0.01 et 999.99 kg'}
+            />
+          </Box>
           
-          {/* Mot de passe */}
-          <TextField
-            required
-            fullWidth
-            id="mot_de_passe"
-            label="Mot de passe"
-            name="mot_de_passe"
-            type={showPassword ? 'text' : 'password'}
-            value={formData.mot_de_passe}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={shouldShowError('mot_de_passe')}
-            helperText={shouldShowError('mot_de_passe') ? errors.mot_de_passe : 'Doit contenir au moins 6 caractères, avec au moins une lettre et un chiffre'}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{ mb: 3 }}
-          />
-          
-          {/* Confirmation mot de passe */}
-          <TextField
-            required
-            fullWidth
-            id="mot_de_passe_confirm"
-            label="Confirmer le mot de passe"
-            name="mot_de_passe_confirm"
-            type={showConfirmPassword ? 'text' : 'password'}
-            value={formData.mot_de_passe_confirm}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={shouldShowError('mot_de_passe_confirm')}
-            helperText={shouldShowError('mot_de_passe_confirm') ? errors.mot_de_passe_confirm : ''}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    edge="end"
-                  >
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{ mb: 3 }}
-          />
-          
-          <Typography sx={{ mb: 3 }} variant="caption" color="text.secondary">
-            Les champs marqués d'un * sont obligatoires
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <FormControl fullWidth error={shouldShowError('consommation_alcool')}>
+              <InputLabel>Consommation d'alcool</InputLabel>
+              <Select
+                name="consommation_alcool"
+                value={formData.consommation_alcool}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                label="Consommation d'alcool"
+              >
+                {alcoholConsumptionOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </Select>
+              {shouldShowError('consommation_alcool') && (
+                <FormHelperText>{errors.consommation_alcool}</FormHelperText>
+              )}
+            </FormControl>
+            
+            <FormControl fullWidth error={shouldShowError('activite_physique')}>
+              <InputLabel>Activité physique</InputLabel>
+              <Select
+                name="activite_physique"
+                value={formData.activite_physique}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                label="Activité physique"
+              >
+                {physicalActivityOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </Select>
+              {shouldShowError('activite_physique') && (
+                <FormHelperText>{errors.activite_physique}</FormHelperText>
+              )}
+            </FormControl>
+          </Box>
+
+          {/* Emergency Contact */}
+          <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+            Contact d'urgence (Optionnel)
           </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <TextField
+              fullWidth
+              id="contact_urgence_nom"
+              label="Nom du contact d'urgence"
+              name="contact_urgence_nom"
+              value={formData.contact_urgence_nom}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('contact_urgence_nom')}
+              helperText={shouldShowError('contact_urgence_nom') ? errors.contact_urgence_nom : ''}
+            />
+            
+            <TextField
+              fullWidth
+              id="contact_urgence_telephone"
+              label="Téléphone du contact d'urgence"
+              name="contact_urgence_telephone"
+              value={formData.contact_urgence_telephone}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('contact_urgence_telephone')}
+              helperText={shouldShowError('contact_urgence_telephone') ? errors.contact_urgence_telephone : ''}
+            />
+          </Box>
+          
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <TextField
+              fullWidth
+              id="contact_urgence_relation"
+              label="Relation"
+              name="contact_urgence_relation"
+              value={formData.contact_urgence_relation}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('contact_urgence_relation')}
+              helperText={shouldShowError('contact_urgence_relation') ? errors.contact_urgence_relation : 'Ex: Père, Mère, Conjoint(e)'}
+            />
+            
+            <TextField
+              fullWidth
+              id="profession"
+              label="Profession"
+              name="profession"
+              value={formData.profession}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={shouldShowError('profession')}
+              helperText={shouldShowError('profession') ? errors.profession : ''}
+            />
+          </Box>
           
           <Button
             type="submit"
@@ -659,17 +845,17 @@ const PatientRegistrationForm = () => {
             variant="contained"
             disabled={isSubmitting}
             sx={{
+              mt: 3,
               mb: 2,
-              bgcolor: '#4ca1af',
+              py: 1.5,
+              background: 'linear-gradient(45deg, #4ca1af 30%, #c4e0e5 90%)',
               color: 'white',
               '&:hover': {
-                bgcolor: '#2c3e50',
+                background: 'linear-gradient(45deg, #3a8a99 30%, #b0d4d9 90%)',
               },
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 8px rgba(76, 161, 175, 0.3)',
-              borderRadius: '8px',
-              padding: '12px 0',
-              fontWeight: 'bold'
+              '&:disabled': {
+                background: '#ccc',
+              },
             }}
           >
             {isSubmitting ? (

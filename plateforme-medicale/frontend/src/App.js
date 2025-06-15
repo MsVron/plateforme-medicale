@@ -54,6 +54,18 @@ import {
   Calendar as MedecinCalendar
 } from './components/medecin';
 
+// Import hospital components
+import HospitalDashboard from './components/hospital/HospitalDashboard';
+import HospitalHome from './pages/hospital/HospitalHome';
+
+// Import pharmacy components
+import PharmacyDashboard from './components/pharmacy/PharmacyDashboard';
+import PharmacyHome from './pages/pharmacy/PharmacyHome';
+
+// Import laboratory components
+import LaboratoryDashboard from './components/laboratory/LaboratoryDashboard';
+import LaboratoryHome from './pages/laboratory/LaboratoryHome';
+
 function App() {
   return (
     <ThemeProvider theme={medicalTheme}>
@@ -360,6 +372,60 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['institution']}>
                   <InstitutionHome />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Hospital routes */}
+            <Route
+              path="/hospital"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <HospitalHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Pharmacy routes */}
+            <Route
+              path="/pharmacy"
+              element={
+                <ProtectedRoute allowedRoles={['pharmacy']}>
+                  <PharmacyHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pharmacy/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['pharmacy']}>
+                  <PharmacyDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Laboratory routes */}
+            <Route
+              path="/laboratory"
+              element={
+                <ProtectedRoute allowedRoles={['laboratory']}>
+                  <LaboratoryHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/laboratory/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['laboratory']}>
+                  <LaboratoryDashboard />
                 </ProtectedRoute>
               }
             />

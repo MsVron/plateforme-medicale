@@ -70,6 +70,24 @@ const DashboardLayoutContainer = () => {
     institution: [
       { text: 'Mon espace', path: '/institution', icon: <Business /> },
       { text: 'Nos patients', path: '/institution/patients', icon: <Person /> }
+    ],
+    hospital: [
+      { text: 'Tableau de bord', path: '/hospital/dashboard', icon: <Dashboard /> },
+      { text: 'Rechercher patient', path: '/hospital/patients/search', icon: <Search /> },
+      { text: 'Patients hôpital', path: '/hospital/patients', icon: <People /> },
+      { text: 'Patient direct', path: '/hospital/patient-direct', icon: <PersonAdd /> }
+    ],
+    pharmacy: [
+      { text: 'Tableau de bord', path: '/pharmacy/dashboard', icon: <Dashboard /> },
+      { text: 'Rechercher patient', path: '/pharmacy/patients/search', icon: <Search /> },
+      { text: 'Prescriptions', path: '/pharmacy/prescriptions', icon: <LocalPharmacy /> },
+      { text: 'Historique', path: '/pharmacy/history', icon: <Assignment /> }
+    ],
+    laboratory: [
+      { text: 'Tableau de bord', path: '/laboratory/dashboard', icon: <Dashboard /> },
+      { text: 'Rechercher patient', path: '/laboratory/patients/search', icon: <Search /> },
+      { text: 'Demandes d\'analyses', path: '/laboratory/test-requests', icon: <Assignment /> },
+      { text: 'Travail en attente', path: '/laboratory/pending-work', icon: <Analytics /> }
     ]
   };
 

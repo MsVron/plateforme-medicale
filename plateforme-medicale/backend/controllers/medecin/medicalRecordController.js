@@ -1,4 +1,5 @@
 const db = require('../../config/db');
+const { searchPatients } = require('../../utils/patientSearch');
 
 // Get patient medical record by ID (for doctors)
 exports.getPatientMedicalRecord = async (req, res) => {
@@ -141,118 +142,35 @@ exports.getPatientMedicalRecord = async (req, res) => {
   }
 };
 
-// Enhanced search for patients (for doctors) - supports exact matches
+// Enhanced search for patients (for doctors) - using shared search utility
 exports.searchPatients = async (req, res) => {
   try {
     const medecinId = req.user.id_specifique_role;
     const { prenom, nom, cne } = req.query;
 
-    // Validate that at least one search parameter is provided
-    if (!prenom && !nom && !cne) {
-      return res.status(400).json({ 
-        message: 'Au moins un critère de recherche doit être fourni (prénom, nom, ou CNE)' 
-      });
-    }
-
-    // Sanitize inputs to prevent injection attacks
-    const sanitizedPrenom = prenom ? prenom.trim() : null;
-    const sanitizedNom = nom ? nom.trim() : null;
-    const sanitizedCNE = cne ? cne.trim() : null;
-
-    // Validate input lengths
-    if (sanitizedPrenom && sanitizedPrenom.length < 2) {
-      return res.status(400).json({ 
-        message: 'Le prénom doit contenir au moins 2 caractères' 
-      });
-    }
-    if (sanitizedNom && sanitizedNom.length < 2) {
-      return res.status(400).json({ 
-        message: 'Le nom doit contenir au moins 2 caractères' 
-      });
-    }
-    if (sanitizedCNE && sanitizedCNE.length < 3) {
-      return res.status(400).json({ 
-        message: 'Le CNE doit contenir au moins 3 caractères' 
-      });
-    }
-
-    // Build dynamic query for exact matches
-    let whereConditions = [];
-    let queryParams = [];
-
-    if (sanitizedPrenom) {
-      whereConditions.push('p.prenom = ?');
-      queryParams.push(sanitizedPrenom);
-    }
-
-    if (sanitizedNom) {
-      whereConditions.push('p.nom = ?');
-      queryParams.push(sanitizedNom);
-    }
-
-    if (sanitizedCNE) {
-      whereConditions.push('p.CNE = ?');
-      queryParams.push(sanitizedCNE);
-    }
-
-    const whereClause = whereConditions.join(' AND ');
-
-    // Search for patients with exact matches
-    const [patients] = await db.execute(`
-      SELECT 
-        p.id, 
-        p.prenom, 
-        p.nom, 
-        p.date_naissance, 
-        p.sexe, 
-        p.CNE, 
-        p.email, 
-        p.telephone,
-        p.adresse,
-        p.ville,
-        p.code_postal,
-        p.est_inscrit_par_medecin,
-        p.date_inscription,
+    const result = await searchPatients({
+      prenom,
+      nom,
+      cne,
+      userId: req.user.id,
+      institutionId: medecinId,
+      institutionType: 'doctor',
+      additionalFields: `,
         CASE 
           WHEN rv.patient_id IS NOT NULL THEN TRUE 
           ELSE FALSE 
-        END as a_rendez_vous_avec_medecin
-      FROM patients p
-      LEFT JOIN rendez_vous rv ON p.id = rv.patient_id AND rv.medecin_id = ?
-      WHERE ${whereClause}
-      GROUP BY p.id
-      ORDER BY p.nom, p.prenom
-      LIMIT 50
-    `, [medecinId, ...queryParams]);
-
-    // Log search activity for security audit
-    await db.execute(`
-      INSERT INTO historique_actions (
-        utilisateur_id, action_type, table_concernee, 
-        enregistrement_id, description
-      ) VALUES (?, ?, ?, ?, ?)
-    `, [
-      req.user.id, 
-      'SEARCH_PATIENTS', 
-      'patients', 
-      0, 
-      `Recherche: ${sanitizedPrenom || ''} ${sanitizedNom || ''} ${sanitizedCNE || ''}`.trim()
-    ]);
-
-    return res.status(200).json({ 
-      patients,
-      searchCriteria: {
-        prenom: sanitizedPrenom,
-        nom: sanitizedNom,
-        cne: sanitizedCNE
-      },
-      totalResults: patients.length
+        END as a_rendez_vous_avec_medecin`,
+      additionalJoins: `
+        LEFT JOIN rendez_vous rv ON p.id = rv.patient_id AND rv.medecin_id = ${medecinId}`,
+      additionalConditions: `
+        GROUP BY p.id`
     });
+
+    return res.status(200).json(result);
   } catch (error) {
     console.error('Erreur lors de la recherche de patients:', error);
     return res.status(500).json({ 
-      message: 'Erreur serveur lors de la recherche', 
-      error: error.message 
+      message: error.message
     });
   }
 };

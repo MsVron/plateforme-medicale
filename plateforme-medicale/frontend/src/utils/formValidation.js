@@ -9,13 +9,13 @@ export const isValidEmail = (email) => {
 };
 
 /**
- * Validates a username
+ * Validates a username according to database schema (VARCHAR(50))
  * @param {string} username - The username to validate
  * @returns {Object} - Contains whether the username is valid and any error message
  */
 export const validateUsername = (username) => {
-  // Username should be 3-20 characters and only contain letters, numbers, dots, and underscores
-  const usernameRegex = /^[a-z0-9._]{3,20}$/;
+  // Username should be 3-50 characters and only contain letters, numbers, dots, and underscores
+  const usernameRegex = /^[a-z0-9._]{3,50}$/;
   
   if (!username) {
     return { isValid: false, errorMessage: "Le nom d'utilisateur est requis" };
@@ -24,7 +24,7 @@ export const validateUsername = (username) => {
   if (!usernameRegex.test(username)) {
     return { 
       isValid: false, 
-      errorMessage: "Le nom d'utilisateur doit contenir entre 3 et 20 caractères et ne peut contenir que des lettres minuscules, des chiffres, des points et des tirets bas" 
+      errorMessage: "Le nom d'utilisateur doit contenir entre 3 et 50 caractères et ne peut contenir que des lettres minuscules, des chiffres, des points et des tirets bas" 
     };
   }
   
@@ -64,54 +64,49 @@ export const validatePassword = (password) => {
 
 /**
  * Validates a birth date
- * @param {string} birthDate - The birth date to validate in format YYYY-MM-DD
- * @returns {Object} - Contains whether the date is valid and any error message
+ * @param {string|Date} birthDate - The birth date to validate
+ * @returns {Object} - Contains whether the birth date is valid and any error message
  */
 export const validateBirthDate = (birthDate) => {
   if (!birthDate) {
     return { isValid: false, errorMessage: "La date de naissance est requise" };
   }
   
-  const birthDateObj = new Date(birthDate);
+  const date = new Date(birthDate);
   const today = new Date();
+  const minDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
   
-  // Check if date is valid
-  if (isNaN(birthDateObj.getTime())) {
-    return { isValid: false, errorMessage: "Format de date invalide" };
+  if (isNaN(date.getTime())) {
+    return { isValid: false, errorMessage: "Date de naissance invalide" };
   }
   
-  // Check if date is in the future
-  if (birthDateObj > today) {
+  if (date > today) {
     return { isValid: false, errorMessage: "La date de naissance ne peut pas être dans le futur" };
   }
   
-  // Check if person is at least 1 year old
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(today.getFullYear() - 1);
-  
-  if (birthDateObj > oneYearAgo) {
-    return { isValid: false, errorMessage: "L'âge minimum est de 1 an" };
-  }
-  
-  // Check if person is not too old (less than 120 years old)
-  const maxAge = new Date();
-  maxAge.setFullYear(today.getFullYear() - 120);
-  
-  if (birthDateObj < maxAge) {
-    return { isValid: false, errorMessage: "L'âge maximum est de 120 ans" };
+  if (date < minDate) {
+    return { isValid: false, errorMessage: "Date de naissance trop ancienne" };
   }
   
   return { isValid: true, errorMessage: "" };
 };
 
 /**
- * Validates a phone number
+ * Validates a phone number according to database schema (VARCHAR(20))
  * @param {string} phone - The phone number to validate
  * @returns {Object} - Contains whether the phone is valid and any error message
  */
 export const validatePhoneNumber = (phone) => {
   if (!phone) {
     return { isValid: true, errorMessage: "" }; // Phone is optional
+  }
+  
+  // Check length constraint from database
+  if (phone.length > 20) {
+    return { 
+      isValid: false, 
+      errorMessage: "Le numéro de téléphone ne doit pas dépasser 20 caractères" 
+    };
   }
   
   // Matches formats like +212612345678, 06-12-34-56-78, 0612345678
@@ -128,7 +123,7 @@ export const validatePhoneNumber = (phone) => {
 };
 
 /**
- * Validates a postal code
+ * Validates a postal code according to database schema (VARCHAR(10))
  * @param {string} postalCode - The postal code to validate
  * @returns {Object} - Contains whether the postal code is valid and any error message
  */
@@ -137,13 +132,21 @@ export const validatePostalCode = (postalCode) => {
     return { isValid: true, errorMessage: "" }; // Postal code is optional
   }
   
-  // Moroccan postal codes are 5 digits
-  const postalCodeRegex = /^\d{5}$/;
+  // Check length constraint from database
+  if (postalCode.length > 10) {
+    return { 
+      isValid: false, 
+      errorMessage: "Le code postal ne doit pas dépasser 10 caractères" 
+    };
+  }
+  
+  // Basic postal code format (numbers and letters)
+  const postalCodeRegex = /^[A-Za-z0-9\s-]{2,10}$/;
   
   if (!postalCodeRegex.test(postalCode)) {
     return { 
       isValid: false, 
-      errorMessage: "Le code postal doit contenir 5 chiffres" 
+      errorMessage: "Format de code postal invalide" 
     };
   }
   
@@ -151,7 +154,7 @@ export const validatePostalCode = (postalCode) => {
 };
 
 /**
- * Validates a CNE (Carte Nationale d'Étudiant) - Optional for regular registration
+ * Validates a CNE (Carte Nationale d'Étudiant) according to database schema (VARCHAR(20))
  * @param {string} cne - The CNE to validate
  * @returns {Object} - Contains whether the CNE is valid and any error message
  */
@@ -160,13 +163,21 @@ export const validateCNE = (cne) => {
     return { isValid: true, errorMessage: "" }; // CNE is optional for regular registration
   }
   
-  // CNE can be 1-2 letters followed by at least 6 characters
-  const cneRegex = /^[A-Za-z]{1,2}[A-Za-z0-9]{6,}$/;
+  // Check length constraint from database
+  if (cne.length > 20) {
+    return { 
+      isValid: false, 
+      errorMessage: "Le CNE ne doit pas dépasser 20 caractères" 
+    };
+  }
+  
+  // Standardized CNE format: 1-2 letters followed by 6-18 characters (alphanumeric)
+  const cneRegex = /^[A-Za-z]{1,2}[A-Za-z0-9]{6,18}$/;
   
   if (!cneRegex.test(cne)) {
     return { 
       isValid: false, 
-      errorMessage: "Le CNE doit comporter 1 ou 2 lettres suivies d'au moins 6 caractères" 
+      errorMessage: "Le CNE doit comporter 1 ou 2 lettres suivies de 6 à 18 caractères alphanumériques" 
     };
   }
   
@@ -174,7 +185,7 @@ export const validateCNE = (cne) => {
 };
 
 /**
- * Validates a CNE (Carte Nationale d'Étudiant) - Required for patients directs
+ * Validates a required CNE
  * @param {string} cne - The CNE to validate
  * @returns {Object} - Contains whether the CNE is valid and any error message
  */
@@ -183,17 +194,7 @@ export const validateCNERequired = (cne) => {
     return { isValid: false, errorMessage: "Le CNE est requis" };
   }
   
-  // CNE can be 1-2 letters followed by at least 6 characters
-  const cneRegex = /^[A-Za-z]{1,2}[A-Za-z0-9]{6,}$/;
-  
-  if (!cneRegex.test(cne.trim())) {
-    return { 
-      isValid: false, 
-      errorMessage: "Le CNE doit comporter 1 ou 2 lettres suivies d'au moins 6 caractères alphanumériques" 
-    };
-  }
-  
-  return { isValid: true, errorMessage: "" };
+  return validateCNE(cne);
 };
 
 /**
@@ -233,6 +234,298 @@ export const validateCNEConfirmationOptional = (cne, cneConfirm) => {
   
   if (cne !== cneConfirm) {
     return { isValid: false, errorMessage: "Les CNE ne correspondent pas" };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates a name field according to database schema (VARCHAR(50))
+ * @param {string} name - The name to validate
+ * @param {string} fieldName - The field name for error messages
+ * @returns {Object} - Contains whether the name is valid and any error message
+ */
+export const validateName = (name, fieldName = 'nom') => {
+  if (!name || name.trim().length === 0) {
+    return {
+      isValid: false,
+      errorMessage: `Le ${fieldName} est requis`
+    };
+  }
+  
+  if (name.trim().length < 2) {
+    return {
+      isValid: false,
+      errorMessage: `Le ${fieldName} doit contenir au moins 2 caractères`
+    };
+  }
+  
+  if (name.trim().length > 50) {
+    return {
+      isValid: false,
+      errorMessage: `Le ${fieldName} ne doit pas dépasser 50 caractères`
+    };
+  }
+  
+  // Allow letters, spaces, hyphens, and apostrophes
+  const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']+$/;
+  if (!nameRegex.test(name.trim())) {
+    return {
+      isValid: false,
+      errorMessage: `Le ${fieldName} ne doit contenir que des lettres, espaces, tirets et apostrophes`
+    };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates email according to database schema (VARCHAR(100))
+ * @param {string} email - The email to validate
+ * @returns {Object} - Contains whether the email is valid and any error message
+ */
+export const validateEmail = (email) => {
+  if (!email) {
+    return { isValid: false, errorMessage: "L'email est requis" };
+  }
+  
+  if (email.length > 100) {
+    return { 
+      isValid: false, 
+      errorMessage: "L'email ne doit pas dépasser 100 caractères" 
+    };
+  }
+  
+  if (!isValidEmail(email)) {
+    return { isValid: false, errorMessage: "Format d'email invalide" };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates blood group according to database ENUM
+ * @param {string} bloodGroup - The blood group to validate
+ * @returns {Object} - Contains whether the blood group is valid and any error message
+ */
+export const validateBloodGroup = (bloodGroup) => {
+  if (!bloodGroup) {
+    return { isValid: true, errorMessage: "" }; // Optional field
+  }
+  
+  const validBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  
+  if (!validBloodGroups.includes(bloodGroup)) {
+    return { 
+      isValid: false, 
+      errorMessage: "Groupe sanguin invalide" 
+    };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates alcohol consumption according to database ENUM
+ * @param {string} consumption - The alcohol consumption to validate
+ * @returns {Object} - Contains whether the consumption is valid and any error message
+ */
+export const validateAlcoholConsumption = (consumption) => {
+  if (!consumption) {
+    return { isValid: true, errorMessage: "" }; // Optional field
+  }
+  
+  const validConsumptions = ['non', 'occasionnel', 'régulier', 'quotidien'];
+  
+  if (!validConsumptions.includes(consumption)) {
+    return { 
+      isValid: false, 
+      errorMessage: "Consommation d'alcool invalide" 
+    };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates physical activity according to database ENUM
+ * @param {string} activity - The physical activity to validate
+ * @returns {Object} - Contains whether the activity is valid and any error message
+ */
+export const validatePhysicalActivity = (activity) => {
+  if (!activity) {
+    return { isValid: true, errorMessage: "" }; // Optional field
+  }
+  
+  const validActivities = ['sédentaire', 'légère', 'modérée', 'intense'];
+  
+  if (!validActivities.includes(activity)) {
+    return { 
+      isValid: false, 
+      errorMessage: "Activité physique invalide" 
+    };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates decimal precision for monetary values (DECIMAL(8,2))
+ * @param {string|number} value - The value to validate
+ * @returns {Object} - Contains whether the value is valid and any error message
+ */
+export const validateMonetaryValue = (value) => {
+  if (!value) {
+    return { isValid: true, errorMessage: "" }; // Optional field
+  }
+  
+  const numValue = parseFloat(value);
+  
+  if (isNaN(numValue)) {
+    return { 
+      isValid: false, 
+      errorMessage: "Valeur numérique invalide" 
+    };
+  }
+  
+  if (numValue < 0) {
+    return { 
+      isValid: false, 
+      errorMessage: "La valeur ne peut pas être négative" 
+    };
+  }
+  
+  if (numValue >= 1000000) { // DECIMAL(8,2) max value
+    return { 
+      isValid: false, 
+      errorMessage: "La valeur est trop élevée" 
+    };
+  }
+  
+  // Check decimal places
+  const decimalPlaces = (value.toString().split('.')[1] || '').length;
+  if (decimalPlaces > 2) {
+    return { 
+      isValid: false, 
+      errorMessage: "Maximum 2 décimales autorisées" 
+    };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates weight according to database schema (DECIMAL(5,2))
+ * @param {string|number} weight - The weight to validate
+ * @returns {Object} - Contains whether the weight is valid and any error message
+ */
+export const validateWeight = (weight) => {
+  if (!weight) {
+    return { isValid: true, errorMessage: "" }; // Optional field
+  }
+  
+  const numWeight = parseFloat(weight);
+  
+  if (isNaN(numWeight)) {
+    return { 
+      isValid: false, 
+      errorMessage: "Poids invalide" 
+    };
+  }
+  
+  if (numWeight <= 0 || numWeight > 999.99) { // DECIMAL(5,2) constraint
+    return { 
+      isValid: false, 
+      errorMessage: "Le poids doit être entre 0.01 et 999.99 kg" 
+    };
+  }
+  
+  // Check decimal places
+  const decimalPlaces = (weight.toString().split('.')[1] || '').length;
+  if (decimalPlaces > 2) {
+    return { 
+      isValid: false, 
+      errorMessage: "Maximum 2 décimales autorisées pour le poids" 
+    };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates height according to database schema (INT)
+ * @param {string|number} height - The height to validate
+ * @returns {Object} - Contains whether the height is valid and any error message
+ */
+export const validateHeight = (height) => {
+  if (!height) {
+    return { isValid: true, errorMessage: "" }; // Optional field
+  }
+  
+  const numHeight = parseInt(height);
+  
+  if (isNaN(numHeight)) {
+    return { 
+      isValid: false, 
+      errorMessage: "Taille invalide" 
+    };
+  }
+  
+  if (numHeight < 30 || numHeight > 300) {
+    return { 
+      isValid: false, 
+      errorMessage: "La taille doit être entre 30 et 300 cm" 
+    };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates appointment motif according to database schema (VARCHAR(255))
+ * @param {string} motif - The motif to validate
+ * @returns {Object} - Contains whether the motif is valid and any error message
+ */
+export const validateAppointmentMotif = (motif) => {
+  if (!motif || motif.trim().length === 0) {
+    return { isValid: false, errorMessage: "Le motif de consultation est requis" };
+  }
+  
+  if (motif.length > 255) {
+    return { 
+      isValid: false, 
+      errorMessage: "Le motif ne doit pas dépasser 255 caractères" 
+    };
+  }
+  
+  return { isValid: true, errorMessage: "" };
+};
+
+/**
+ * Validates medical license number according to database schema (VARCHAR(50))
+ * @param {string} licenseNumber - The license number to validate
+ * @returns {Object} - Contains whether the license number is valid and any error message
+ */
+export const validateMedicalLicenseNumber = (licenseNumber) => {
+  if (!licenseNumber || licenseNumber.trim().length === 0) {
+    return { isValid: false, errorMessage: "Le numéro d'ordre est requis" };
+  }
+  
+  if (licenseNumber.length > 50) {
+    return { 
+      isValid: false, 
+      errorMessage: "Le numéro d'ordre ne doit pas dépasser 50 caractères" 
+    };
+  }
+  
+  // Basic format validation for medical license numbers
+  const licenseRegex = /^[A-Za-z0-9\-\/]{3,50}$/;
+  
+  if (!licenseRegex.test(licenseNumber)) {
+    return { 
+      isValid: false, 
+      errorMessage: "Format de numéro d'ordre invalide" 
+    };
   }
   
   return { isValid: true, errorMessage: "" };
