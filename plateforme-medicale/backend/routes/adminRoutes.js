@@ -434,135 +434,368 @@ router.get('/statistics', verifyToken, isAdmin, async (req, res) => {
     try {
         const db = require('../config/db');
 
-        // Get basic counts
-        const [patientCount] = await db.execute('SELECT COUNT(*) as count FROM patients');
-        const [doctorCount] = await db.execute('SELECT COUNT(*) as count FROM medecins WHERE est_actif = TRUE');
-        const [institutionCount] = await db.execute('SELECT COUNT(*) as count FROM institutions WHERE est_actif = TRUE');
-        const [appointmentCount] = await db.execute('SELECT COUNT(*) as count FROM rendez_vous');
+        // Get basic counts with more detailed breakdowns
+        const [patientStats] = await db.execute(`
+            SELECT 
+                COUNT(*) as total_patients,
+                COUNT(CASE WHEN date_inscription >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as new_patients_month,
+                COUNT(CASE WHEN date_inscription >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 END) as new_patients_week,
+                COUNT(CASE WHEN est_profil_complete = TRUE THEN 1 END) as complete_profiles,
+                COUNT(CASE WHEN est_inscrit_par_medecin = TRUE THEN 1 END) as doctor_registered,
+                AVG(YEAR(CURDATE()) - YEAR(date_naissance)) as avg_age,
+                COUNT(CASE WHEN sexe = 'M' THEN 1 END) as male_patients,
+                COUNT(CASE WHEN sexe = 'F' THEN 1 END) as female_patients
+            FROM patients 
+            WHERE date_naissance IS NOT NULL
+        `);
 
-        // Get appointments by status
+        const [doctorStats] = await db.execute(`
+            SELECT 
+                COUNT(*) as total_doctors,
+                COUNT(CASE WHEN est_actif = TRUE THEN 1 END) as active_doctors,
+                COUNT(CASE WHEN accepte_nouveaux_patients = TRUE THEN 1 END) as accepting_patients,
+                COUNT(CASE WHEN accepte_patients_walk_in = TRUE THEN 1 END) as walk_in_doctors,
+                AVG(tarif_consultation) as avg_consultation_fee,
+                AVG(temps_consultation_moyen) as avg_consultation_time
+            FROM medecins
+        `);
+
+        const [institutionStats] = await db.execute(`
+            SELECT 
+                COUNT(*) as total_institutions,
+                COUNT(CASE WHEN est_actif = TRUE THEN 1 END) as active_institutions,
+                COUNT(CASE WHEN type_institution = 'hospital' THEN 1 END) as hospitals,
+                COUNT(CASE WHEN type_institution = 'pharmacy' THEN 1 END) as pharmacies,
+                COUNT(CASE WHEN type_institution = 'laboratory' THEN 1 END) as laboratories,
+                COUNT(CASE WHEN type_institution = 'clinic' THEN 1 END) as clinics,
+                COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_approval
+            FROM institutions
+        `);
+
+        const [appointmentStats] = await db.execute(`
+            SELECT 
+                COUNT(*) as total_appointments,
+                COUNT(CASE WHEN date_creation >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as appointments_month,
+                COUNT(CASE WHEN date_creation >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 END) as appointments_week,
+                COUNT(CASE WHEN statut = 'confirmé' THEN 1 END) as confirmed,
+                COUNT(CASE WHEN statut = 'annulé' THEN 1 END) as cancelled,
+                COUNT(CASE WHEN statut = 'terminé' THEN 1 END) as completed,
+                COUNT(CASE WHEN statut = 'planifié' THEN 1 END) as scheduled,
+                AVG(TIMESTAMPDIFF(MINUTE, date_heure_debut, date_heure_fin)) as avg_duration
+            FROM rendez_vous
+        `);
+
+        // Get appointments by status for charts
         const [appointmentsByStatus] = await db.execute(
             `SELECT statut as name, COUNT(*) as count 
              FROM rendez_vous 
              GROUP BY statut`
         );
 
-        // Get monthly trends (last 12 months)
+        // Enhanced monthly trends with more metrics
         const [monthlyTrends] = await db.execute(
             `SELECT 
-                DATE_FORMAT(date_creation, '%Y-%m') as month,
+                DATE_FORMAT(p.date_inscription, '%Y-%m') as month,
                 COUNT(DISTINCT p.id) as patients,
-                COUNT(DISTINCT rv.id) as appointments
+                COUNT(DISTINCT rv.id) as appointments,
+                COUNT(DISTINCT c.id) as consultations,
+                COUNT(DISTINCT ra.id) as analyses
              FROM patients p
              LEFT JOIN rendez_vous rv ON DATE_FORMAT(rv.date_creation, '%Y-%m') = DATE_FORMAT(p.date_inscription, '%Y-%m')
+             LEFT JOIN consultations c ON DATE_FORMAT(c.date_consultation, '%Y-%m') = DATE_FORMAT(p.date_inscription, '%Y-%m')
+             LEFT JOIN resultats_analyses ra ON DATE_FORMAT(ra.date_prescription, '%Y-%m') = DATE_FORMAT(p.date_inscription, '%Y-%m')
              WHERE p.date_inscription >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-             GROUP BY DATE_FORMAT(date_creation, '%Y-%m')
+             GROUP BY DATE_FORMAT(p.date_inscription, '%Y-%m')
              ORDER BY month`
         );
 
-        // Get specialty stats
+        // Enhanced specialty stats with performance metrics
         const [specialtyStats] = await db.execute(
             `SELECT 
                 s.nom as name,
-                COUNT(m.id) as count,
-                COUNT(CASE WHEN m.est_actif = TRUE THEN 1 END) as active_count
+                COUNT(m.id) as total_doctors,
+                COUNT(CASE WHEN m.est_actif = TRUE THEN 1 END) as active_doctors,
+                COUNT(DISTINCT rv.id) as total_appointments,
+                AVG(em.note) as avg_rating,
+                COUNT(em.id) as total_reviews,
+                AVG(m.tarif_consultation) as avg_fee
              FROM specialites s
              LEFT JOIN medecins m ON s.id = m.specialite_id
+             LEFT JOIN rendez_vous rv ON m.id = rv.medecin_id
+             LEFT JOIN evaluations_medecins em ON m.id = em.medecin_id AND em.est_approuve = TRUE
              GROUP BY s.id, s.nom
-             HAVING count > 0
-             ORDER BY count DESC
+             HAVING total_doctors > 0
+             ORDER BY total_appointments DESC, active_doctors DESC
              LIMIT 10`
         );
 
-        // Get institution performance stats
-        const [institutionStats] = await db.execute(
+        // Enhanced institution performance stats
+        const [institutionPerformance] = await db.execute(
             `SELECT 
                 i.nom as name,
-                i.type,
+                i.type_institution as type,
+                i.ville as city,
                 COUNT(DISTINCT mi.medecin_id) as doctors,
                 COUNT(DISTINCT rv.id) as appointments,
+                COUNT(DISTINCT ha.id) as hospital_admissions,
+                COUNT(DISTINCT md.id) as dispensed_medications,
+                COUNT(DISTINCT ra.id) as lab_analyses,
                 AVG(CASE WHEN rv.statut = 'terminé' THEN 1 ELSE 0 END) * 100 as success_rate
              FROM institutions i
              LEFT JOIN medecin_institution mi ON i.id = mi.institution_id AND (mi.date_fin IS NULL OR mi.date_fin > CURDATE())
              LEFT JOIN rendez_vous rv ON mi.medecin_id = rv.medecin_id
+             LEFT JOIN hospital_assignments ha ON i.id = ha.hospital_id
+             LEFT JOIN medication_dispensing md ON i.id = md.pharmacy_id
+             LEFT JOIN resultats_analyses ra ON i.id = ra.laboratory_id
              WHERE i.est_actif = TRUE
-             GROUP BY i.id, i.nom, i.type
+             GROUP BY i.id, i.nom, i.type_institution, i.ville
              ORDER BY doctors DESC, appointments DESC
-             LIMIT 10`
+             LIMIT 15`
         );
 
-        // Get recent activity
-        const [recentAppointments] = await db.execute(
-            `SELECT COUNT(*) as count 
-             FROM rendez_vous 
-             WHERE date_creation >= DATE_SUB(NOW(), INTERVAL 7 DAY)`
-        );
-
-        const [recentPatients] = await db.execute(
-            `SELECT COUNT(*) as count 
-             FROM patients 
-             WHERE date_inscription >= DATE_SUB(NOW(), INTERVAL 7 DAY)`
-        );
-
-        // Get medical analysis statistics
+        // Medical analysis statistics with categories
         const [analysisStats] = await db.execute(
             `SELECT 
-                tc.nom as category,
+                ca.nom as category,
                 COUNT(ra.id) as total_tests,
                 COUNT(CASE WHEN ra.request_status = 'completed' THEN 1 END) as completed,
-                COUNT(CASE WHEN ra.est_critique = TRUE THEN 1 END) as critical_results
-             FROM types_analyses ta
-             LEFT JOIN categories_analyses tc ON ta.categorie_id = tc.id
+                COUNT(CASE WHEN ra.request_status = 'validated' THEN 1 END) as validated,
+                COUNT(CASE WHEN ra.est_critique = TRUE THEN 1 END) as critical_results,
+                COUNT(CASE WHEN ra.priority = 'urgent' THEN 1 END) as urgent_tests,
+                AVG(DATEDIFF(ra.date_realisation, ra.date_prescription)) as avg_turnaround_days
+             FROM categories_analyses ca
+             LEFT JOIN types_analyses ta ON ca.id = ta.categorie_id
              LEFT JOIN resultats_analyses ra ON ta.id = ra.type_analyse_id
-             WHERE ra.date_prescription >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-             GROUP BY tc.id, tc.nom
+             WHERE ra.date_prescription >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+             GROUP BY ca.id, ca.nom
+             HAVING total_tests > 0
              ORDER BY total_tests DESC
              LIMIT 10`
         );
 
-        // Get system health metrics
+        // Hospital management statistics
+        const [hospitalStats] = await db.execute(`
+            SELECT 
+                COUNT(DISTINCT ha.id) as total_admissions,
+                COUNT(CASE WHEN ha.status = 'active' THEN 1 END) as current_admissions,
+                COUNT(CASE WHEN ha.admission_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as admissions_month,
+                AVG(DATEDIFF(COALESCE(ha.discharge_date, NOW()), ha.admission_date)) as avg_stay_days,
+                COUNT(DISTINCT hs.id) as total_surgeries,
+                COUNT(CASE WHEN hs.status = 'completed' THEN 1 END) as completed_surgeries,
+                COUNT(CASE WHEN hs.scheduled_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as surgeries_month
+            FROM hospital_assignments ha
+            LEFT JOIN hospital_surgeries hs ON ha.id = hs.hospital_assignment_id
+        `);
+
+        // Pharmacy statistics
+        const [pharmacyStats] = await db.execute(`
+            SELECT 
+                COUNT(DISTINCT t.id) as total_prescriptions,
+                COUNT(CASE WHEN t.status = 'dispensed' THEN 1 END) as dispensed,
+                COUNT(CASE WHEN t.status = 'prescribed' THEN 1 END) as pending,
+                COUNT(CASE WHEN t.status = 'expired' THEN 1 END) as expired,
+                COUNT(CASE WHEN t.date_prescription >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as prescriptions_month,
+                COUNT(DISTINCT md.id) as dispensing_records,
+                COUNT(DISTINCT md.medicament_id) as unique_medications
+            FROM traitements t
+            LEFT JOIN medication_dispensing md ON t.id = md.prescription_id
+        `);
+
+        // System health and audit metrics
         const [systemHealth] = await db.execute(`
             SELECT 
-                COUNT(DISTINCT CASE WHEN al.success = FALSE THEN al.id END) as failed_operations,
                 COUNT(DISTINCT al.id) as total_operations,
-                COUNT(DISTINCT CASE WHEN al.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN al.id END) as operations_24h,
-                COUNT(DISTINCT CASE WHEN al.success = FALSE AND al.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN al.id END) as failures_24h
+                COUNT(CASE WHEN al.success = FALSE THEN 1 END) as failed_operations,
+                COUNT(CASE WHEN al.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 END) as operations_24h,
+                COUNT(CASE WHEN al.success = FALSE AND al.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 END) as failures_24h,
+                COUNT(DISTINCT al.user_id) as active_users,
+                COUNT(DISTINCT CASE WHEN al.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN al.user_id END) as active_users_24h
             FROM audit_logs al
             WHERE al.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
         `);
 
-        // Get prescription statistics
-        const [prescriptionStats] = await db.execute(`
+        // User activity statistics
+        const [userActivity] = await db.execute(`
             SELECT 
-                COUNT(DISTINCT o.id) as total_prescriptions,
-                COUNT(DISTINCT om.medicament_id) as unique_medications,
-                COUNT(CASE WHEN o.date_prescription >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as prescriptions_this_month
-            FROM ordonnances o
-            LEFT JOIN ordonnance_medicaments om ON o.id = om.ordonnance_id
+                COUNT(*) as total_users,
+                COUNT(CASE WHEN est_actif = TRUE THEN 1 END) as active_users,
+                COUNT(CASE WHEN est_verifie = TRUE THEN 1 END) as verified_users,
+                COUNT(CASE WHEN derniere_connexion >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 END) as users_24h,
+                COUNT(CASE WHEN derniere_connexion >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 END) as users_week,
+                COUNT(CASE WHEN role = 'patient' THEN 1 END) as patient_users,
+                COUNT(CASE WHEN role = 'medecin' THEN 1 END) as doctor_users,
+                COUNT(CASE WHEN role = 'institution' THEN 1 END) as institution_users
+            FROM utilisateurs
         `);
+
+        // Geographic distribution
+        const [geographicStats] = await db.execute(`
+            SELECT 
+                ville as city,
+                COUNT(DISTINCT p.id) as patients,
+                COUNT(DISTINCT m.id) as doctors,
+                COUNT(DISTINCT i.id) as institutions
+            FROM (
+                SELECT ville FROM patients WHERE ville IS NOT NULL
+                UNION 
+                SELECT ville FROM medecins WHERE ville IS NOT NULL
+                UNION 
+                SELECT ville FROM institutions WHERE ville IS NOT NULL
+            ) cities
+            LEFT JOIN patients p ON cities.ville = p.ville
+            LEFT JOIN medecins m ON cities.ville = m.ville
+            LEFT JOIN institutions i ON cities.ville = i.ville
+            GROUP BY ville
+            HAVING (patients > 0 OR doctors > 0 OR institutions > 0)
+            ORDER BY (patients + doctors + institutions) DESC
+            LIMIT 10
+        `);
+
+        // Recent activity summary
+        const [recentActivity] = await db.execute(`
+            SELECT 
+                'patients' as type, COUNT(*) as count, 'Cette semaine' as period
+            FROM patients 
+            WHERE date_inscription >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            UNION ALL
+            SELECT 
+                'appointments' as type, COUNT(*) as count, 'Cette semaine' as period
+            FROM rendez_vous 
+            WHERE date_creation >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            UNION ALL
+            SELECT 
+                'consultations' as type, COUNT(*) as count, 'Cette semaine' as period
+            FROM consultations 
+            WHERE date_consultation >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            UNION ALL
+            SELECT 
+                'analyses' as type, COUNT(*) as count, 'Cette semaine' as period
+            FROM resultats_analyses 
+            WHERE date_prescription >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        `);
+
+        // Calculate failure rate for system health
+        const systemHealthData = systemHealth[0];
+        const failureRate = systemHealthData.total_operations > 0 
+            ? (systemHealthData.failed_operations / systemHealthData.total_operations) * 100 
+            : 0;
 
         res.json({
             overview: {
-                patients: patientCount[0].count,
-                doctors: doctorCount[0].count,
-                institutions: institutionCount[0].count,
-                appointments: appointmentCount[0].count
+                patients: patientStats[0].total_patients,
+                doctors: doctorStats[0].total_doctors,
+                institutions: institutionStats[0].total_institutions,
+                appointments: appointmentStats[0].total_appointments
+            },
+            detailedStats: {
+                patients: patientStats[0],
+                doctors: doctorStats[0],
+                institutions: institutionStats[0],
+                appointments: appointmentStats[0],
+                hospital: hospitalStats[0],
+                pharmacy: pharmacyStats[0],
+                userActivity: userActivity[0]
             },
             appointmentsByStatus,
             monthlyTrends,
             specialtyStats,
-            institutionStats,
+            institutionPerformance,
             analysisStats,
-            systemHealth: systemHealth[0],
-            prescriptionStats: prescriptionStats[0],
-            recentActivity: {
-                appointments: recentAppointments[0].count,
-                patients: recentPatients[0].count
+            geographicStats,
+            systemHealth: {
+                ...systemHealthData,
+                failure_rate: failureRate,
+                success_rate: 100 - failureRate
+            },
+            recentActivity: recentActivity.reduce((acc, item) => {
+                acc[item.type] = item.count;
+                return acc;
+            }, {}),
+            // Additional insights
+            insights: {
+                topPerformingSpecialty: specialtyStats[0]?.name || 'N/A',
+                mostActiveCity: geographicStats[0]?.city || 'N/A',
+                systemHealthStatus: failureRate < 1 ? 'Excellent' : failureRate < 5 ? 'Good' : 'Needs Attention',
+                patientGrowthRate: patientStats[0].total_patients > 0 
+                    ? ((patientStats[0].new_patients_month / patientStats[0].total_patients) * 100).toFixed(2)
+                    : 0
             }
         });
     } catch (error) {
-        console.error('Error fetching statistics:', error);
+        console.error('Error fetching enhanced statistics:', error);
         res.status(500).json({ message: 'Erreur lors de la récupération des statistiques' });
+    }
+});
+
+// Enhanced Institution Performance Details
+router.get('/statistics/institutions/performance', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const db = require('../config/db');
+        
+        // Detailed institution performance with breakdown by type
+        const [institutionDetails] = await db.execute(`
+            SELECT 
+                i.id,
+                i.nom as name,
+                i.type_institution as type,
+                i.ville as city,
+                i.status,
+                i.date_creation,
+                COUNT(DISTINCT mi.medecin_id) as total_doctors,
+                COUNT(DISTINCT CASE WHEN m.est_actif = TRUE THEN mi.medecin_id END) as active_doctors,
+                COUNT(DISTINCT rv.id) as total_appointments,
+                COUNT(DISTINCT CASE WHEN rv.statut = 'terminé' THEN rv.id END) as completed_appointments,
+                COUNT(DISTINCT CASE WHEN rv.date_creation >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN rv.id END) as appointments_month,
+                COUNT(DISTINCT ha.id) as hospital_admissions,
+                COUNT(DISTINCT CASE WHEN ha.status = 'active' THEN ha.id END) as current_admissions,
+                COUNT(DISTINCT md.id) as dispensed_medications,
+                COUNT(DISTINCT ra.id) as lab_analyses,
+                COUNT(DISTINCT CASE WHEN ra.request_status = 'completed' THEN ra.id END) as completed_analyses,
+                AVG(em.note) as avg_doctor_rating,
+                COUNT(em.id) as total_reviews,
+                AVG(CASE WHEN rv.statut = 'terminé' THEN 1 ELSE 0 END) * 100 as success_rate,
+                AVG(DATEDIFF(COALESCE(ha.discharge_date, NOW()), ha.admission_date)) as avg_stay_days
+            FROM institutions i
+            LEFT JOIN medecin_institution mi ON i.id = mi.institution_id AND (mi.date_fin IS NULL OR mi.date_fin > CURDATE())
+            LEFT JOIN medecins m ON mi.medecin_id = m.id
+            LEFT JOIN rendez_vous rv ON m.id = rv.medecin_id
+            LEFT JOIN hospital_assignments ha ON i.id = ha.hospital_id
+            LEFT JOIN medication_dispensing md ON i.id = md.pharmacy_id
+            LEFT JOIN resultats_analyses ra ON i.id = ra.laboratory_id
+            LEFT JOIN evaluations_medecins em ON m.id = em.medecin_id AND em.est_approuve = TRUE
+            WHERE i.est_actif = TRUE
+            GROUP BY i.id, i.nom, i.type_institution, i.ville, i.status, i.date_creation
+            ORDER BY total_appointments DESC, total_doctors DESC
+        `);
+
+        // Institution type summary
+        const [typeSummary] = await db.execute(`
+            SELECT 
+                type_institution as type,
+                COUNT(*) as count,
+                COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved,
+                COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending,
+                AVG(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) * 100 as approval_rate
+            FROM institutions
+            WHERE est_actif = TRUE
+            GROUP BY type_institution
+            ORDER BY count DESC
+        `);
+
+        res.json({
+            institutionDetails,
+            typeSummary,
+            totalInstitutions: institutionDetails.length,
+            summary: {
+                totalDoctors: institutionDetails.reduce((sum, inst) => sum + (inst.total_doctors || 0), 0),
+                totalAppointments: institutionDetails.reduce((sum, inst) => sum + (inst.total_appointments || 0), 0),
+                avgSuccessRate: institutionDetails.reduce((sum, inst) => sum + (inst.success_rate || 0), 0) / institutionDetails.length,
+                topPerformer: institutionDetails[0]?.name || 'N/A'
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching institution performance:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des performances des institutions' });
     }
 });
 

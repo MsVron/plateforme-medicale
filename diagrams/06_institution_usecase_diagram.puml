@@ -1,0 +1,42 @@
+@startuml Institution_UseCase_Diagram
+!theme plain
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam direction top to bottom
+
+title Diagramme de Cas d'Utilisation - Institution\nPlateforme Médicale Intelligente
+
+' Acteur principal
+actor "Institution" as Institution
+
+' Cas d'utilisation principaux
+usecase "Authentification" as UC_Auth
+usecase "Gestion de l'Établissement" as UC_EstablishmentManagement
+usecase "Gestion des Médecins Affiliés" as UC_AffiliatedDoctors
+usecase "Accès aux Dossiers Patients" as UC_PatientRecords
+usecase "Gestion Administrative" as UC_AdministrativeManagement
+usecase "Statistiques Institution" as UC_InstitutionStatistics
+usecase "Gestion des Ressources" as UC_ResourceManagement
+usecase "Communication" as UC_Communication
+usecase "Conformité et Qualité" as UC_ComplianceQuality
+
+' Relations
+Institution --> UC_Auth
+Institution --> UC_EstablishmentManagement
+Institution --> UC_AffiliatedDoctors
+Institution --> UC_PatientRecords
+Institution --> UC_AdministrativeManagement
+Institution --> UC_InstitutionStatistics
+Institution --> UC_ResourceManagement
+Institution --> UC_Communication
+Institution --> UC_ComplianceQuality
+
+@enduml 

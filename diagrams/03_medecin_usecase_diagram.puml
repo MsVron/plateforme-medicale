@@ -1,0 +1,40 @@
+@startuml Medecin_UseCase_Diagram
+!theme plain
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam direction top to bottom
+
+title Diagramme de Cas d'Utilisation - Médecin\nPlateforme Médicale Intelligente
+
+' Acteur principal
+actor "Médecin" as Medecin
+
+' Cas d'utilisation principaux
+usecase "Authentification" as UC_Auth
+usecase "Gestion des Disponibilités" as UC_Availability
+usecase "Gestion des Rendez-vous" as UC_Appointments
+usecase "Gestion des Patients" as UC_Patients
+usecase "Consultations Médicales" as UC_Consultations
+usecase "Analyses et Résultats" as UC_Results
+usecase "Statistiques" as UC_Statistics
+usecase "Notifications" as UC_Notifications
+
+' Relations
+Medecin --> UC_Auth
+Medecin --> UC_Availability
+Medecin --> UC_Appointments
+Medecin --> UC_Patients
+Medecin --> UC_Consultations
+Medecin --> UC_Results
+Medecin --> UC_Statistics
+Medecin --> UC_Notifications
+
+@enduml 

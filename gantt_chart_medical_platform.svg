@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1400" height="900" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1400" height="900" fill="#f8f9fa"/>
+  
+  <!-- Title -->
+  <text x="700" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#2c3e50">
+    DIAGRAMME DE GANTT - PLATEFORME MÉDICALE INTELLIGENTE BluePulse
+  </text>
+  <text x="700" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#7f8c8d">
+    Période: Fin Février - Fin Mai 2024 (14 semaines)
+  </text>
+  
+  <!-- Grid lines and week headers -->
+  <g stroke="#e0e0e0" stroke-width="1">
+    <!-- Vertical grid lines -->
+    <line x1="200" y1="80" x2="200" y2="850"/>
+    <line x1="280" y1="80" x2="280" y2="850"/>
+    <line x1="360" y1="80" x2="360" y2="850"/>
+    <line x1="440" y1="80" x2="440" y2="850"/>
+    <line x1="520" y1="80" x2="520" y2="850"/>
+    <line x1="600" y1="80" x2="600" y2="850"/>
+    <line x1="680" y1="80" x2="680" y2="850"/>
+    <line x1="760" y1="80" x2="760" y2="850"/>
+    <line x1="840" y1="80" x2="840" y2="850"/>
+    <line x1="920" y1="80" x2="920" y2="850"/>
+    <line x1="1000" y1="80" x2="1000" y2="850"/>
+    <line x1="1080" y1="80" x2="1080" y2="850"/>
+    <line x1="1160" y1="80" x2="1160" y2="850"/>
+    <line x1="1240" y1="80" x2="1240" y2="850"/>
+    <line x1="1320" y1="80" x2="1320" y2="850"/>
+    
+    <!-- Horizontal grid lines -->
+    <line x1="20" y1="100" x2="1320" y2="100"/>
+    <line x1="20" y1="140" x2="1320" y2="140"/>
+    <line x1="20" y1="200" x2="1320" y2="200"/>
+    <line x1="20" y1="320" x2="1320" y2="320"/>
+    <line x1="20" y1="480" x2="1320" y2="480"/>
+    <line x1="20" y1="600" x2="1320" y2="600"/>
+    <line x1="20" y1="720" x2="1320" y2="720"/>
+  </g>
+  
+  <!-- Week numbers -->
+  <g font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#2c3e50">
+    <text x="240" y="95">S1</text>
+    <text x="320" y="95">S2</text>
+    <text x="400" y="95">S3</text>
+    <text x="480" y="95">S4</text>
+    <text x="560" y="95">S5</text>
+    <text x="640" y="95">S6</text>
+    <text x="720" y="95">S7</text>
+    <text x="800" y="95">S8</text>
+    <text x="880" y="95">S9</text>
+    <text x="960" y="95">S10</text>
+    <text x="1040" y="95">S11</text>
+    <text x="1120" y="95">S12</text>
+    <text x="1200" y="95">S13</text>
+    <text x="1280" y="95">S14</text>
+  </g>
+  
+  <!-- Date labels -->
+  <g font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#7f8c8d">
+    <text x="240" y="110">Fév 26</text>
+    <text x="320" y="110">Mar 4</text>
+    <text x="400" y="110">Mar 11</text>
+    <text x="480" y="110">Mar 18</text>
+    <text x="560" y="110">Mar 25</text>
+    <text x="640" y="110">Avr 1</text>
+    <text x="720" y="110">Avr 8</text>
+    <text x="800" y="110">Avr 15</text>
+    <text x="880" y="110">Avr 22</text>
+    <text x="960" y="110">Avr 29</text>
+    <text x="1040" y="110">Mai 6</text>
+    <text x="1120" y="110">Mai 13</text>
+    <text x="1200" y="110">Mai 20</text>
+    <text x="1280" y="110">Mai 27</text>
+  </g>
+  
+  <!-- Phase headers -->
+  <g font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2c3e50">
+    <text x="25" y="130">PHASE 1: ANALYSE ET CONCEPTION</text>
+    <text x="25" y="200">PHASE 2: DÉVELOPPEMENT CORE</text>
+    <text x="25" y="320">PHASE 3: FONCTIONNALITÉS AVANCÉES</text>
+    <text x="25" y="475">PHASE 4: INTELLIGENCE ARTIFICIELLE</text>
+    <text x="25" y="590">PHASE 5: FINALISATION</text>
+    <text x="25" y="710">PHASE 6: DÉPLOIEMENT</text>
+  </g>
+  
+  <!-- Task labels -->
+  <g font-family="Arial, sans-serif" font-size="11" fill="#34495e">
+    <!-- Phase 1 tasks -->
+    <text x="30" y="155">Étude des besoins</text>
+    <text x="30" y="170">Analyse de l'existant</text>
+    <text x="30" y="185">Conception BDD &amp; Architecture</text>
+    
+    <!-- Phase 2 tasks -->
+    <text x="30" y="215">Setup Projet &amp; Environnement</text>
+    <text x="30" y="230">Base de Données MySQL</text>
+    <text x="30" y="245">Authentification &amp; Sécurité</text>
+    <text x="30" y="260">API Backend Node.js</text>
+    <text x="30" y="275">Interface React.js</text>
+    <text x="30" y="290">Tests Backend</text>
+    <text x="30" y="305">Intégration Frontend-Backend</text>
+    
+    <!-- Phase 3 tasks -->
+    <text x="30" y="335">Géolocalisation OpenStreetMap</text>
+    <text x="30" y="350">Gestion Rendez-vous Avancée</text>
+    <text x="30" y="365">Dossiers Médicaux Complets</text>
+    <text x="30" y="380">Système de Notifications</text>
+    <text x="30" y="395">Architecture Multi-Institutionnelle</text>
+    <text x="30" y="410">Recherche &amp; Filtrage</text>
+    <text x="30" y="425">Tableaux de Bord</text>
+    <text x="30" y="440">Tests d'Intégration</text>
+    <text x="30" y="455">Optimisation Performance</text>
+    
+    <!-- Phase 4 tasks -->
+    <text x="30" y="495">Recherche &amp; Conception IA</text>
+    <text x="30" y="510">Intégration Ollama Local</text>
+    <text x="30" y="525">Assistant Chatbot Médical</text>
+    <text x="30" y="540">Services IA Externes</text>
+    <text x="30" y="555">Tests &amp; Validation IA</text>
+    <text x="30" y="570">Sécurité &amp; Conformité IA</text>
+    
+    <!-- Phase 5 tasks -->
+    <text x="30" y="615">Tests Finaux &amp; Validation</text>
+    <text x="30" y="630">Optimisation Globale</text>
+    <text x="30" y="645">Documentation Technique</text>
+    <text x="30" y="660">Préparation Présentation</text>
+    <text x="30" y="675">Formation Utilisateurs</text>
+    <text x="30" y="690">Rapport Final</text>
+    
+    <!-- Phase 6 tasks -->
+    <text x="30" y="735">Configuration Production</text>
+    <text x="30" y="750">Déploiement Serveur</text>
+    <text x="30" y="765">Tests de Production</text>
+    <text x="30" y="780">Monitoring &amp; Maintenance</text>
+    <text x="30" y="795">Formation Support</text>
+    <text x="30" y="810">Go-Live</text>
+  </g>
+  
+  <!-- Task bars -->
+  <!-- Phase 1: Analysis and Design -->
+  <rect x="200" y="150" width="80" height="10" fill="#3498db" opacity="0.8"/>
+  <rect x="200" y="165" width="160" height="10" fill="#3498db" opacity="0.8"/>
+  <rect x="280" y="180" width="160" height="10" fill="#3498db" opacity="0.8"/>
+  
+  <!-- Phase 2: Core Development -->
+  <rect x="440" y="210" width="80" height="10" fill="#2ecc71" opacity="0.8"/>
+  <rect x="440" y="225" width="160" height="10" fill="#2ecc71" opacity="0.8"/>
+  <rect x="520" y="240" width="160" height="10" fill="#2ecc71" opacity="0.8"/>
+  <rect x="600" y="255" width="240" height="10" fill="#2ecc71" opacity="0.8"/>
+  <rect x="680" y="270" width="240" height="10" fill="#2ecc71" opacity="0.8"/>
+  <rect x="760" y="285" width="80" height="10" fill="#2ecc71" opacity="0.8"/>
+  <rect x="840" y="300" width="80" height="10" fill="#2ecc71" opacity="0.8"/>
+  
+  <!-- Phase 3: Advanced Features -->
+  <rect x="760" y="330" width="160" height="10" fill="#f39c12" opacity="0.8"/>
+  <rect x="840" y="345" width="160" height="10" fill="#f39c12" opacity="0.8"/>
+  <rect x="920" y="360" width="160" height="10" fill="#f39c12" opacity="0.8"/>
+  <rect x="920" y="375" width="80" height="10" fill="#f39c12" opacity="0.8"/>
+  <rect x="840" y="390" width="240" height="10" fill="#f39c12" opacity="0.8"/>
+  <rect x="760" y="405" width="160" height="10" fill="#f39c12" opacity="0.8"/>
+  <rect x="920" y="420" width="160" height="10" fill="#f39c12" opacity="0.8"/>
+  <rect x="1000" y="435" width="80" height="10" fill="#f39c12" opacity="0.8"/>
+  <rect x="1000" y="450" width="80" height="10" fill="#f39c12" opacity="0.8"/>
+  
+  <!-- Phase 4: Artificial Intelligence -->
+  <rect x="1000" y="490" width="80" height="10" fill="#9b59b6" opacity="0.8"/>
+  <rect x="1000" y="505" width="160" height="10" fill="#9b59b6" opacity="0.8"/>
+  <rect x="1080" y="520" width="160" height="10" fill="#9b59b6" opacity="0.8"/>
+  <rect x="1120" y="535" width="80" height="10" fill="#9b59b6" opacity="0.8"/>
+  <rect x="1160" y="550" width="80" height="10" fill="#9b59b6" opacity="0.8"/>
+  <rect x="1080" y="565" width="160" height="10" fill="#9b59b6" opacity="0.8"/>
+  
+  <!-- Phase 5: Finalization -->
+  <rect x="1160" y="610" width="160" height="10" fill="#e74c3c" opacity="0.8"/>
+  <rect x="1200" y="625" width="120" height="10" fill="#e74c3c" opacity="0.8"/>
+  <rect x="1200" y="640" width="120" height="10" fill="#e74c3c" opacity="0.8"/>
+  <rect x="1240" y="655" width="80" height="10" fill="#e74c3c" opacity="0.8"/>
+  <rect x="1200" y="670" width="80" height="10" fill="#e74c3c" opacity="0.8"/>
+  <rect x="1240" y="685" width="80" height="10" fill="#e74c3c" opacity="0.8"/>
+  
+  <!-- Phase 6: Deployment -->
+  <rect x="1240" y="730" width="80" height="10" fill="#1abc9c" opacity="0.8"/>
+  <rect x="1240" y="745" width="80" height="10" fill="#1abc9c" opacity="0.8"/>
+  <rect x="1280" y="760" width="40" height="10" fill="#1abc9c" opacity="0.8"/>
+  <rect x="1280" y="775" width="40" height="10" fill="#1abc9c" opacity="0.8"/>
+  <rect x="1280" y="790" width="40" height="10" fill="#1abc9c" opacity="0.8"/>
+  <rect x="1280" y="805" width="40" height="10" fill="#1abc9c" opacity="0.8"/>
+  
+  <!-- Milestones (diamonds) -->
+  <g fill="#e74c3c">
+    <polygon points="480,125 490,135 480,145 470,135" stroke="#c0392b" stroke-width="2"/>
+    <polygon points="680,125 690,135 680,145 670,135" stroke="#c0392b" stroke-width="2"/>
+    <polygon points="840,125 850,135 840,145 830,135" stroke="#c0392b" stroke-width="2"/>
+    <polygon points="1000,125 1010,135 1000,145 990,135" stroke="#c0392b" stroke-width="2"/>
+    <polygon points="1160,125 1170,135 1160,145 1150,135" stroke="#c0392b" stroke-width="2"/>
+    <polygon points="1240,125 1250,135 1240,145 1230,135" stroke="#c0392b" stroke-width="2"/>
+    <polygon points="1320,125 1330,135 1320,145 1310,135" stroke="#c0392b" stroke-width="2"/>
+  </g>
+  
+  <!-- Milestone labels -->
+  <g font-family="Arial, sans-serif" font-size="10" fill="#c0392b" font-weight="bold">
+    <text x="480" y="160" text-anchor="middle">Architecture</text>
+    <text x="480" y="172" text-anchor="middle">Validée</text>
+    
+    <text x="680" y="160" text-anchor="middle">Auth</text>
+    <text x="680" y="172" text-anchor="middle">Opérationnelle</text>
+    
+    <text x="840" y="160" text-anchor="middle">API Backend</text>
+    <text x="840" y="172" text-anchor="middle">Complète</text>
+    
+    <text x="1000" y="160" text-anchor="middle">Interface</text>
+    <text x="1000" y="172" text-anchor="middle">Fonctionnelle</text>
+    
+    <text x="1160" y="160" text-anchor="middle">Géoloc &amp; RDV</text>
+    <text x="1160" y="172" text-anchor="middle">Opérationnels</text>
+    
+    <text x="1240" y="160" text-anchor="middle">IA Médicale</text>
+    <text x="1240" y="172" text-anchor="middle">Intégrée</text>
+    
+    <text x="1320" y="160" text-anchor="middle">Déploiement</text>
+    <text x="1320" y="172" text-anchor="middle">Production</text>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(20, 830)">
+    <text font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2c3e50">Légende:</text>
+    
+    <rect x="0" y="15" width="15" height="10" fill="#3498db" opacity="0.8"/>
+    <text x="20" y="24" font-family="Arial, sans-serif" font-size="10" fill="#2c3e50">Analyse &amp; Conception</text>
+    
+    <rect x="150" y="15" width="15" height="10" fill="#2ecc71" opacity="0.8"/>
+    <text x="170" y="24" font-family="Arial, sans-serif" font-size="10" fill="#2c3e50">Développement Core</text>
+    
+    <rect x="300" y="15" width="15" height="10" fill="#f39c12" opacity="0.8"/>
+    <text x="320" y="24" font-family="Arial, sans-serif" font-size="10" fill="#2c3e50">Fonctionnalités Avancées</text>
+    
+    <rect x="480" y="15" width="15" height="10" fill="#9b59b6" opacity="0.8"/>
+    <text x="500" y="24" font-family="Arial, sans-serif" font-size="10" fill="#2c3e50">Intelligence Artificielle</text>
+    
+    <rect x="650" y="15" width="15" height="10" fill="#e74c3c" opacity="0.8"/>
+    <text x="670" y="24" font-family="Arial, sans-serif" font-size="10" fill="#2c3e50">Finalisation</text>
+    
+    <rect x="750" y="15" width="15" height="10" fill="#1abc9c" opacity="0.8"/>
+    <text x="770" y="24" font-family="Arial, sans-serif" font-size="10" fill="#2c3e50">Déploiement</text>
+    
+    <polygon points="900,15 910,25 900,35 890,25" fill="#e74c3c" stroke="#c0392b" stroke-width="1"/>
+    <text x="920" y="24" font-family="Arial, sans-serif" font-size="10" fill="#2c3e50">Jalons Majeurs</text>
+  </g>
+  
+  <!-- Progress indicators -->
+  <g font-family="Arial, sans-serif" font-size="10" fill="#27ae60" font-weight="bold">
+    <text x="1350" y="200">TERMINÉ</text>
+    <text x="1350" y="320">TERMINÉ</text>
+    <text x="1350" y="480">TERMINÉ</text>
+    <text x="1350" y="600">TERMINÉ</text>
+    <text x="1350" y="720">TERMINÉ</text>
+    <text x="1350" y="820">DÉPLOYÉ</text>
+  </g>
+  
+
+</svg>

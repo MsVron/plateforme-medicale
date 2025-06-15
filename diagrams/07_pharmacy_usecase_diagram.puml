@@ -1,0 +1,44 @@
+@startuml Pharmacy_UseCase_Diagram
+!theme plain
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam direction top to bottom
+
+title Diagramme de Cas d'Utilisation - Pharmacie\nPlateforme Médicale Intelligente
+
+' Acteur principal
+actor "Pharmacie" as Pharmacy
+
+' Cas d'utilisation principaux
+usecase "Authentification" as UC_Auth
+usecase "Recherche de Patients" as UC_PatientSearch
+usecase "Gestion des Prescriptions" as UC_PrescriptionManagement
+usecase "Dispensation de Médicaments" as UC_MedicationDispensing
+usecase "Historique Inter-Pharmacies" as UC_InterPharmacyHistory
+usecase "Gestion des Stocks" as UC_StockManagement
+usecase "Conseil Pharmaceutique" as UC_PharmaceuticalAdvice
+usecase "Sécurité Pharmaceutique" as UC_PharmaceuticalSafety
+usecase "Rapports et Statistiques" as UC_ReportsStatistics
+usecase "Communication" as UC_Communication
+
+' Relations
+Pharmacy --> UC_Auth
+Pharmacy --> UC_PatientSearch
+Pharmacy --> UC_PrescriptionManagement
+Pharmacy --> UC_MedicationDispensing
+Pharmacy --> UC_InterPharmacyHistory
+Pharmacy --> UC_StockManagement
+Pharmacy --> UC_PharmaceuticalAdvice
+Pharmacy --> UC_PharmaceuticalSafety
+Pharmacy --> UC_ReportsStatistics
+Pharmacy --> UC_Communication
+
+@enduml 

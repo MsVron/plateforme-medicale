@@ -1,0 +1,80 @@
+@startuml Global_UseCase_Diagram
+!theme plain
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam direction top to bottom
+
+title Diagramme de Cas d'Utilisation Global\nPlateforme Médicale Intelligente
+
+' Acteurs
+actor "Patient" as Patient
+actor "Médecin" as Medecin
+actor "Administrateur" as Admin
+actor "Super Administrateur" as SuperAdmin
+actor "Institution" as Institution
+actor "Pharmacie" as Pharmacy
+actor "Hôpital" as Hospital
+actor "Laboratoire" as Laboratory
+
+' Cas d'utilisation principaux
+usecase "Authentification" as UC_Auth
+usecase "Gestion des Rendez-vous" as UC_Appointments
+usecase "Dossiers Médicaux" as UC_MedicalRecords
+usecase "Recherche et Géolocalisation" as UC_Search
+usecase "Intelligence Artificielle" as UC_AI
+usecase "Gestion Multi-Institutionnelle" as UC_MultiInstitution
+usecase "Administration" as UC_Administration
+usecase "Statistiques" as UC_Statistics
+
+' Relations Patient
+Patient --> UC_Auth
+Patient --> UC_Appointments
+Patient --> UC_MedicalRecords
+Patient --> UC_Search
+Patient --> UC_AI
+
+' Relations Médecin
+Medecin --> UC_Auth
+Medecin --> UC_Appointments
+Medecin --> UC_MedicalRecords
+Medecin --> UC_Statistics
+
+' Relations Administrateur
+Admin --> UC_Auth
+Admin --> UC_Administration
+Admin --> UC_Statistics
+
+' Relations Super Administrateur
+SuperAdmin --> UC_Auth
+SuperAdmin --> UC_Administration
+SuperAdmin --> UC_Statistics
+
+' Relations Institution
+Institution --> UC_Auth
+Institution --> UC_MedicalRecords
+Institution --> UC_Administration
+
+' Relations Pharmacie
+Pharmacy --> UC_Auth
+Pharmacy --> UC_MedicalRecords
+Pharmacy --> UC_MultiInstitution
+
+' Relations Hôpital
+Hospital --> UC_Auth
+Hospital --> UC_MedicalRecords
+Hospital --> UC_MultiInstitution
+
+' Relations Laboratoire
+Laboratory --> UC_Auth
+Laboratory --> UC_MedicalRecords
+Laboratory --> UC_MultiInstitution
+
+@enduml 

@@ -115,7 +115,11 @@ function App() {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={
+            <AuthRedirect>
+              <LandingPage />
+            </AuthRedirect>
+          } />
           <Route path="/login" element={
             <AuthRedirect>
               <Login />

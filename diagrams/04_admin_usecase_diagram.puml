@@ -1,0 +1,40 @@
+@startuml Admin_UseCase_Diagram
+!theme plain
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam direction top to bottom
+
+title Diagramme de Cas d'Utilisation - Administrateur\nPlateforme Médicale Intelligente
+
+' Acteur principal
+actor "Administrateur" as Admin
+
+' Cas d'utilisation principaux
+usecase "Authentification" as UC_Auth
+usecase "Gestion des Utilisateurs" as UC_Users
+usecase "Validation des Médecins" as UC_Validation
+usecase "Gestion des Institutions" as UC_Institutions
+usecase "Statistiques" as UC_Statistics
+usecase "Gestion du Contenu" as UC_Content
+usecase "Sécurité" as UC_Security
+usecase "Configuration" as UC_Configuration
+
+' Relations
+Admin --> UC_Auth
+Admin --> UC_Users
+Admin --> UC_Validation
+Admin --> UC_Institutions
+Admin --> UC_Statistics
+Admin --> UC_Content
+Admin --> UC_Security
+Admin --> UC_Configuration
+
+@enduml 

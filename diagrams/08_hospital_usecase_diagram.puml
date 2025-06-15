@@ -1,0 +1,46 @@
+@startuml Hospital_UseCase_Diagram
+!theme plain
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam direction top to bottom
+
+title Diagramme de Cas d'Utilisation - Hôpital\nPlateforme Médicale Intelligente
+
+' Acteur principal
+actor "Hôpital" as Hospital
+
+' Cas d'utilisation principaux
+usecase "Authentification" as UC_Auth
+usecase "Recherche de Patients" as UC_PatientSearch
+usecase "Gestion des Admissions" as UC_AdmissionManagement
+usecase "Attribution de Médecins" as UC_DoctorAssignment
+usecase "Gestion des Lits" as UC_BedManagement
+usecase "Suivi des Séjours" as UC_StayTracking
+usecase "Patients Walk-in" as UC_WalkInPatients
+usecase "Coordination des Soins" as UC_CareCoordination
+usecase "Gestion des Services" as UC_ServiceManagement
+usecase "Statistiques Hospitalières" as UC_HospitalStatistics
+usecase "Facturation et Administration" as UC_BillingAdministration
+
+' Relations
+Hospital --> UC_Auth
+Hospital --> UC_PatientSearch
+Hospital --> UC_AdmissionManagement
+Hospital --> UC_DoctorAssignment
+Hospital --> UC_BedManagement
+Hospital --> UC_StayTracking
+Hospital --> UC_WalkInPatients
+Hospital --> UC_CareCoordination
+Hospital --> UC_ServiceManagement
+Hospital --> UC_HospitalStatistics
+Hospital --> UC_BillingAdministration
+
+@enduml 

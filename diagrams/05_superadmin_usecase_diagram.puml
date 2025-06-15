@@ -1,0 +1,42 @@
+@startuml SuperAdmin_UseCase_Diagram
+!theme plain
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam direction top to bottom
+
+title Diagramme de Cas d'Utilisation - Super Administrateur\nPlateforme Médicale Intelligente
+
+' Acteur principal
+actor "Super Administrateur" as SuperAdmin
+
+' Cas d'utilisation principaux
+usecase "Authentification" as UC_Auth
+usecase "Gestion Globale du Système" as UC_GlobalSystem
+usecase "Gestion des Administrateurs" as UC_AdminManagement
+usecase "Contrôle Global des Utilisateurs" as UC_GlobalUserControl
+usecase "Surveillance Avancée" as UC_AdvancedSurveillance
+usecase "Statistiques Avancées" as UC_AdvancedStatistics
+usecase "Gestion Globale des Institutions" as UC_GlobalInstitutions
+usecase "Configuration Avancée" as UC_AdvancedConfiguration
+usecase "Gestion du Système IA" as UC_AISystemManagement
+
+' Relations
+SuperAdmin --> UC_Auth
+SuperAdmin --> UC_GlobalSystem
+SuperAdmin --> UC_AdminManagement
+SuperAdmin --> UC_GlobalUserControl
+SuperAdmin --> UC_AdvancedSurveillance
+SuperAdmin --> UC_AdvancedStatistics
+SuperAdmin --> UC_GlobalInstitutions
+SuperAdmin --> UC_AdvancedConfiguration
+SuperAdmin --> UC_AISystemManagement
+
+@enduml 

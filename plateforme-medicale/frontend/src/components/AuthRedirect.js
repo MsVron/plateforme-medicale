@@ -6,12 +6,13 @@ import { Navigate, useLocation } from 'react-router-dom';
  * 
  * This component checks if a user is already logged in (has token and user data in localStorage)
  * and redirects them to their role-specific dashboard if they attempt to access:
+ * - / (landing page)
  * - /login
  * - /register/patient
  */
 const AuthRedirect = ({ children }) => {
   const location = useLocation();
-  const isAuthPage = ['/login', '/register/patient'].includes(location.pathname);
+  const isAuthPage = ['/login', '/register/patient', '/'].includes(location.pathname);
   
   // Check if user is authenticated
   let user = null;
@@ -39,6 +40,12 @@ const AuthRedirect = ({ children }) => {
       redirectPath = '/patient';
     } else if (user.role === 'institution') {
       redirectPath = '/institution';
+    } else if (user.role === 'hospital') {
+      redirectPath = '/hospital';
+    } else if (user.role === 'pharmacy') {
+      redirectPath = '/pharmacy';
+    } else if (user.role === 'laboratory') {
+      redirectPath = '/laboratory';
     }
     
     if (process.env.NODE_ENV === 'development') {

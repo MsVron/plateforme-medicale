@@ -1,0 +1,44 @@
+@startuml Laboratory_UseCase_Diagram
+!theme plain
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+skinparam direction top to bottom
+
+title Diagramme de Cas d'Utilisation - Laboratoire\nPlateforme Médicale Intelligente
+
+' Acteur principal
+actor "Laboratoire" as Laboratory
+
+' Cas d'utilisation principaux
+usecase "Authentification" as UC_Auth
+usecase "Recherche de Patients" as UC_PatientSearch
+usecase "Gestion des Analyses" as UC_TestManagement
+usecase "Traitement des Échantillons" as UC_SampleProcessing
+usecase "Saisie des Résultats" as UC_ResultEntry
+usecase "Validation des Résultats" as UC_ResultValidation
+usecase "Transmission des Résultats" as UC_ResultTransmission
+usecase "Gestion de la Qualité" as UC_QualityManagement
+usecase "Statistiques Laboratoire" as UC_LaboratoryStatistics
+usecase "Communication" as UC_Communication
+
+' Relations
+Laboratory --> UC_Auth
+Laboratory --> UC_PatientSearch
+Laboratory --> UC_TestManagement
+Laboratory --> UC_SampleProcessing
+Laboratory --> UC_ResultEntry
+Laboratory --> UC_ResultValidation
+Laboratory --> UC_ResultTransmission
+Laboratory --> UC_QualityManagement
+Laboratory --> UC_LaboratoryStatistics
+Laboratory --> UC_Communication
+
+@enduml 

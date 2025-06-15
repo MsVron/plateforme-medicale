@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration - Plateforme Médicale</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .diagram-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <svg width="1000" height="700" viewBox="0 0 1000 700">
+            <!-- Title -->
+            <text x="500" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#2c3e50">
+                Diagramme Administration - Plateforme Médicale
+            </text>
+            
+            <!-- Main System Box -->
+            <rect x="250" y="80" width="500" height="550" rx="20" ry="20" 
+                  fill="none" stroke="#34495e" stroke-width="3"/>
+            
+            <!-- System Title -->
+            <text x="500" y="110" text-anchor="middle" font-size="16" font-weight="bold" fill="#2c3e50">
+                Système BluePulse - Module Administration
+            </text>
+            
+            <!-- Use Cases (Vertical Layout) -->
+            <!-- Authentification -->
+            <ellipse cx="500" cy="150" rx="80" ry="25" fill="#e8f4fd" stroke="#3498db" stroke-width="2"/>
+            <text x="500" y="155" text-anchor="middle" font-size="12" fill="#2c3e50">Authentification</text>
+            
+            <!-- Gestion des Utilisateurs -->
+            <ellipse cx="500" cy="200" rx="100" ry="25" fill="#e8f6f3" stroke="#27ae60" stroke-width="2"/>
+            <text x="500" y="205" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion des Utilisateurs</text>
+            
+            <!-- Validation des Médecins -->
+            <ellipse cx="500" cy="250" rx="100" ry="25" fill="#fef9e7" stroke="#f39c12" stroke-width="2"/>
+            <text x="500" y="255" text-anchor="middle" font-size="12" fill="#2c3e50">Validation des Médecins</text>
+            
+            <!-- Gestion des Institutions -->
+            <ellipse cx="500" cy="300" rx="105" ry="25" fill="#f4ecf7" stroke="#9b59b6" stroke-width="2"/>
+            <text x="500" y="305" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion des Institutions</text>
+            
+            <!-- Statistiques Avancées -->
+            <ellipse cx="500" cy="350" rx="100" ry="25" fill="#fdeaea" stroke="#e74c3c" stroke-width="2"/>
+            <text x="500" y="355" text-anchor="middle" font-size="12" fill="#2c3e50">Statistiques Avancées</text>
+            
+            <!-- Surveillance et Sécurité -->
+            <ellipse cx="500" cy="400" rx="110" ry="25" fill="#eaf2f8" stroke="#2980b9" stroke-width="2"/>
+            <text x="500" y="405" text-anchor="middle" font-size="12" fill="#2c3e50">Surveillance et Sécurité</text>
+            
+            <!-- Configuration Système -->
+            <ellipse cx="500" cy="450" rx="100" ry="25" fill="#e8f8f5" stroke="#16a085" stroke-width="2"/>
+            <text x="500" y="455" text-anchor="middle" font-size="12" fill="#2c3e50">Configuration Système</text>
+            
+            <!-- Gestion Globale -->
+            <ellipse cx="500" cy="500" rx="85" ry="25" fill="#fdf2e9" stroke="#d68910" stroke-width="2"/>
+            <text x="500" y="505" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion Globale</text>
+            
+            <!-- Gestion IA Système -->
+            <ellipse cx="500" cy="550" rx="95" ry="25" fill="#f8f9fa" stroke="#6c757d" stroke-width="2"/>
+            <text x="500" y="555" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion IA Système</text>
+            
+            <!-- Actors -->
+            <!-- Administrateur (Left) -->
+            <g id="admin">
+                <circle cx="100" cy="250" r="15" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="100" y1="265" x2="100" y2="310" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="85" y1="280" x2="115" y2="280" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="100" y1="310" x2="85" y2="340" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="100" y1="310" x2="115" y2="340" stroke="#2c3e50" stroke-width="2"/>
+                <text x="100" y="360" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Administrateur</text>
+            </g>
+            
+            <!-- Super Administrateur (Right) -->
+            <g id="superadmin">
+                <circle cx="900" cy="350" r="15" fill="none" stroke="#8b0000" stroke-width="2"/>
+                <line x1="900" y1="365" x2="900" y2="410" stroke="#8b0000" stroke-width="2"/>
+                <line x1="885" y1="380" x2="915" y2="380" stroke="#8b0000" stroke-width="2"/>
+                <line x1="900" y1="410" x2="885" y2="440" stroke="#8b0000" stroke-width="2"/>
+                <line x1="900" y1="410" x2="915" y2="440" stroke="#8b0000" stroke-width="2"/>
+                <text x="900" y="460" text-anchor="middle" font-size="14" font-weight="bold" fill="#8b0000">Super</text>
+                <text x="900" y="475" text-anchor="middle" font-size="14" font-weight="bold" fill="#8b0000">Administrateur</text>
+            </g>
+            
+            <!-- Connections -->
+            <!-- Administrateur connections -->
+            <line x1="115" y1="230" x2="420" y2="150" stroke="#3498db" stroke-width="2"/>
+            <line x1="115" y1="250" x2="400" y2="200" stroke="#27ae60" stroke-width="2"/>
+            <line x1="115" y1="270" x2="400" y2="250" stroke="#f39c12" stroke-width="2"/>
+            <line x1="115" y1="290" x2="395" y2="300" stroke="#9b59b6" stroke-width="2"/>
+            <line x1="115" y1="310" x2="400" y2="350" stroke="#e74c3c" stroke-width="2"/>
+            <line x1="115" y1="330" x2="390" y2="400" stroke="#2980b9" stroke-width="2"/>
+            <line x1="115" y1="350" x2="400" y2="450" stroke="#16a085" stroke-width="2"/>
+            
+            <!-- Super Administrateur connections (all use cases) -->
+            <line x1="885" y1="330" x2="580" y2="150" stroke="#3498db" stroke-width="3"/>
+            <line x1="885" y1="340" x2="600" y2="200" stroke="#27ae60" stroke-width="3"/>
+            <line x1="885" y1="350" x2="600" y2="250" stroke="#f39c12" stroke-width="3"/>
+            <line x1="885" y1="360" x2="605" y2="300" stroke="#9b59b6" stroke-width="3"/>
+            <line x1="885" y1="370" x2="600" y2="350" stroke="#e74c3c" stroke-width="3"/>
+            <line x1="885" y1="380" x2="610" y2="400" stroke="#2980b9" stroke-width="3"/>
+            <line x1="885" y1="390" x2="600" y2="450" stroke="#16a085" stroke-width="3"/>
+            <line x1="885" y1="400" x2="585" y2="500" stroke="#d68910" stroke-width="3"/>
+            <line x1="885" y1="410" x2="595" y2="550" stroke="#6c757d" stroke-width="3"/>
+            
+            <!-- Include/Exclude relationships -->
+            <!-- Include relationships (dashed lines with <<include>>) -->
+            <line x1="400" y1="200" x2="420" y2="150" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="430" y="175" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            
+            <line x1="400" y1="250" x2="400" y2="200" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="410" y="225" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            
+            <line x1="395" y1="300" x2="400" y2="200" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="410" y="250" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            
+            <line x1="390" y1="400" x2="400" y2="350" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="410" y="375" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            
+            <line x1="585" y1="500" x2="600" y2="450" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="610" y="475" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            
+            <line x1="595" y1="550" x2="585" y2="500" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="610" y="525" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            
+            <!-- Extend relationships (dashed lines with <<extends>>) -->
+            <line x1="600" y1="350" x2="610" y2="400" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="620" y="375" font-size="10" fill="#7f8c8d">&lt;&lt;extends&gt;&gt;</text>
+            
+            <line x1="600" y1="450" x2="585" y2="500" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="620" y="475" font-size="10" fill="#7f8c8d">&lt;&lt;extends&gt;&gt;</text>
+            
+            <!-- Inheritance relationship -->
+            <line x1="115" y1="340" x2="885" y2="340" stroke="#2c3e50" stroke-width="2"/>
+            <polygon points="870,335 885,340 870,345" fill="#2c3e50"/>
+            <text x="500" y="330" text-anchor="middle" font-size="10" fill="#2c3e50">hérite de</text>
+            
+            <!-- Legend -->
+            <rect x="20" y="580" width="220" height="100" rx="5" ry="5" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+            <text x="30" y="600" font-size="12" font-weight="bold" fill="#2c3e50">Légende:</text>
+            <line x1="30" y1="615" x2="60" y2="615" stroke="#2c3e50" stroke-width="2"/>
+            <text x="70" y="620" font-size="10" fill="#2c3e50">Association</text>
+            <line x1="30" y1="635" x2="60" y2="635" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="70" y="640" font-size="10" fill="#7f8c8d">Include/Extends</text>
+            <line x1="30" y1="655" x2="60" y2="655" stroke="#2c3e50" stroke-width="2"/>
+            <polygon points="55,650 60,655 55,660" fill="#2c3e50"/>
+            <text x="70" y="660" font-size="10" fill="#2c3e50">Héritage</text>
+            
+            <!-- Privileges Box -->
+            <rect x="760" y="580" width="220" height="100" rx="5" ry="5" fill="#fff3cd" stroke="#ffeaa7" stroke-width="1"/>
+            <text x="770" y="600" font-size="12" font-weight="bold" fill="#856404">Privilèges:</text>
+            <text x="770" y="620" font-size="10" fill="#856404">• Admin: Gestion régionale</text>
+            <text x="770" y="635" font-size="10" fill="#856404">• Super Admin: Contrôle total</text>
+            <text x="770" y="650" font-size="10" fill="#856404">• Audit et surveillance avancés</text>
+            <text x="770" y="665" font-size="10" fill="#856404">• Configuration système critique</text>
+        </svg>
+    </div>
+</body>
+</html> 

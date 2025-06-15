@@ -12,7 +12,12 @@ import {
     CircularProgress,
     Paper,
     LinearProgress,
-    Divider
+    Divider,
+    Tabs,
+    Tab,
+    Button,
+    IconButton,
+    Tooltip
 } from '@mui/material';
 import { 
     BarChart, 
@@ -20,7 +25,7 @@ import {
     XAxis, 
     YAxis, 
     CartesianGrid, 
-    Tooltip, 
+    Tooltip as RechartsTooltip, 
     ResponsiveContainer,
     PieChart,
     Pie,
@@ -29,7 +34,10 @@ import {
     Line,
     Legend,
     AreaChart,
-    Area
+    Area,
+    ComposedChart,
+    RadialBarChart,
+    RadialBar
 } from 'recharts';
 import { 
     People as Users, 
@@ -44,13 +52,22 @@ import {
     CheckCircle as CheckCircle,
     Error as ErrorIcon,
     Science as ScienceIcon,
-    LocalPharmacy as PharmacyIcon
+    LocalPharmacy as PharmacyIcon,
+    LocalHospital as HospitalIcon,
+    LocationOn as LocationIcon,
+    Refresh as RefreshIcon,
+    Download as DownloadIcon,
+    Insights as InsightsIcon,
+    Dashboard as DashboardIcon,
+    Analytics as AnalyticsIcon,
+    Assessment as AssessmentIcon
 } from '@mui/icons-material';
 
 const Statistics = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [activeTab, setActiveTab] = useState(0);
 
     useEffect(() => {
         fetchStatistics();
@@ -79,10 +96,14 @@ const Statistics = () => {
         }
     };
 
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658'];
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF6B6B', '#4ECDC4', '#45B7D1'];
 
     const formatNumber = (num) => {
-        return new Intl.NumberFormat('fr-FR').format(num);
+        return new Intl.NumberFormat('fr-FR').format(num || 0);
+    };
+
+    const formatPercentage = (num) => {
+        return `${(num || 0).toFixed(1)}%`;
     };
 
     const getSystemHealthColor = (failureRate) => {
@@ -93,8 +114,12 @@ const Statistics = () => {
 
     const getSystemHealthStatus = (failureRate) => {
         if (failureRate < 1) return 'Excellent';
-        if (failureRate < 5) return 'Attention';
-        return 'Critique';
+        if (failureRate < 5) return 'Bon';
+        return 'Attention Requise';
+    };
+
+    const handleTabChange = (event, newValue) => {
+        setActiveTab(newValue);
     };
 
     if (loading) {
@@ -125,23 +150,67 @@ const Statistics = () => {
 
     return (
         <Box sx={{ p: 3 }}>
-            <Typography variant="h4" gutterBottom>
-                Statistiques de la Plateforme
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography variant="h4" gutterBottom>
+                    Tableau de Bord Administratif
+                </Typography>
+                <Box>
+                    <Tooltip title="Actualiser les données">
+                        <IconButton onClick={fetchStatistics} color="primary">
+                            <RefreshIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Exporter le rapport">
+                        <IconButton color="primary">
+                            <DownloadIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+            </Box>
 
             {/* System Health Alert */}
             {stats.systemHealth && stats.systemHealth.failure_rate > 5 && (
                 <Alert severity="error" sx={{ mb: 3 }}>
-                    <AlertTitle>Alerte Système</AlertTitle>
-                    Taux d'échec élevé détecté: {stats.systemHealth.failure_rate?.toFixed(2)}% 
+                    <AlertTitle>Alerte Système Critique</AlertTitle>
+                    Taux d'échec élevé détecté: {formatPercentage(stats.systemHealth.failure_rate)} 
                     ({stats.systemHealth.failures_24h} échecs dans les dernières 24h)
                 </Alert>
+            )}
+
+            {/* Key Insights */}
+            {stats.insights && (
+                <Card sx={{ mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                    <CardContent>
+                        <Box display="flex" alignItems="center" mb={2}>
+                            <InsightsIcon sx={{ mr: 1 }} />
+                            <Typography variant="h6">Insights Clés</Typography>
+                        </Box>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Typography variant="body2" sx={{ opacity: 0.8 }}>Spécialité Top Performance</Typography>
+                                <Typography variant="h6">{stats.insights.topPerformingSpecialty}</Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Typography variant="body2" sx={{ opacity: 0.8 }}>Ville la Plus Active</Typography>
+                                <Typography variant="h6">{stats.insights.mostActiveCity}</Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Typography variant="body2" sx={{ opacity: 0.8 }}>Croissance Patients</Typography>
+                                <Typography variant="h6">+{stats.insights.patientGrowthRate}%</Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Typography variant="body2" sx={{ opacity: 0.8 }}>État Système</Typography>
+                                <Typography variant="h6">{stats.insights.systemHealthStatus}</Typography>
+                            </Grid>
+                        </Grid>
+                    </CardContent>
+                </Card>
             )}
 
             {/* Overview Cards */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6} md={3}>
-                    <Card>
+                    <Card sx={{ height: '100%' }}>
                         <CardContent>
                             <Box display="flex" alignItems="center" justifyContent="space-between">
                                 <Box>
@@ -149,10 +218,13 @@ const Statistics = () => {
                                         Patients
                                     </Typography>
                                     <Typography variant="h4">
-                                        {formatNumber(stats.overview?.patients || 0)}
+                                        {formatNumber(stats.overview?.patients)}
                                     </Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        +{stats.recentActivity?.patients || 0} cette semaine
+                                    <Typography variant="body2" color="success.main">
+                                        +{stats.detailedStats?.patients?.new_patients_week || 0} cette semaine
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary">
+                                        {formatPercentage((stats.detailedStats?.patients?.complete_profiles / stats.overview?.patients) * 100)} profils complets
                                     </Typography>
                                 </Box>
                                 <Users color="primary" sx={{ fontSize: 40 }} />
@@ -162,7 +234,7 @@ const Statistics = () => {
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
-                    <Card>
+                    <Card sx={{ height: '100%' }}>
                         <CardContent>
                             <Box display="flex" alignItems="center" justifyContent="space-between">
                                 <Box>
@@ -170,10 +242,13 @@ const Statistics = () => {
                                         Médecins
                                     </Typography>
                                     <Typography variant="h4">
-                                        {formatNumber(stats.overview?.doctors || 0)}
+                                        {formatNumber(stats.overview?.doctors)}
                                     </Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        Actifs
+                                    <Typography variant="body2" color="success.main">
+                                        {stats.detailedStats?.doctors?.active_doctors || 0} actifs
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary">
+                                        {stats.detailedStats?.doctors?.accepting_patients || 0} acceptent nouveaux patients
                                     </Typography>
                                 </Box>
                                 <Stethoscope color="primary" sx={{ fontSize: 40 }} />
@@ -183,7 +258,7 @@ const Statistics = () => {
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
-                    <Card>
+                    <Card sx={{ height: '100%' }}>
                         <CardContent>
                             <Box display="flex" alignItems="center" justifyContent="space-between">
                                 <Box>
@@ -191,10 +266,13 @@ const Statistics = () => {
                                         Institutions
                                     </Typography>
                                     <Typography variant="h4">
-                                        {formatNumber(stats.overview?.institutions || 0)}
+                                        {formatNumber(stats.overview?.institutions)}
                                     </Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        Partenaires
+                                    <Typography variant="body2" color="warning.main">
+                                        {stats.detailedStats?.institutions?.pending_approval || 0} en attente
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary">
+                                        {stats.detailedStats?.institutions?.active_institutions || 0} actives
                                     </Typography>
                                 </Box>
                                 <Building2 color="primary" sx={{ fontSize: 40 }} />
@@ -204,7 +282,7 @@ const Statistics = () => {
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
-                    <Card>
+                    <Card sx={{ height: '100%' }}>
                         <CardContent>
                             <Box display="flex" alignItems="center" justifyContent="space-between">
                                 <Box>
@@ -212,10 +290,13 @@ const Statistics = () => {
                                         Rendez-vous
                                     </Typography>
                                     <Typography variant="h4">
-                                        {formatNumber(stats.overview?.appointments || 0)}
+                                        {formatNumber(stats.overview?.appointments)}
                                     </Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        +{stats.recentActivity?.appointments || 0} cette semaine
+                                    <Typography variant="body2" color="success.main">
+                                        +{stats.detailedStats?.appointments?.appointments_week || 0} cette semaine
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary">
+                                        {Math.round(stats.detailedStats?.appointments?.avg_duration || 0)} min moyenne
                                     </Typography>
                                 </Box>
                                 <Calendar color="primary" sx={{ fontSize: 40 }} />
@@ -225,150 +306,25 @@ const Statistics = () => {
                 </Grid>
             </Grid>
 
-            {/* System Health Metrics */}
-            {stats.systemHealth && (
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid item xs={12}>
-                        <Card>
-                            <CardHeader title="Santé du Système" />
-                            <CardContent>
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} md={3}>
-                                        <Box textAlign="center">
-                                            <Typography variant="h6" color="textSecondary">
-                                                Taux de Réussite
-                                            </Typography>
-                                            <Typography 
-                                                variant="h4" 
-                                                sx={{ 
-                                                    color: getSystemHealthColor(stats.systemHealth.failure_rate || 0),
-                                                    fontWeight: 'bold'
-                                                }}
-                                            >
-                                                {(100 - (stats.systemHealth.failure_rate || 0)).toFixed(1)}%
-                                            </Typography>
-                                            <Chip 
-                                                label={getSystemHealthStatus(stats.systemHealth.failure_rate || 0)}
-                                                color={stats.systemHealth.failure_rate < 1 ? 'success' : stats.systemHealth.failure_rate < 5 ? 'warning' : 'error'}
-                                                size="small"
-                                            />
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} md={3}>
-                                        <Box textAlign="center">
-                                            <Typography variant="h6" color="textSecondary">
-                                                Opérations 24h
-                                            </Typography>
-                                            <Typography variant="h4">
-                                                {formatNumber(stats.systemHealth.operations_24h || 0)}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {stats.systemHealth.failures_24h || 0} échecs
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} md={3}>
-                                        <Box textAlign="center">
-                                            <Typography variant="h6" color="textSecondary">
-                                                Utilisateurs Affectés
-                                            </Typography>
-                                            <Typography variant="h4">
-                                                {formatNumber(stats.systemHealth.affected_users || 0)}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                Par les échecs
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} md={3}>
-                                        <Box textAlign="center">
-                                            <Typography variant="h6" color="textSecondary">
-                                                Total Opérations
-                                            </Typography>
-                                            <Typography variant="h4">
-                                                {formatNumber(stats.systemHealth.total_operations || 0)}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                Cette période
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
-            )}
+            {/* Tabs for Different Views */}
+            <Paper sx={{ mb: 3 }}>
+                <Tabs value={activeTab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
+                    <Tab label="Vue d'ensemble" icon={<DashboardIcon />} />
+                    <Tab label="Analyses Médicales" icon={<ScienceIcon />} />
+                    <Tab label="Hôpitaux" icon={<HospitalIcon />} />
+                    <Tab label="Pharmacies" icon={<PharmacyIcon />} />
+                    <Tab label="Géographie" icon={<LocationIcon />} />
+                    <Tab label="Système" icon={<AssessmentIcon />} />
+                </Tabs>
+            </Paper>
 
-            {/* Medical Analysis & Prescriptions */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                {stats.analysisStats && (
+            {/* Tab Content */}
+            {activeTab === 0 && (
+                <Grid container spacing={3}>
+                    {/* Appointments by Status */}
                     <Grid item xs={12} md={6}>
                         <Card>
-                            <CardHeader title="Analyses Médicales" />
-                            <CardContent>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={stats.analysisStats}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="category" angle={-45} textAnchor="end" height={100} />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Bar dataKey="total_tests" fill="#8884d8" name="Tests Totaux" />
-                                        <Bar dataKey="completed" fill="#82ca9d" name="Complétés" />
-                                        <Bar dataKey="critical_results" fill="#ff7300" name="Résultats Critiques" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                )}
-
-                {stats.prescriptionStats && (
-                    <Grid item xs={12} md={6}>
-                        <Card>
-                            <CardHeader title="Prescriptions" />
-                            <CardContent>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12}>
-                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                                            <Typography variant="h6">Prescriptions Totales</Typography>
-                                            <Typography variant="h4" color="primary">
-                                                {formatNumber(stats.prescriptionStats.total_prescriptions || 0)}
-                                            </Typography>
-                                        </Box>
-                                        <Divider />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                                            <Typography variant="h6">Médicaments Uniques</Typography>
-                                            <Typography variant="h4" color="secondary">
-                                                {formatNumber(stats.prescriptionStats.unique_medications || 0)}
-                                            </Typography>
-                                        </Box>
-                                        <Divider />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <Box display="flex" alignItems="center" justifyContent="space-between">
-                                            <Typography variant="h6">Ce Mois</Typography>
-                                            <Typography variant="h4" color="success.main">
-                                                {formatNumber(stats.prescriptionStats.prescriptions_this_month || 0)}
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                )}
-            </Grid>
-
-            {/* Charts Section */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                {/* Appointments by Status */}
-                {stats.appointmentsByStatus && stats.appointmentsByStatus.length > 0 && (
-                    <Grid item xs={12} md={6}>
-                        <Card>
-                            <CardHeader title="Rendez-vous par Statut" />
+                            <CardHeader title="Statut des Rendez-vous" />
                             <CardContent>
                                 <ResponsiveContainer width="100%" height={300}>
                                     <PieChart>
@@ -382,57 +338,75 @@ const Statistics = () => {
                                             fill="#8884d8"
                                             dataKey="count"
                                         >
-                                            {stats.appointmentsByStatus.map((entry, index) => (
+                                            {stats.appointmentsByStatus?.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip />
+                                        <RechartsTooltip />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </CardContent>
                         </Card>
                     </Grid>
-                )}
 
-                {/* Specialties */}
-                {stats.specialtyStats && stats.specialtyStats.length > 0 && (
+                    {/* Monthly Trends */}
                     <Grid item xs={12} md={6}>
                         <Card>
-                            <CardHeader title="Médecins par Spécialité" />
+                            <CardHeader title="Tendances Mensuelles" />
                             <CardContent>
                                 <ResponsiveContainer width="100%" height={300}>
+                                    <ComposedChart data={stats.monthlyTrends}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="month" />
+                                        <YAxis />
+                                        <RechartsTooltip />
+                                        <Legend />
+                                        <Bar dataKey="patients" fill="#8884d8" name="Patients" />
+                                        <Line type="monotone" dataKey="appointments" stroke="#82ca9d" name="RDV" />
+                                        <Line type="monotone" dataKey="consultations" stroke="#ffc658" name="Consultations" />
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Specialty Performance */}
+                    <Grid item xs={12} md={6}>
+                        <Card>
+                            <CardHeader title="Performance par Spécialité" />
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={400}>
                                     <BarChart data={stats.specialtyStats}>
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
                                         <YAxis />
-                                        <Tooltip />
-                                        <Bar dataKey="count" fill="#8884d8" name="Total" />
-                                        <Bar dataKey="active_count" fill="#82ca9d" name="Actifs" />
+                                        <RechartsTooltip />
+                                        <Legend />
+                                        <Bar dataKey="total_doctors" fill="#8884d8" name="Médecins" />
+                                        <Bar dataKey="total_appointments" fill="#82ca9d" name="RDV" />
+                                        <Bar dataKey="total_reviews" fill="#ffc658" name="Avis" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </CardContent>
                         </Card>
                     </Grid>
-                )}
-            </Grid>
 
-            {/* Monthly Trends */}
-            {stats.monthlyTrends && stats.monthlyTrends.length > 0 && (
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid item xs={12}>
+                    {/* Institution Performance Overview */}
+                    <Grid item xs={12} md={6}>
                         <Card>
-                            <CardHeader title="Tendances Mensuelles" />
+                            <CardHeader title="Performance des Institutions" />
                             <CardContent>
                                 <ResponsiveContainer width="100%" height={400}>
-                                    <LineChart data={stats.monthlyTrends}>
+                                    <BarChart data={stats.institutionPerformance?.slice(0, 8)}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="month" />
+                                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
                                         <YAxis />
-                                        <Tooltip />
+                                        <RechartsTooltip />
                                         <Legend />
-                                        <Line type="monotone" dataKey="patients" stroke="#8884d8" name="Nouveaux Patients" />
-                                        <Line type="monotone" dataKey="appointments" stroke="#82ca9d" name="Rendez-vous" />
-                                    </LineChart>
+                                        <Bar dataKey="doctors" fill="#8884d8" name="Médecins" />
+                                        <Bar dataKey="appointments" fill="#82ca9d" name="RDV" />
+                                        <Bar dataKey="success_rate" fill="#ffc658" name="Taux Succès %" />
+                                    </BarChart>
                                 </ResponsiveContainer>
                             </CardContent>
                         </Card>
@@ -440,25 +414,275 @@ const Statistics = () => {
                 </Grid>
             )}
 
-            {/* Institution Performance */}
-            {stats.institutionStats && stats.institutionStats.length > 0 && (
+            {activeTab === 1 && (
                 <Grid container spacing={3}>
+                    {/* Medical Analysis Statistics */}
                     <Grid item xs={12}>
                         <Card>
-                            <CardHeader title="Performance des Institutions" />
+                            <CardHeader title="Analyses Médicales par Catégorie" />
                             <CardContent>
                                 <ResponsiveContainer width="100%" height={400}>
-                                    <BarChart data={stats.institutionStats}>
+                                    <BarChart data={stats.analysisStats}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                                        <XAxis dataKey="category" angle={-45} textAnchor="end" height={100} />
                                         <YAxis />
-                                        <Tooltip />
+                                        <RechartsTooltip />
                                         <Legend />
-                                        <Bar dataKey="doctors" fill="#8884d8" name="Médecins" />
-                                        <Bar dataKey="appointments" fill="#82ca9d" name="Rendez-vous" />
-                                        <Bar dataKey="success_rate" fill="#ffc658" name="Taux de Réussite %" />
+                                        <Bar dataKey="total_tests" fill="#8884d8" name="Tests Totaux" />
+                                        <Bar dataKey="completed" fill="#82ca9d" name="Complétés" />
+                                        <Bar dataKey="validated" fill="#00C49F" name="Validés" />
+                                        <Bar dataKey="critical_results" fill="#ff7300" name="Résultats Critiques" />
+                                        <Bar dataKey="urgent_tests" fill="#FF8042" name="Tests Urgents" />
                                     </BarChart>
                                 </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            )}
+
+            {activeTab === 2 && (
+                <Grid container spacing={3}>
+                    {/* Hospital Statistics */}
+                    <Grid item xs={12} md={4}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>Admissions Hospitalières</Typography>
+                                <Typography variant="h3" color="primary">
+                                    {formatNumber(stats.detailedStats?.hospital?.total_admissions)}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                    {stats.detailedStats?.hospital?.current_admissions || 0} actuellement hospitalisés
+                                </Typography>
+                                <LinearProgress 
+                                    variant="determinate" 
+                                    value={(stats.detailedStats?.hospital?.current_admissions / stats.detailedStats?.hospital?.total_admissions) * 100 || 0} 
+                                    sx={{ mt: 1 }}
+                                />
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>Chirurgies</Typography>
+                                <Typography variant="h3" color="secondary">
+                                    {formatNumber(stats.detailedStats?.hospital?.total_surgeries)}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                    {stats.detailedStats?.hospital?.completed_surgeries || 0} complétées
+                                </Typography>
+                                <LinearProgress 
+                                    variant="determinate" 
+                                    value={(stats.detailedStats?.hospital?.completed_surgeries / stats.detailedStats?.hospital?.total_surgeries) * 100 || 0} 
+                                    sx={{ mt: 1 }}
+                                    color="secondary"
+                                />
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>Durée Moyenne de Séjour</Typography>
+                                <Typography variant="h3" color="info">
+                                    {Math.round(stats.detailedStats?.hospital?.avg_stay_days || 0)}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                    jours en moyenne
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            )}
+
+            {activeTab === 3 && (
+                <Grid container spacing={3}>
+                    {/* Pharmacy Statistics */}
+                    <Grid item xs={12} md={6}>
+                        <Card>
+                            <CardHeader title="Statut des Prescriptions" />
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <PieChart>
+                                        <Pie
+                                            data={[
+                                                { name: 'Dispensées', value: stats.detailedStats?.pharmacy?.dispensed || 0 },
+                                                { name: 'En Attente', value: stats.detailedStats?.pharmacy?.pending || 0 },
+                                                { name: 'Expirées', value: stats.detailedStats?.pharmacy?.expired || 0 }
+                                            ]}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                            outerRadius={80}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                        >
+                                            {[0, 1, 2].map((index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>Médicaments Uniques</Typography>
+                                <Typography variant="h3" color="primary">
+                                    {formatNumber(stats.detailedStats?.pharmacy?.unique_medications)}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+                                    Total Prescriptions: {formatNumber(stats.detailedStats?.pharmacy?.total_prescriptions)}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                    Ce mois: {formatNumber(stats.detailedStats?.pharmacy?.prescriptions_month)}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            )}
+
+            {activeTab === 4 && (
+                <Grid container spacing={3}>
+                    {/* Geographic Distribution */}
+                    <Grid item xs={12}>
+                        <Card>
+                            <CardHeader title="Distribution Géographique" />
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={400}>
+                                    <BarChart data={stats.geographicStats}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="city" />
+                                        <YAxis />
+                                        <RechartsTooltip />
+                                        <Legend />
+                                        <Bar dataKey="patients" fill="#8884d8" name="Patients" />
+                                        <Bar dataKey="doctors" fill="#82ca9d" name="Médecins" />
+                                        <Bar dataKey="institutions" fill="#ffc658" name="Institutions" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            )}
+
+            {activeTab === 5 && (
+                <Grid container spacing={3}>
+                    {/* System Health */}
+                    <Grid item xs={12}>
+                        <Card>
+                            <CardHeader title="Santé du Système" />
+                            <CardContent>
+                                <Grid container spacing={3}>
+                                    <Grid item xs={12} md={3}>
+                                        <Box textAlign="center">
+                                            <Typography variant="h6" color="textSecondary">
+                                                Taux de Réussite
+                                            </Typography>
+                                            <Typography 
+                                                variant="h4" 
+                                                sx={{ 
+                                                    color: getSystemHealthColor(stats.systemHealth?.failure_rate || 0),
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                {formatPercentage(stats.systemHealth?.success_rate)}
+                                            </Typography>
+                                            <Chip 
+                                                label={getSystemHealthStatus(stats.systemHealth?.failure_rate || 0)}
+                                                color={stats.systemHealth?.failure_rate < 1 ? 'success' : stats.systemHealth?.failure_rate < 5 ? 'warning' : 'error'}
+                                                size="small"
+                                            />
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <Box textAlign="center">
+                                            <Typography variant="h6" color="textSecondary">
+                                                Opérations 24h
+                                            </Typography>
+                                            <Typography variant="h4">
+                                                {formatNumber(stats.systemHealth?.operations_24h)}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                {stats.systemHealth?.failures_24h || 0} échecs
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <Box textAlign="center">
+                                            <Typography variant="h6" color="textSecondary">
+                                                Utilisateurs Actifs
+                                            </Typography>
+                                            <Typography variant="h4">
+                                                {formatNumber(stats.systemHealth?.active_users_24h)}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Dernières 24h
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <Box textAlign="center">
+                                            <Typography variant="h6" color="textSecondary">
+                                                Total Opérations
+                                            </Typography>
+                                            <Typography variant="h4">
+                                                {formatNumber(stats.systemHealth?.total_operations)}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Cette période
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* User Activity */}
+                    <Grid item xs={12}>
+                        <Card>
+                            <CardHeader title="Activité des Utilisateurs" />
+                            <CardContent>
+                                <Grid container spacing={3}>
+                                    <Grid item xs={12} md={4}>
+                                        <Typography variant="h6" color="textSecondary">Total Utilisateurs</Typography>
+                                        <Typography variant="h4">{formatNumber(stats.detailedStats?.userActivity?.total_users)}</Typography>
+                                        <Typography variant="body2" color="success.main">
+                                            {stats.detailedStats?.userActivity?.verified_users || 0} vérifiés
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={12} md={4}>
+                                        <Typography variant="h6" color="textSecondary">Actifs 24h</Typography>
+                                        <Typography variant="h4">{formatNumber(stats.detailedStats?.userActivity?.users_24h)}</Typography>
+                                        <Typography variant="body2" color="info.main">
+                                            {stats.detailedStats?.userActivity?.users_week || 0} cette semaine
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={12} md={4}>
+                                        <Typography variant="h6" color="textSecondary">Par Type</Typography>
+                                        <Typography variant="body2">
+                                            Patients: {stats.detailedStats?.userActivity?.patient_users || 0}
+                                        </Typography>
+                                        <Typography variant="body2">
+                                            Médecins: {stats.detailedStats?.userActivity?.doctor_users || 0}
+                                        </Typography>
+                                        <Typography variant="body2">
+                                            Institutions: {stats.detailedStats?.userActivity?.institution_users || 0}
+                                        </Typography>
+                                    </Grid>
+                                </Grid>
                             </CardContent>
                         </Card>
                     </Grid>

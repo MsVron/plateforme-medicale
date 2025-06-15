@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groupe Administration - Plateforme Médicale</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .diagram-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <svg width="1300" height="900" viewBox="0 0 1300 900">
+            <!-- Title -->
+            <text x="650" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#2c3e50">
+                Diagramme de Cas d'Utilisation - Groupe Administration
+            </text>
+            
+            <!-- Main System Box -->
+            <rect x="200" y="80" width="900" height="750" rx="20" ry="20" 
+                  fill="none" stroke="#34495e" stroke-width="3"/>
+            
+            <!-- System Title -->
+            <text x="650" y="110" text-anchor="middle" font-size="16" font-weight="bold" fill="#2c3e50">
+                Système BluePulse - Module Administration
+            </text>
+            
+            <!-- Main Use Cases (Center) -->
+            <!-- Authentification -->
+            <ellipse cx="450" cy="170" rx="80" ry="25" fill="#e8f4fd" stroke="#3498db" stroke-width="2"/>
+            <text x="450" y="175" text-anchor="middle" font-size="12" fill="#2c3e50">Authentification</text>
+            
+            <!-- Gestion des Utilisateurs -->
+            <ellipse cx="450" cy="220" rx="100" ry="25" fill="#e8f6f3" stroke="#27ae60" stroke-width="2"/>
+            <text x="450" y="225" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion des Utilisateurs</text>
+            
+            <!-- Validation des Médecins -->
+            <ellipse cx="450" cy="270" rx="100" ry="25" fill="#fef9e7" stroke="#f39c12" stroke-width="2"/>
+            <text x="450" y="275" text-anchor="middle" font-size="12" fill="#2c3e50">Validation des Médecins</text>
+            
+            <!-- Gestion des Institutions -->
+            <ellipse cx="450" cy="320" rx="105" ry="25" fill="#f4ecf7" stroke="#9b59b6" stroke-width="2"/>
+            <text x="450" y="325" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion des Institutions</text>
+            
+            <!-- Administration Système -->
+            <ellipse cx="750" cy="220" rx="100" ry="25" fill="#fdeaea" stroke="#e74c3c" stroke-width="2"/>
+            <text x="750" y="225" text-anchor="middle" font-size="12" fill="#2c3e50">Administration Système</text>
+            
+            <!-- Surveillance Avancée -->
+            <ellipse cx="750" cy="270" rx="95" ry="25" fill="#eaf2f8" stroke="#2980b9" stroke-width="2"/>
+            <text x="750" y="275" text-anchor="middle" font-size="12" fill="#2c3e50">Surveillance Avancée</text>
+            
+            <!-- Configuration Avancée -->
+            <ellipse cx="750" cy="320" rx="100" ry="25" fill="#e8f8f5" stroke="#16a085" stroke-width="2"/>
+            <text x="750" y="325" text-anchor="middle" font-size="12" fill="#2c3e50">Configuration Avancée</text>
+            
+            <!-- Gestion IA -->
+            <ellipse cx="750" cy="370" rx="75" ry="25" fill="#fdf2e9" stroke="#d68910" stroke-width="2"/>
+            <text x="750" y="375" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion IA</text>
+            
+            <!-- Statistiques -->
+            <ellipse cx="600" cy="420" rx="70" ry="25" fill="#f4f6f7" stroke="#85929e" stroke-width="2"/>
+            <text x="600" y="425" text-anchor="middle" font-size="12" fill="#2c3e50">Statistiques</text>
+            
+            <!-- Sécurité -->
+            <ellipse cx="450" cy="470" rx="65" ry="25" fill="#ebf5fb" stroke="#5499c7" stroke-width="2"/>
+            <text x="450" y="475" text-anchor="middle" font-size="12" fill="#2c3e50">Sécurité</text>
+            
+            <!-- Side Use Cases (Include/Extend) -->
+            <!-- Left Side - User Management related -->
+            <ellipse cx="280" cy="200" rx="70" ry="20" fill="#ebfaf7" stroke="#58d68d" stroke-width="1"/>
+            <text x="280" y="205" text-anchor="middle" font-size="10" fill="#2c3e50">Créer comptes</text>
+            
+            <ellipse cx="280" cy="240" rx="75" ry="20" fill="#ebfaf7" stroke="#58d68d" stroke-width="1"/>
+            <text x="280" y="245" text-anchor="middle" font-size="10" fill="#2c3e50">Gérer rôles</text>
+            
+            <ellipse cx="280" cy="280" rx="70" ry="20" fill="#fef5e7" stroke="#f7dc6f" stroke-width="1"/>
+            <text x="280" y="285" text-anchor="middle" font-size="10" fill="#2c3e50">Vérifier documents</text>
+            
+            <ellipse cx="280" cy="320" rx="75" ry="20" fill="#f8f4fd" stroke="#bb8fce" stroke-width="1"/>
+            <text x="280" y="325" text-anchor="middle" font-size="10" fill="#2c3e50">Valider institutions</text>
+            
+            <!-- Right Side - Advanced Admin Functions -->
+            <ellipse cx="950" cy="180" rx="75" ry="20" fill="#fdeaea" stroke="#f1948a" stroke-width="1"/>
+            <text x="950" y="185" text-anchor="middle" font-size="10" fill="#2c3e50">Configurer système</text>
+            
+            <ellipse cx="950" cy="220" rx="80" ry="20" fill="#fdeaea" stroke="#f1948a" stroke-width="1"/>
+            <text x="950" y="225" text-anchor="middle" font-size="10" fill="#2c3e50">Gérer bases données</text>
+            
+            <ellipse cx="950" cy="260" rx="75" ry="20" fill="#edf7ff" stroke="#85c1e9" stroke-width="1"/>
+            <text x="950" y="265" text-anchor="middle" font-size="10" fill="#2c3e50">Analyser logs</text>
+            
+            <ellipse cx="950" cy="300" rx="80" ry="20" fill="#edf7ff" stroke="#85c1e9" stroke-width="1"/>
+            <text x="950" y="305" text-anchor="middle" font-size="10" fill="#2c3e50">Détecter anomalies</text>
+            
+            <ellipse cx="950" cy="340" rx="75" ry="20" fill="#ebfaf7" stroke="#7fb3d3" stroke-width="1"/>
+            <text x="950" y="345" text-anchor="middle" font-size="10" fill="#2c3e50">Gérer infrastructure</text>
+            
+            <ellipse cx="950" cy="380" rx="80" ry="20" fill="#fef9e7" stroke="#f4d03f" stroke-width="1"/>
+            <text x="950" y="385" text-anchor="middle" font-size="10" fill="#2c3e50">Configurer modèles IA</text>
+            
+            <!-- Bottom Side - Security and Statistics -->
+            <ellipse cx="300" cy="650" rx="75" ry="20" fill="#ebf5fb" stroke="#7fb3d3" stroke-width="1"/>
+            <text x="300" y="655" text-anchor="middle" font-size="10" fill="#2c3e50">Contrôler accès</text>
+            
+            <ellipse cx="450" cy="650" rx="70" ry="20" fill="#ebf5fb" stroke="#7fb3d3" stroke-width="1"/>
+            <text x="450" y="655" text-anchor="middle" font-size="10" fill="#2c3e50">Audit sécurité</text>
+            
+            <ellipse cx="600" cy="650" rx="80" ry="20" fill="#f4f6f7" stroke="#a6acaf" stroke-width="1"/>
+            <text x="600" y="655" text-anchor="middle" font-size="10" fill="#2c3e50">Générer rapports</text>
+            
+            <ellipse cx="750" cy="650" rx="75" ry="20" fill="#f4f6f7" stroke="#a6acaf" stroke-width="1"/>
+            <text x="750" y="655" text-anchor="middle" font-size="10" fill="#2c3e50">Analyser métriques</text>
+            
+            <ellipse cx="900" cy="650" rx="80" ry="20" fill="#f4f6f7" stroke="#a6acaf" stroke-width="1"/>
+            <text x="900" y="655" text-anchor="middle" font-size="10" fill="#2c3e50">Optimiser ressources</text>
+            
+            <!-- Actors -->
+            <!-- Administrateur (Left) -->
+            <g id="admin">
+                <circle cx="80" cy="300" r="15" fill="none" stroke="#27ae60" stroke-width="2"/>
+                <line x1="80" y1="315" x2="80" y2="360" stroke="#27ae60" stroke-width="2"/>
+                <line x1="65" y1="330" x2="95" y2="330" stroke="#27ae60" stroke-width="2"/>
+                <line x1="80" y1="360" x2="65" y2="390" stroke="#27ae60" stroke-width="2"/>
+                <line x1="80" y1="360" x2="95" y2="390" stroke="#27ae60" stroke-width="2"/>
+                <text x="80" y="410" text-anchor="middle" font-size="14" font-weight="bold" fill="#27ae60">Administrateur</text>
+            </g>
+            
+            <!-- Super Administrateur (Left) -->
+            <g id="superadmin">
+                <circle cx="80" cy="550" r="15" fill="none" stroke="#e74c3c" stroke-width="2"/>
+                <line x1="80" y1="565" x2="80" y2="610" stroke="#e74c3c" stroke-width="2"/>
+                <line x1="65" y1="580" x2="95" y2="580" stroke="#e74c3c" stroke-width="2"/>
+                <line x1="80" y1="610" x2="65" y2="640" stroke="#e74c3c" stroke-width="2"/>
+                <line x1="80" y1="610" x2="95" y2="640" stroke="#e74c3c" stroke-width="2"/>
+                <text x="80" y="660" text-anchor="middle" font-size="12" font-weight="bold" fill="#e74c3c">Super</text>
+                <text x="80" y="675" text-anchor="middle" font-size="12" font-weight="bold" fill="#e74c3c">Administrateur</text>
+            </g>
+            
+            <!-- Main Connections -->
+            <!-- Administrateur connections -->
+            <line x1="95" y1="280" x2="370" y2="170" stroke="#3498db" stroke-width="2"/>
+            <line x1="95" y1="290" x2="350" y2="220" stroke="#27ae60" stroke-width="2"/>
+            <line x1="95" y1="300" x2="350" y2="270" stroke="#f39c12" stroke-width="2"/>
+            <line x1="95" y1="310" x2="345" y2="320" stroke="#9b59b6" stroke-width="2"/>
+            <line x1="95" y1="320" x2="530" y2="420" stroke="#85929e" stroke-width="2"/>
+            <line x1="95" y1="330" x2="385" y2="470" stroke="#5499c7" stroke-width="2"/>
+            
+            <!-- Super Administrateur connections -->
+            <line x1="95" y1="530" x2="370" y2="170" stroke="#3498db" stroke-width="2"/>
+            <line x1="95" y1="540" x2="350" y2="220" stroke="#27ae60" stroke-width="2"/>
+            <line x1="95" y1="550" x2="350" y2="270" stroke="#f39c12" stroke-width="2"/>
+            <line x1="95" y1="560" x2="345" y2="320" stroke="#9b59b6" stroke-width="2"/>
+            <line x1="95" y1="570" x2="650" y2="220" stroke="#e74c3c" stroke-width="2"/>
+            <line x1="95" y1="580" x2="655" y2="270" stroke="#2980b9" stroke-width="2"/>
+            <line x1="95" y1="590" x2="650" y2="320" stroke="#16a085" stroke-width="2"/>
+            <line x1="95" y1="600" x2="675" y2="370" stroke="#d68910" stroke-width="2"/>
+            <line x1="95" y1="610" x2="530" y2="420" stroke="#85929e" stroke-width="2"/>
+            <line x1="95" y1="620" x2="385" y2="470" stroke="#5499c7" stroke-width="2"/>
+            
+            <!-- Include relationships -->
+            <!-- User management includes -->
+            <line x1="350" y1="210" x2="350" y2="200" stroke="#58d68d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="315" y="200" text-anchor="middle" font-size="8" fill="#58d68d">«include»</text>
+            
+            <line x1="350" y1="230" x2="355" y2="240" stroke="#58d68d" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="320" y="240" text-anchor="middle" font-size="8" fill="#58d68d">«include»</text>
+            
+            <!-- Doctor validation includes -->
+            <line x1="350" y1="260" x2="350" y2="280" stroke="#f7dc6f" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="315" y="275" text-anchor="middle" font-size="8" fill="#f7dc6f">«include»</text>
+            
+            <!-- Institution management includes -->
+            <line x1="345" y1="330" x2="355" y2="320" stroke="#bb8fce" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="320" y="320" text-anchor="middle" font-size="8" fill="#bb8fce">«include»</text>
+            
+            <!-- System administration includes -->
+            <line x1="850" y1="210" x2="875" y2="180" stroke="#f1948a" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="865" y="190" text-anchor="middle" font-size="8" fill="#f1948a">«include»</text>
+            
+            <line x1="850" y1="230" x2="870" y2="220" stroke="#f1948a" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="860" y="220" text-anchor="middle" font-size="8" fill="#f1948a">«include»</text>
+            
+            <!-- Advanced surveillance includes -->
+            <line x1="845" y1="260" x2="875" y2="260" stroke="#85c1e9" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="860" y="255" text-anchor="middle" font-size="8" fill="#85c1e9">«include»</text>
+            
+            <line x1="845" y1="280" x2="870" y2="300" stroke="#85c1e9" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="860" y="295" text-anchor="middle" font-size="8" fill="#85c1e9">«include»</text>
+            
+            <!-- Advanced configuration includes -->
+            <line x1="850" y1="330" x2="875" y2="340" stroke="#7fb3d3" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="865" y="340" text-anchor="middle" font-size="8" fill="#7fb3d3">«include»</text>
+            
+            <!-- AI management includes -->
+            <line x1="825" y1="380" x2="870" y2="380" stroke="#f4d03f" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="850" y="375" text-anchor="middle" font-size="8" fill="#f4d03f">«include»</text>
+            
+            <!-- Security includes -->
+            <line x1="400" y1="485" x2="300" y2="630" stroke="#7fb3d3" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="350" y="560" text-anchor="middle" font-size="8" fill="#7fb3d3">«include»</text>
+            
+            <line x1="500" y1="485" x2="450" y2="630" stroke="#7fb3d3" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="475" y="560" text-anchor="middle" font-size="8" fill="#7fb3d3">«include»</text>
+            
+            <!-- Extend relationships -->
+            <!-- Statistics extends -->
+            <line x1="670" y1="430" x2="675" y2="635" stroke="#a6acaf" stroke-width="1" stroke-dasharray="5,2"/>
+            <text x="675" y="535" text-anchor="middle" font-size="8" fill="#a6acaf">«extends»</text>
+            
+            <line x1="670" y1="440" x2="750" y2="630" stroke="#a6acaf" stroke-width="1" stroke-dasharray="5,2"/>
+            <text x="710" y="540" text-anchor="middle" font-size="8" fill="#a6acaf">«extends»</text>
+            
+            <line x1="670" y1="450" x2="825" y2="635" stroke="#a6acaf" stroke-width="1" stroke-dasharray="5,2"/>
+            <text x="750" y="545" text-anchor="middle" font-size="8" fill="#a6acaf">«extends»</text>
+            
+            <!-- Legend -->
+            <rect x="1050" y="150" width="180" height="140" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1" rx="5"/>
+            <text x="1140" y="170" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Légende</text>
+            <line x1="1060" y1="185" x2="1090" y2="185" stroke="#000" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="1100" y="190" font-size="10" fill="#2c3e50">«include»</text>
+            <line x1="1060" y1="205" x2="1090" y2="205" stroke="#000" stroke-width="1" stroke-dasharray="5,2"/>
+            <text x="1100" y="210" font-size="10" fill="#2c3e50">«extends»</text>
+            <line x1="1060" y1="225" x2="1090" y2="225" stroke="#27ae60" stroke-width="2"/>
+            <text x="1100" y="230" font-size="10" fill="#2c3e50">Administrateur</text>
+            <line x1="1060" y1="245" x2="1090" y2="245" stroke="#e74c3c" stroke-width="2"/>
+            <text x="1100" y="250" font-size="10" fill="#2c3e50">Super Admin</text>
+            <rect x="1060" y="260" width="30" height="15" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+            <text x="1100" y="270" font-size="10" fill="#2c3e50">Fonctions communes</text>
+        </svg>
+    </div>
+</body>
+</html> 
