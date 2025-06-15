@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import Layout from './components/layout';
@@ -25,7 +25,8 @@ import DoctorSearch from './components/DoctorSearch/DoctorSearch';
 import AppointmentBookingPage from './components/appointments/AppointmentBookingPage';
 import PatientAppointments from './components/patient/PatientAppointments';
 import PatientFavorites from './components/patient/PatientFavorites';
-import medicalTheme from './styles/theme';
+import medicalTheme, { getThemeForRole } from './styles/theme';
+import ThemeUpdater from './components/ThemeUpdater';
 
 // Import the new pages
 import MedicalRecord from './pages/patient/MedicalRecord';
@@ -67,8 +68,48 @@ import LaboratoryDashboard from './components/laboratory/LaboratoryDashboard';
 import LaboratoryHome from './pages/laboratory/LaboratoryHome';
 
 function App() {
+  const [currentTheme, setCurrentTheme] = useState(medicalTheme);
+
+  // Function to update theme based on user role
+  const updateThemeForUser = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const roleTheme = getThemeForRole(user.role);
+        setCurrentTheme(roleTheme);
+      } else {
+        setCurrentTheme(medicalTheme); // Default theme
+      }
+    } catch (error) {
+      console.error('Error updating theme:', error);
+      setCurrentTheme(medicalTheme); // Fallback to default
+    }
+  };
+
+  // Update theme on component mount and when localStorage changes
+  useEffect(() => {
+    updateThemeForUser();
+    
+    // Listen for storage changes (when user logs in/out)
+    const handleStorageChange = () => {
+      updateThemeForUser();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events when user data changes
+    window.addEventListener('userDataChanged', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userDataChanged', handleStorageChange);
+    };
+  }, []);
+
   return (
-    <ThemeProvider theme={medicalTheme}>
+    <ThemeProvider theme={currentTheme}>
+      <ThemeUpdater />
       <Router>
         <Routes>
           {/* Public routes */}

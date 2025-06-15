@@ -38,6 +38,9 @@ const LoginContainer = () => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(userData));
 
+      // Trigger theme update
+      window.dispatchEvent(new Event('userDataChanged'));
+
       // Redirect based on role
       console.log('User role:', response.data.user.role);
       if (['super_admin', 'admin'].includes(response.data.user.role)) {

@@ -1,6 +1,6 @@
 body {
   min-height: 100vh;
-  background: linear-gradient(to right, #2c3e50, #4ca1af); /* dark-blue to medical aqua */
+  background: var(--login-gradient, linear-gradient(to right, #2c3e50, #4ca1af)); /* dark-blue to medical aqua */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -10,22 +10,22 @@ body {
 #title {
   font-size: 45px;
   font-weight: bold;
-  color: #4ca1af;
+  color: var(--primary-color, #4ca1af);
   text-transform: uppercase;
   letter-spacing: 4px;
   text-shadow:
       4px 4px 6px rgba(0, 0, 0, 0.2),
-      0 0 10px #2c3e50,
-      0 0 20px #4ca1af;
+      0 0 10px var(--primary-dark, #2c3e50),
+      0 0 20px var(--primary-color, #4ca1af);
   animation: pulseAnimation 2s infinite;
   transition: all 0.3s ease-in-out;
 }
 #title:hover {
-  color: #2c3e50;
+  color: var(--primary-dark, #2c3e50);
   text-shadow:
-      0 0 20px #4ca1af,
-      0 0 30px #4ca1af,
-      0 0 40px #2c3e50;
+      0 0 20px var(--primary-color, #4ca1af),
+      0 0 30px var(--primary-color, #4ca1af),
+      0 0 40px var(--primary-dark, #2c3e50);
   transform: scale(1.1);
   animation: pulseAnimation 1s infinite;
   transition: all 0.3s ease-in-out;
@@ -47,38 +47,38 @@ body {
 }
 #subtitle{
   font-weight: bold;
-  color: #4ca1af;
+  color: var(--primary-color, #4ca1af);
 }
 #username , #password{
   padding: 15px 20px;
       width: 300px;
       font-size: 16px;
-      border: 2px solid #2c3e50;
+      border: 2px solid var(--primary-dark, #2c3e50);
       border-radius: 10px;
       background-color: #fff;
-      color: #2c3e50;
+      color: var(--primary-dark, #2c3e50);
       box-shadow: 0 0 10px rgba(44, 62, 80, 0.1);
       transition: all 0.3s ease;
       outline: none;
 }
 #username:focus  , #password:focus {
-  border-color: #4ca1af;
-      box-shadow: 0 0 12px #4ca1af, 0 0 5px #2c3e50;
+  border-color: var(--primary-color, #4ca1af);
+      box-shadow: 0 0 12px var(--primary-color, #4ca1af), 0 0 5px var(--primary-dark, #2c3e50);
       animation: glowPulse 1.5s infinite alternate;
 }
 @keyframes glowPulse {
   0% {
-    box-shadow: 0 0 12px #4ca1af, 0 0 5px #2c3e50;
+    box-shadow: 0 0 12px var(--primary-color, #4ca1af), 0 0 5px var(--primary-dark, #2c3e50);
   }
   100% {
-    box-shadow: 0 0 20px #4ca1af, 0 0 10px #2c3e50;
+    box-shadow: 0 0 20px var(--primary-color, #4ca1af), 0 0 10px var(--primary-dark, #2c3e50);
   }
 }
 
 .bluepulse-input .MuiOutlinedInput-root {
   border-radius: 10px;
   background-color: #fff;
-  color: #2c3e50;
+  color: var(--primary-dark, #2c3e50);
   transition: all 0.3s ease;
   position: relative;
   z-index: 0;

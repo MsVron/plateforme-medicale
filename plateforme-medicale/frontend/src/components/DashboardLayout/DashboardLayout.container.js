@@ -96,6 +96,10 @@ const DashboardLayoutContainer = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    
+    // Trigger theme reset to default
+    window.dispatchEvent(new Event('userDataChanged'));
+    
     navigate('/login');
   };
 

@@ -1,6 +1,6 @@
 /* Drawer container */
 .MuiDrawer-paper {
-  background: linear-gradient(to bottom, #2c3e50, #4ca1af);
+  background: var(--sidebar-gradient, linear-gradient(to bottom, #2c3e50, #4ca1af));
   color: white;
   border-right: none;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
