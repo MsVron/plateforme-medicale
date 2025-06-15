@@ -12,6 +12,10 @@ router.post('/logout', authController.logout);
 // Route d'inscription patient
 router.post('/register/patient', patientController.addPatient);
 
+// Routes de réinitialisation de mot de passe
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
+
 // Route de vérification d'email
 router.get('/verify-email', async (req, res) => {
   // Get token from query params

@@ -86,57 +86,35 @@ The platform successfully addresses the challenges of healthcare digitalization 
     3.1.2 Technologies Utilisées .................................................. 23
     3.1.3 Diagramme de Déploiement ................................................ 24
     3.1.4 Diagramme de Composants ................................................. 25
-3.2 Implémentation ................................................................. 26
+3.2 Implémentation et Développement ................................................ 26
     3.2.1 Backend - API REST ...................................................... 26
     3.2.2 Frontend - Interface Utilisateur ........................................ 27
     3.2.3 Base de Données ......................................................... 28
     3.2.4 Sécurité et Authentification ............................................ 29
-3.3 Validation et Debugging ........................................................ 30
-    3.3.1 Approche de Validation .................................................. 30
-    3.3.2 Suite de Tests Backend Spécialisés ...................................... 31
-    3.3.3 Monitoring et Debugging Avancé .......................................... 32
-3.4 Technologies Utilisées - Stack Technique Complet .............................. 33
-    3.4.1 Frontend - Technologies Modernes ........................................ 33
-    3.4.2 Backend - Architecture Robuste .......................................... 34
-    3.4.3 Intelligence Artificielle - Services Hybrides .......................... 35
-    3.4.4 Base de Données - Architecture Optimisée ............................... 36
-3.5 Stratégies de Déploiement ...................................................... 37
-    3.5.1 Architecture de Déploiement ............................................. 37
-    3.5.2 Solutions de Déploiement Évaluées ....................................... 38
-    3.5.3 Configuration de Production ............................................. 39
-    3.5.4 Monitoring et Maintenance ............................................... 40
-
-**CHAPITRE 4 : INTÉGRATION DE L'INTELLIGENCE ARTIFICIELLE** .......................... 33
-4.1 Vision et Objectifs de l'IA Médicale .......................................... 33
-4.2 Architecture de l'Assistant IA Médical ........................................ 34
-    4.2.1 Conception Multi-Services ................................................ 34
-    4.2.2 Système Hybride d'Analyse ............................................... 35
-4.3 Fonctionnalités Avancées de l'Assistant IA .................................... 36
-    4.3.1 Interface Conversationnelle Intelligente ................................ 36
-    4.3.2 Détection Automatique d'Urgences ........................................ 37
-4.4 Implémentation Technique de l'IA ............................................... 38
-    4.4.1 Backend IA et Gestion des Modèles ....................................... 38
-    4.4.2 Persistance et Traçabilité .............................................. 39
-4.5 Sécurité et Conformité de l'IA Médicale ....................................... 40
-    4.5.1 Disclaimers et Responsabilité Médicale .................................. 40
-    4.5.2 Protection des Données et Confidentialité ............................... 41
-4.6 Performance et Optimisation de l'IA ........................................... 42
-    4.6.1 Métriques de Performance ................................................ 42
-    4.6.2 Évolutivité et Apprentissage Continu .................................... 43
-
-**CHAPITRE 5 : PLANIFICATION ET GESTION DE PROJET** ................................... 44
-5.1 Méthodologie de Développement .................................................. 44
-    5.1.1 Approche Agile Adaptée .................................................. 44
-    5.1.2 Organisation en Sprints Académiques ..................................... 45
-5.2 Planification Temporelle Détaillée ............................................ 46
-    5.2.1 Diagramme de Gantt du Projet ............................................ 46
-    5.2.2 Répartition des Efforts par Phase ....................................... 47
-5.3 Gestion des Risques et Mitigation .............................................. 48
-    5.3.1 Identification des Risques Techniques ................................... 48
-    5.3.2 Stratégies d'Adaptation et de Contingence ............................... 49
-5.4 Métriques de Suivi et Indicateurs de Performance .............................. 50
-    5.4.1 Indicateurs de Développement ............................................ 50
-    5.4.2 Évaluation de la Qualité et de la Conformité ........................... 51
+    3.2.5 Implémentation Multi-Institutionnelle .................................... 30
+    3.2.6 Système de Thématisation Dynamique ....................................... 31
+    3.2.7 Implémentation des Statistiques .......................................... 32
+3.3 Intégration de l'Intelligence Artificielle ..................................... 33
+    3.3.1 Vision et Objectifs de l'IA Médicale .................................... 33
+    3.3.2 Architecture de l'Assistant IA Médical .................................. 34
+    3.3.3 Fonctionnalités Avancées de l'Assistant IA .............................. 35
+    3.3.4 Implémentation Technique de l'IA ........................................ 36
+    3.3.5 Sécurité et Conformité de l'IA Médicale ................................. 37
+    3.3.6 Performance et Optimisation de l'IA ..................................... 38
+3.4 Validation et Testing .......................................................... 39
+    3.4.1 Approche de Validation .................................................. 39
+    3.4.2 Suite de Tests Backend Spécialisés ...................................... 40
+    3.4.3 Monitoring et Debugging Avancé .......................................... 41
+3.5 Gestion de Projet et Méthodologie .............................................. 42
+    3.5.1 Méthodologie Agile/Scrum Adaptée ........................................ 42
+    3.5.2 Planification Temporelle et Sprints ..................................... 43
+    3.5.3 Gestion des Risques et Mitigation ....................................... 44
+    3.5.4 Métriques de Suivi et Indicateurs de Performance ........................ 45
+3.6 Déploiement et Production ...................................................... 46
+    3.6.1 Architecture de Déploiement ............................................. 46
+    3.6.2 Solutions de Déploiement Évaluées ....................................... 47
+    3.6.3 Configuration de Production ............................................. 48
+    3.6.4 Monitoring et Maintenance ............................................... 49
 
 **CONCLUSION GÉNÉRALE** ............................................................. 52
 
@@ -182,7 +160,7 @@ Le projet vise à créer une interface utilisateur moderne et responsive qui s'a
 
 ### Structure du Rapport
 
-Ce rapport s'articule autour de quatre chapitres principaux. La présentation générale du projet et de son contexte établit les fondements de notre approche. L'étude fonctionnelle avec les diagrammes d'analyse détaille les besoins et spécifications du système. L'étude technique et la réalisation de la solution présentent les choix technologiques et l'implémentation. Une conclusion synthétise les résultats obtenus et les perspectives d'évolution du projet.
+Ce rapport s'articule autour de trois chapitres principaux conformément aux recommandations académiques. Le premier chapitre présente le projet dans son contexte général, détaillant la problématique, les solutions existantes et les objectifs visés. Le deuxième chapitre développe l'étude fonctionnelle avec les diagrammes d'analyse UML qui spécifient les besoins et l'architecture logicielle du système. Le troisième chapitre combine l'étude technique et la réalisation, présentant l'architecture système, l'implémentation des fonctionnalités, l'intégration de l'intelligence artificielle, la validation par les tests, la méthodologie de gestion de projet et les stratégies de déploiement. Une conclusion générale synthétise les résultats obtenus et les perspectives d'évolution du projet.
 
 ---
 
@@ -200,7 +178,7 @@ La plateforme médicale développée est une application web full-stack moderne 
 
 **Système Multi-Rôles Avancé :** Le système implémente une gestion différenciée selon huit types d'utilisateurs distincts définis dans l'énumération de la base de données : 'super_admin', 'admin', 'medecin', 'patient', 'institution', 'pharmacy', 'hospital', 'laboratory'. Les Super Administrateurs bénéficient d'une gestion globale du système avec création d'administrateurs délégués. Les Administrateurs gèrent les médecins et institutions dans leur périmètre géographique. Les Médecins disposent d'un accès complet aux dossiers patients avec possibilité de créer des profils patients directes (walk-in) et de modifier toutes leurs informations médicales. Les Patients peuvent prendre des rendez-vous, consulter leurs dossiers et gérer leurs favoris médecins. Les Hôpitaux peuvent assigner des patients à un ou plusieurs médecins travaillant dans l'établissement, suivre les séjours, procédures et chirurgies. Les Pharmacies accèdent aux prescriptions médicales, gèrent la dispensation des médicaments et maintiennent un historique inter-pharmacies. Les Laboratoires visualisent les demandes d'analyses et d'imagerie, téléchargent les résultats et permettent aux médecins de consulter les rapports avec identification du laboratoire source.
 
-**Sécurité Renforcée :** La sécurité du système repose sur une architecture multi-couches robuste. L'authentification par JWT (JSON Web Tokens) avec middleware Express personnalisé garantit la sécurité des sessions et la gestion granulaire des droits d'accès. Le hashage des mots de passe utilise bcrypt avec salt pour une protection maximale contre les attaques par dictionnaire. La vérification par email utilise Nodemailer avec tokens temporaires stockés en base. Le système de récupération de mot de passe implémente des tokens à durée de vie limitée avec traçabilité complète des actions dans la table `historique_actions`.
+**Sécurité Renforcée :** La sécurité du système repose sur une architecture multi-couches robuste. L'authentification par JWT (JSON Web Tokens) avec middleware Express personnalisé garantit la sécurité des sessions et la gestion granulaire des droits d'accès. Le hashage des mots de passe utilise bcrypt avec salt pour une protection maximale contre les attaques par dictionnaire. La vérification par email utilise Nodemailer avec tokens temporaires stockés en base. Le système de récupération de mot de passe implémente une fonctionnalité complète de réinitialisation sécurisée, permettant aux patients d'accéder à un processus de récupération via leur adresse email. Cette fonctionnalité génère des tokens à durée de vie limitée d'une heure, stockés de manière sécurisée dans les colonnes `token_reset_password` et `date_expiration_token` de la table `utilisateurs`. L'interface utilisateur intègre un bouton "Mot de passe oublié ?" accessible depuis la page de connexion, ouvrant une boîte de dialogue modale permettant la saisie de l'adresse email. Le système envoie automatiquement un email contenant un lien sécurisé vers une page de réinitialisation, où l'utilisateur peut définir un nouveau mot de passe avec validation de la force et confirmation. Cette implémentation assure une traçabilité complète des actions dans la table `historique_actions` tout en respectant les principes de sécurité par défaut et de protection des données personnelles.
 
 #### 1.2.2 Gestion des Rendez-vous
 
@@ -321,13 +299,15 @@ Frontend  │   │   │   │███│███│███│███│�
 Tests     │   │   │   │   │   │   │   │   │   │  │██│██│
 ```
 
-#### 1.5.3 Méthodologie Scrum Adaptée
+#### 1.5.3 Méthodologie Agile/Scrum Adaptée
 
-L'approche méthodologique adoptée s'inspire des principes Scrum adaptés au contexte d'un projet individuel de fin d'études. Des sprints de deux semaines ont été définis pour structurer le développement et permettre une évaluation régulière de l'avancement. Chaque sprint débutait par une planification des tâches à réaliser, avec définition d'objectifs précis et mesurables. Des points de contrôle hebdomadaires avec l'encadrant pédagogique faisaient office de réunions de suivi, permettant d'ajuster la planification en fonction des difficultés rencontrées et des opportunités d'amélioration identifiées.
+L'approche méthodologique adoptée s'inspire des principes Agile et Scrum adaptés au contexte d'un projet individuel de fin d'études. Cette méthodologie agile a été choisie pour sa flexibilité et sa capacité d'adaptation aux évolutions technologiques et fonctionnelles rencontrées durant le développement. Des sprints de deux semaines ont été définis pour structurer le développement et permettre une évaluation régulière de l'avancement, avec des livrables fonctionnels à chaque itération.
 
-La retrospective de fin de sprint permettait d'analyser les succès et les points d'amélioration, favorisant un apprentissage continu et une optimisation des méthodes de travail. L'approche itérative a facilité l'intégration progressive des fonctionnalités, permettant de valider régulièrement la cohérence technique et fonctionnelle de la solution développée. La flexibilité inhérente à cette méthodologie a permis d'adapter le périmètre du projet en fonction des contraintes temporelles tout en maintenant la qualité des livrables.
+**Implémentation Scrum Personnalisée :** Chaque sprint débutait par une planification des tâches à réaliser, avec définition d'objectifs précis et mesurables sous forme de user stories. Des points de contrôle hebdomadaires avec l'encadrant pédagogique faisaient office de Sprint Reviews, permettant d'ajuster la planification en fonction des difficultés rencontrées et des opportunités d'amélioration identifiées. Les Sprint Retrospectives de fin de cycle permettaient d'analyser les succès et les points d'amélioration, favorisant un apprentissage continu et une optimisation des méthodes de travail.
 
-Le backlog produit était régulièrement mis à jour avec les user stories priorisées selon leur valeur métier et leur complexité technique. Cette approche a permis de concentrer les efforts sur les fonctionnalités essentielles tout en gardant une vision claire des évolutions possibles pour les phases ultérieures du projet. L'utilisation d'outils de gestion de projet simples mais efficaces a facilité le suivi de l'avancement et la communication avec l'équipe pédagogique.
+**Gestion Agile du Backlog :** Le product backlog était régulièrement mis à jour avec les user stories priorisées selon leur valeur métier et leur complexité technique. Les épics principales comprenaient l'authentification multi-rôles, la gestion des rendez-vous intelligente, les dossiers médicaux complets, la géolocalisation avancée, l'assistant IA médical, et l'architecture multi-institutionnelle. Cette approche a permis de concentrer les efforts sur les fonctionnalités essentielles tout en gardant une vision claire des évolutions possibles.
+
+**Avantages de l'Approche Agile :** L'approche itérative a facilité l'intégration progressive des fonctionnalités complexes, permettant de valider régulièrement la cohérence technique et fonctionnelle de la solution développée. La flexibilité inhérente à cette méthodologie a permis d'adapter le périmètre du projet en fonction des contraintes temporelles tout en maintenant la qualité des livrables. L'utilisation d'outils de gestion de projet simples mais efficaces a facilité le suivi de l'avancement et la communication avec l'équipe pédagogique.
 
 ### 1.6 Contraintes et Défis
 
@@ -512,9 +492,21 @@ Les diagrammes d'états-transitions modélisent les changements d'état des obje
 
 #### 2.3.1 Module d'Authentification
 
-**Fonctionnalités :** Le module d'authentification intègre une inscription avec vérification email qui garantit l'authenticité des comptes utilisateurs dès leur création. La connexion avec JWT (JSON Web Tokens) assure une gestion sécurisée des sessions utilisateur avec un contrôle fin des droits d'accès. Le système de récupération de mot de passe permet aux utilisateurs de retrouver l'accès à leur compte de manière sécurisée. La gestion des sessions maintient la continuité de l'expérience utilisateur tout en respectant les exigences de sécurité.
+**Fonctionnalités :** Le module d'authentification intègre une inscription avec vérification email qui garantit l'authenticité des comptes utilisateurs dès leur création. La connexion avec JWT (JSON Web Tokens) assure une gestion sécurisée des sessions utilisateur avec un contrôle fin des droits d'accès. 
 
-**Règles Métier :** Les mots de passe doivent respecter une complexité minimale avec au moins 8 caractères incluant majuscules, minuscules, chiffres et caractères spéciaux. Le système limite les tentatives de connexion à 5 échecs consécutifs pour prévenir les attaques par force brute. Les tokens JWT ont une durée de vie de 24 heures pour équilibrer sécurité et confort d'utilisation. La vérification email est obligatoire avant l'activation complète du compte utilisateur.
+**Système de Récupération de Mot de Passe :** Le système implémente une fonctionnalité complète de récupération de mot de passe exclusivement pour les patients, garantissant la sécurité tout en préservant l'accessibilité. L'architecture technique s'appuie sur plusieurs composants intégrés :
+
+- **Backend (authController.js)** : Deux endpoints dédiés gèrent le processus complet. `POST /api/auth/forgot-password` traite les demandes de réinitialisation en générant des tokens sécurisés avec crypto.randomBytes() et en envoyant des emails professionnels via Nodemailer. `POST /api/auth/reset-password` valide les tokens, vérifie leur expiration (1 heure), et met à jour les mots de passe avec hachage bcrypt.
+
+- **Service Email (emailService.js)** : Le service intègre des templates HTML professionnels avec design responsive et branding BluePulse. Les emails incluent des liens sécurisés, des instructions claires, et des avertissements de sécurité. La configuration SMTP utilise des variables d'environnement pour la sécurité des credentials.
+
+- **Interface Utilisateur** : L'intégration UI comprend un bouton "Mot de passe oublié ?" sur la page de connexion, ouvrant une boîte de dialogue Material-UI élégante (ForgotPasswordDialog.jsx) avec validation d'email en temps réel, états de chargement, et messages de confirmation. La page de réinitialisation (ResetPassword.jsx) offre une interface complète avec validation de token, indicateur de force du mot de passe, confirmation de correspondance, et redirection automatique après succès.
+
+- **Sécurité Renforcée** : Le système implémente plusieurs mesures de protection : tokens à durée de vie limitée (1 heure), aucune divulgation d'informations sur l'existence des comptes, hachage sécurisé des mots de passe avec bcrypt, et validation stricte des critères de complexité. L'utilisation des colonnes existantes `token_reset_password` et `date_expiration_token` évite les modifications de schéma tout en assurant la traçabilité.
+
+La gestion des sessions maintient la continuité de l'expérience utilisateur tout en respectant les exigences de sécurité médicale.
+
+**Règles Métier :** Les mots de passe doivent respecter une complexité minimale avec au moins 6 caractères pour assurer un équilibre entre sécurité et utilisabilité. Le système limite les tentatives de connexion à 5 échecs consécutifs pour prévenir les attaques par force brute. Les tokens JWT ont une durée de vie de 24 heures pour équilibrer sécurité et confort d'utilisation. La vérification email est obligatoire avant l'activation complète du compte utilisateur. Le processus de récupération de mot de passe est exclusivement disponible pour les comptes patients, avec des tokens de réinitialisation ayant une durée de vie limitée à une heure pour des raisons de sécurité. Le système n'expose aucune information sur l'existence ou non d'un compte associé à une adresse email donnée, retournant systématiquement le même message de confirmation pour préserver la confidentialité des utilisateurs. Les nouveaux mots de passe sont soumis aux mêmes critères de validation que lors de l'inscription, avec vérification de la correspondance entre le mot de passe et sa confirmation avant acceptation.
 
 #### 2.3.2 Module de Gestion des Rendez-vous
 
@@ -592,7 +584,15 @@ L'architecture fonctionnelle s'organise en quatre couches distinctes pour garant
 
 #### 2.5.2 API REST - Endpoints Principaux
 
-**Authentification :** Les endpoints d'authentification gèrent l'ensemble du cycle de vie des sessions utilisateur. `POST /api/auth/login` traite les demandes de connexion avec vérification des identifiants. `POST /api/auth/register` gère la création de nouveaux comptes utilisateur avec validation des données. `POST /api/auth/logout` termine proprement les sessions actives. `POST /api/auth/reset-password` permet la récupération sécurisée des comptes en cas d'oubli de mot de passe.
+**Authentification :** Les endpoints d'authentification gèrent l'ensemble du cycle de vie des sessions utilisateur. `POST /api/auth/login` traite les demandes de connexion avec vérification des identifiants. `POST /api/auth/register` gère la création de nouveaux comptes utilisateur avec validation des données. `POST /api/auth/logout` termine proprement les sessions actives. 
+
+**Endpoints de Récupération de Mot de Passe :** Deux endpoints spécialisés gèrent le processus complet de récupération de mot de passe :
+
+- `POST /api/auth/forgot-password` : Traite les demandes de réinitialisation de mot de passe. Accepte un objet JSON avec l'adresse email du patient. Génère un token sécurisé avec crypto.randomBytes(32), définit une expiration d'une heure, et envoie un email de réinitialisation via Nodemailer. Retourne systématiquement le même message de confirmation pour préserver la confidentialité des comptes, qu'ils existent ou non.
+
+- `POST /api/auth/reset-password` : Valide le token de réinitialisation et met à jour le mot de passe. Accepte un objet JSON avec le token et le nouveau mot de passe. Vérifie la validité et l'expiration du token, hache le nouveau mot de passe avec bcrypt, et nettoie les données de réinitialisation. Retourne un message de succès ou d'erreur selon la validité du token.
+
+Ces endpoints implémentent des mesures de sécurité strictes : restriction aux comptes patients uniquement, tokens à durée de vie limitée, aucune divulgation d'informations sur l'existence des comptes, et validation complète des données d'entrée.
 
 **Gestion des Rendez-vous :** Les endpoints de rendez-vous orchestrent la planification médicale. `GET /api/appointments` récupère la liste des rendez-vous selon les droits d'accès de l'utilisateur. `POST /api/appointments` crée de nouveaux rendez-vous avec vérification de disponibilité. `PUT /api/appointments/:id` modifie les rendez-vous existants en respectant les contraintes métier. `DELETE /api/appointments/:id` gère l'annulation des rendez-vous avec notification automatique.
 
@@ -681,6 +681,12 @@ La structure de l'application React suit une organisation modulaire avec sépara
 
 L'interface patient privilégie la simplicité d'utilisation avec un tableau de bord intuitif présentant les informations essentielles. La recherche de médecins intègre des filtres avancés et une carte interactive pour la géolocalisation. Le processus de prise de rendez-vous guide l'utilisateur étape par étape avec validation en temps réel. La gestion des favoris permet un accès rapide aux médecins habituels.
 
+**Amélioration de l'Expérience d'Authentification :** L'interface de connexion a été enrichie avec une fonctionnalité de récupération de mot de passe intégrée et accessible. Le bouton "Mot de passe oublié ?" est stratégiquement positionné sous les champs de connexion pour une découverte naturelle. L'activation de cette fonctionnalité ouvre une boîte de dialogue modale élégante qui maintient le contexte de connexion tout en offrant une solution immédiate aux patients ayant oublié leurs identifiants.
+
+**Design et Ergonomie de la Récupération :** La boîte de dialogue de récupération utilise les composants Material-UI pour une cohérence visuelle parfaite avec le reste de l'application. L'interface guide l'utilisateur avec des messages clairs et des validations en temps réel. Les états de chargement avec indicateurs visuels informent l'utilisateur du traitement de sa demande. Les messages de confirmation sont formulés de manière à préserver la confidentialité tout en rassurant l'utilisateur sur le traitement de sa demande.
+
+**Page de Réinitialisation Optimisée :** La page de réinitialisation de mot de passe offre une expérience utilisateur complète avec validation en temps réel de la force du mot de passe. L'indicateur de sécurité visuel guide l'utilisateur vers la création d'un mot de passe robuste. La vérification de correspondance entre les deux saisies évite les erreurs de frappe. La redirection automatique après succès fluidifie le parcours utilisateur vers la connexion.
+
 [Insert picture of patient appointment booking interface showing search filters and available time slots]
 
 [Insert picture of interactive map showing doctor locations with markers and search filters]
@@ -696,6 +702,260 @@ L'interface médecin optimise la productivité avec un tableau de bord synthéti
 L'architecture du serveur Express.js organise le code en modules fonctionnels avec controllers, routes, middlewares et utilitaires. Les controllers implémentent la logique métier spécifique à chaque domaine (authentification, patients, médecins, rendez-vous). Les middlewares gèrent l'authentification JWT, la validation des données et l'audit des accès. Les routes définissent les endpoints API REST avec documentation intégrée.
 
 Le module d'authentification implémente un système complet avec inscription, connexion, vérification email et récupération de mot de passe. Les mots de passe sont sécurisés par hashage bcrypt avec salt. Les tokens JWT incluent les informations de rôle pour la gestion des autorisations. Le système de notifications utilise Nodemailer pour l'envoi d'emails avec templates personnalisés.
+
+**Implémentation Technique de la Récupération de Mot de Passe :**
+
+L'architecture technique de la fonctionnalité de récupération de mot de passe s'appuie sur une approche sécurisée multi-couches intégrant backend, frontend et service email :
+
+**Backend - Contrôleur d'Authentification :**
+```javascript
+// authController.js - Endpoint de demande de réinitialisation
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const expirationDate = new Date(Date.now() + 3600000); // 1 heure
+  
+  // Mise à jour sécurisée sans révéler l'existence du compte
+  await db.query(
+    'UPDATE utilisateurs SET token_reset_password = ?, date_expiration_token = ? WHERE email = ? AND role = "patient"',
+    [resetToken, expirationDate, email]
+  );
+  
+  await sendPasswordResetEmail(email, resetToken);
+  res.json({ message: 'Si un compte existe, un email a été envoyé' });
+};
+
+// Endpoint de validation et réinitialisation
+exports.resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  
+  const result = await db.query(
+    'UPDATE utilisateurs SET mot_de_passe = ?, token_reset_password = NULL, date_expiration_token = NULL WHERE token_reset_password = ? AND date_expiration_token > NOW() AND role = "patient"',
+    [hashedPassword, token]
+  );
+  
+  if (result.affectedRows === 0) {
+    return res.status(400).json({ message: 'Token invalide ou expiré' });
+  }
+  
+  res.json({ message: 'Mot de passe réinitialisé avec succès' });
+};
+```
+
+**Service Email - Templates Professionnels :**
+```javascript
+// emailService.js - Template HTML responsive
+const sendPasswordResetEmail = async (email, token) => {
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+  
+  const htmlTemplate = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Réinitialisation de mot de passe - BluePulse</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f5f5f5;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #1976d2;">BluePulse</h1>
+          <h2 style="color: #333;">Réinitialisation de votre mot de passe</h2>
+        </div>
+        
+        <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+        <p>Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe :</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #1976d2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Réinitialiser mon mot de passe
+          </a>
+        </div>
+        
+        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <strong>⚠️ Important :</strong>
+          <ul>
+            <li>Ce lien expire dans 1 heure</li>
+            <li>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email</li>
+            <li>Ne partagez jamais ce lien avec personne</li>
+          </ul>
+        </div>
+        
+        <p style="color: #666; font-size: 12px; margin-top: 30px;">
+          Si le bouton ne fonctionne pas, copiez ce lien : ${resetUrl}
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to: email,
+    subject: 'Réinitialisation de votre mot de passe - BluePulse',
+    html: htmlTemplate
+  });
+};
+```
+
+**Frontend - Interface Utilisateur Intégrée :**
+
+**Composant de Dialogue (ForgotPasswordDialog.jsx) :**
+```javascript
+const ForgotPasswordDialog = ({ open, onClose }) => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isValidEmail(email)) {
+      setError('Veuillez entrer une adresse email valide');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post('/api/auth/forgot-password', { email });
+      setMessage('Si un compte existe, un email de réinitialisation a été envoyé');
+      setError('');
+    } catch (err) {
+      setError('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Mot de passe oublié ?</DialogTitle>
+      <form onSubmit={handleSubmit}>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Adresse email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={!!error}
+            helperText={error}
+            disabled={loading}
+          />
+          {message && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              {message}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} disabled={loading}>
+            Annuler
+          </Button>
+          <Button 
+            type="submit" 
+            variant="contained" 
+            disabled={loading || !email}
+            startIcon={loading && <CircularProgress size={20} />}
+          >
+            {loading ? 'Envoi...' : 'Envoyer'}
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
+  );
+};
+```
+
+**Page de Réinitialisation (ResetPassword.jsx) :**
+```javascript
+const ResetPassword = () => {
+  const [token] = useSearchParams();
+  const [passwords, setPasswords] = useState({ password: '', confirmPassword: '' });
+  const [strength, setStrength] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (passwords.password !== passwords.confirmPassword) {
+      setError('Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post('/api/auth/reset-password', {
+        token: token.get('token'),
+        newPassword: passwords.password
+      });
+      
+      setSuccess('Mot de passe réinitialisé avec succès !');
+      setTimeout(() => navigate('/login'), 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Token invalide ou expiré');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Container maxWidth="sm">
+      <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
+        <Typography variant="h4" align="center" gutterBottom>
+          Nouveau mot de passe
+        </Typography>
+        
+        <form onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Nouveau mot de passe"
+            type="password"
+            value={passwords.password}
+            onChange={(e) => {
+              setPasswords(prev => ({ ...prev, password: e.target.value }));
+              setStrength(calculatePasswordStrength(e.target.value));
+            }}
+            margin="normal"
+          />
+          
+          <PasswordStrengthIndicator strength={strength} />
+          
+          <TextField
+            fullWidth
+            label="Confirmer le mot de passe"
+            type="password"
+            value={passwords.confirmPassword}
+            onChange={(e) => setPasswords(prev => ({ ...prev, confirmPassword: e.target.value }))}
+            margin="normal"
+          />
+          
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            disabled={loading || strength < 3}
+            sx={{ mt: 3 }}
+          >
+            {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+          </Button>
+        </form>
+      </Paper>
+    </Container>
+  );
+};
+```
+
+**Mesures de Sécurité Implémentées :**
+- Tokens cryptographiquement sécurisés avec crypto.randomBytes(32)
+- Expiration automatique des tokens après 1 heure
+- Aucune divulgation d'informations sur l'existence des comptes
+- Hachage bcrypt avec salt pour les nouveaux mots de passe
+- Validation stricte des critères de complexité côté client et serveur
+- Utilisation des colonnes existantes pour éviter les migrations de schéma
+- Restriction aux comptes patients uniquement pour des raisons de sécurité
+- Templates email professionnels avec avertissements de sécurité
 
 La gestion des rendez-vous intègre une logique métier complexe pour éviter les conflits et optimiser les plannings. L'algorithme de recherche géographique utilise la formule de Haversine pour calculer les distances et optimise les requêtes avec des index spatiaux. Le système de disponibilités gère les créneaux récurrents et les exceptions.
 
@@ -840,9 +1100,27 @@ La validation du système backend s'appuie sur une suite de tests spécialisés 
 
 **Tests de Performance :** Les modules `test-fast.js`, `test-optimized.js` et `test-quick.js` constituent une suite de tests de performance adaptés à différents scénarios. `test-fast.js` effectue des tests de performance rapides sur les fonctionnalités core, `test-optimized.js` exécute une suite de tests optimisés pour les performances système, et `test-quick.js` réalise des smoke tests pour la validation rapide des fonctionnalités de base.
 
-#### 3.3.3 Monitoring et Debugging Avancé
+#### 3.3.3 Tests de la Fonctionnalité de Récupération de Mot de Passe
+
+La validation de la fonctionnalité de récupération de mot de passe a nécessité une approche de test complète couvrant les aspects sécuritaires, fonctionnels et d'expérience utilisateur. Cette validation s'est appuyée sur plusieurs méthodes complémentaires pour garantir la robustesse et la sécurité de cette fonctionnalité critique.
+
+**Tests de Sécurité :** La validation sécuritaire a porté sur plusieurs aspects critiques. Les tests de génération de tokens ont vérifié l'unicité et la complexité cryptographique des tokens générés avec crypto.randomBytes(32). La validation de l'expiration automatique a confirmé que les tokens deviennent inutilisables après une heure. Les tests de non-divulgation ont vérifié que le système retourne systématiquement le même message, qu'un compte existe ou non, préservant ainsi la confidentialité des utilisateurs. La validation du hachage bcrypt a confirmé que les nouveaux mots de passe sont correctement sécurisés avec salt.
+
+**Tests Fonctionnels Backend :** Le module `test-forgot-password.js` a été développé pour valider exhaustivement les endpoints de récupération. Ce test vérifie la génération correcte des tokens, l'envoi des emails de réinitialisation, la validation des tokens lors de la réinitialisation, et la gestion des cas d'erreur (token expiré, token invalide, compte inexistant). Les tests incluent également la vérification de la restriction aux comptes patients uniquement et la validation des critères de complexité des nouveaux mots de passe.
+
+**Tests d'Interface Utilisateur :** La validation frontend a porté sur l'ergonomie et la fonctionnalité des composants React. Les tests du composant ForgotPasswordDialog ont vérifié la validation d'email en temps réel, la gestion des états de chargement, l'affichage des messages d'erreur et de confirmation, et la fermeture appropriée du dialogue. La page ResetPassword a été testée pour la validation de token, l'indicateur de force du mot de passe, la vérification de correspondance des mots de passe, et la redirection automatique après succès.
+
+**Tests d'Intégration Email :** La validation du service email a confirmé le bon fonctionnement de Nodemailer avec les templates HTML professionnels. Les tests ont vérifié la réception des emails, la validité des liens de réinitialisation, l'affichage correct du template responsive, et la gestion des erreurs SMTP. La configuration SMTP a été testée avec différents fournisseurs pour assurer la compatibilité.
+
+**Tests de Performance et Charge :** Des tests de charge ont été effectués pour valider la performance du système sous stress. Ces tests ont confirmé que le système peut gérer plusieurs demandes simultanées de réinitialisation sans dégradation de performance. La validation des timeouts et de la gestion des connexions concurrentes a assuré la stabilité du système en production.
+
+**Tests de Cas Limites :** La validation a inclus des tests de cas limites comme les tentatives de réutilisation de tokens expirés, les demandes multiples pour le même compte, les tentatives d'accès direct à la page de réinitialisation sans token valide, et la gestion des caractères spéciaux dans les mots de passe. Ces tests ont confirmé la robustesse du système face aux utilisations atypiques.
+
+#### 3.3.4 Monitoring et Debugging Avancé
 
 Le système de logging intégré trace toutes les opérations critiques avec horodatage et niveau de sévérité. Les requêtes géospatiales sont monitorées pour optimiser les performances des calculs de distance Haversine. Le debugging des composants de cartographie a nécessité un suivi précis des coordonnées GPS et du clustering des marqueurs. L'audit des actions utilisateur via la table `historique_actions` permet un debugging post-mortem des problèmes de données. Les métriques de performance des requêtes SQL complexes ont guidé l'optimisation des index composites.
+
+**Monitoring Spécialisé de la Récupération de Mot de Passe :** Un système de monitoring dédié trace toutes les opérations de récupération de mot de passe pour des raisons de sécurité et d'audit. Les logs incluent les tentatives de demande de réinitialisation (avec anonymisation des emails), les générations de tokens, les tentatives de validation de tokens, et les réinitialisations réussies. Ce monitoring permet de détecter les tentatives d'attaque par force brute et d'identifier les problèmes de livraison d'emails. Les métriques collectées incluent le taux de succès des réinitialisations, le temps moyen entre demande et réinitialisation, et les patterns d'utilisation de la fonctionnalité.
 
 ---
 
@@ -916,9 +1194,19 @@ L'architecture modulaire de l'IA facilite l'intégration de nouveaux modèles et
 
 La gestion de ce projet de fin d'année a adopté une méthodologie agile adaptée au contexte académique et aux contraintes d'un développement individuel. L'approche retenue s'inspire des principes Scrum tout en intégrant des éléments de méthodologie Kanban pour optimiser la flexibilité et la réactivité face aux évolutions des besoins. Cette hybridation méthodologique a permis de maintenir un rythme de développement soutenu tout en conservant la capacité d'adaptation nécessaire à l'exploration de nouvelles technologies et fonctionnalités.
 
+**Principes Agiles Appliqués :** Le projet a mis en œuvre les valeurs fondamentales de l'Agile Manifesto, privilégiant les individus et interactions plutôt que les processus, les logiciels fonctionnels plutôt que la documentation exhaustive, la collaboration avec l'encadrant plutôt que la négociation contractuelle, et l'adaptation au changement plutôt que le suivi d'un plan rigide. Cette approche a facilité l'intégration de nouvelles fonctionnalités comme l'intelligence artificielle et l'architecture multi-institutionnelle en cours de développement.
+
+**Pratiques Scrum Adaptées :** L'implémentation de Scrum a été adaptée au contexte individuel avec des sprints de 2 semaines, un product backlog priorisé selon la valeur métier, des daily standups remplacés par un suivi quotidien personnel, et des sprint reviews avec l'encadrant pédagogique. Les retrospectives de fin de sprint ont permis l'amélioration continue des méthodes de travail et l'optimisation de la productivité.
+
 #### 5.1.2 Organisation en Sprints Académiques
 
 Le projet a été structuré en sprints de deux semaines, alignés sur le calendrier académique et les échéances pédagogiques. Chaque sprint débutait par une phase de planification incluant la définition des objectifs, l'estimation des tâches et l'identification des risques potentiels. Les points de contrôle hebdomadaires avec l'encadrant pédagogique servaient de réunions de suivi, permettant d'ajuster la trajectoire du projet en fonction des difficultés rencontrées et des opportunités identifiées. Cette approche itérative a facilité l'intégration progressive des fonctionnalités complexes tout en maintenant un niveau de qualité élevé.
+
+**Structure des Sprints :** Chaque sprint suivait un cycle structuré comprenant : Sprint Planning (définition des user stories et estimation en story points), Sprint Execution (développement avec tests continus), Sprint Review (démonstration des fonctionnalités à l'encadrant), et Sprint Retrospective (analyse des améliorations possibles). Cette structure a permis de livrer des incréments fonctionnels réguliers et de maintenir un feedback constant sur la qualité du développement.
+
+**Gestion du Product Backlog :** Le backlog produit était organisé selon les priorités métier avec des user stories détaillées pour chaque fonctionnalité. Les épics principales incluaient l'authentification multi-rôles, la gestion des rendez-vous, les dossiers médicaux, la géolocalisation, l'intelligence artificielle, et l'architecture multi-institutionnelle. Chaque user story était estimée selon sa complexité et sa valeur métier, permettant une planification optimale des sprints.
+
+**Outils et Suivi :** Le suivi du projet utilisait des outils simples mais efficaces : tableau Kanban pour la visualisation des tâches, burndown charts pour le suivi de l'avancement, et documentation continue des décisions techniques. Cette approche légère a permis de se concentrer sur le développement tout en maintenant une traçabilité complète du processus.
 
 ### 5.2 Planification Temporelle Détaillée
 

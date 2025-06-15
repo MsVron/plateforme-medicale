@@ -16,7 +16,8 @@ const LoginView = ({
   error,
   setUsername,
   setPassword,
-  handleSubmit
+  handleSubmit,
+  onForgotPassword
 }) => {
   return (
     <Container maxWidth="sm">
@@ -129,6 +130,24 @@ const LoginView = ({
             }}
           >
             Se connecter
+          </Button>
+
+          {/* Forgot Password Button */}
+          <Button
+            onClick={onForgotPassword}
+            variant="text"
+            sx={{
+              color: '#4ca1af',
+              textTransform: 'none',
+              fontSize: '0.9rem',
+              '&:hover': {
+                bgcolor: 'rgba(76, 161, 175, 0.05)',
+                color: '#2c3e50',
+              },
+              transition: 'all 0.3s ease',
+            }}
+          >
+            Mot de passe oublié ?
           </Button>
           
           <Button

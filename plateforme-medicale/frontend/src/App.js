@@ -15,6 +15,7 @@ import DashboardLayout from './components/DashboardLayout';
 import Login from './components/Login';
 import PatientRegistrationForm from './components/auth/PatientRegistrationForm';
 import EmailVerification from './components/EmailVerification';
+import ResetPassword from './components/ResetPassword';
 import Unauthorized from './components/Unauthorized';
 import AdminHome from './components/AdminHome';
 import PatientHome from './components/PatientHome';
@@ -27,6 +28,7 @@ import PatientAppointments from './components/patient/PatientAppointments';
 import PatientFavorites from './components/patient/PatientFavorites';
 import medicalTheme, { getThemeForRole } from './styles/theme';
 import ThemeUpdater from './components/ThemeUpdater';
+import LandingPage from './components/LandingPage';
 
 // Import the new pages
 import MedicalRecord from './pages/patient/MedicalRecord';
@@ -113,7 +115,7 @@ function App() {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={
             <AuthRedirect>
               <Login />
@@ -126,6 +128,7 @@ function App() {
             </AuthRedirect>
           } />
           <Route path="/verify-email" element={<EmailVerification />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected routes with DashboardLayout */}
           <Route element={<DashboardLayout />}>

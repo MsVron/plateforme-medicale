@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const { sendPasswordResetEmail, generatePasswordResetToken } = require('../utils/emailService');
 require('dotenv').config();
 
 // -------- AUTH: LOGIN --------
@@ -87,5 +88,121 @@ exports.logout = async (req, res) => {
   } catch (error) {
     console.error('Erreur lors de la déconnexion:', error);
     return res.status(500).json({ message: "Erreur lors de la déconnexion", error: error.message });
+  }
+};
+
+// -------- AUTH: FORGOT PASSWORD --------
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email requis" });
+    }
+
+    // Check if user exists and is a patient
+    const [utilisateurs] = await db.execute(`
+      SELECT u.id, u.nom_utilisateur, u.email, u.role, u.id_specifique_role, p.prenom, p.nom
+      FROM utilisateurs u
+      LEFT JOIN patients p ON u.role = 'patient' AND u.id_specifique_role = p.id
+      WHERE u.email = ? AND u.role = 'patient'
+    `, [email]);
+
+    if (utilisateurs.length === 0) {
+      // Don't reveal if email exists or not for security
+      return res.status(200).json({ 
+        message: "Si cette adresse email est associée à un compte patient, vous recevrez un email de réinitialisation." 
+      });
+    }
+
+    const user = utilisateurs[0];
+
+    // Generate reset token
+    const resetToken = generatePasswordResetToken();
+    const expirationTime = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
+    // Save reset token to database
+    await db.execute(`
+      UPDATE utilisateurs 
+      SET token_reset_password = ?, date_expiration_token = ?
+      WHERE id = ?
+    `, [resetToken, expirationTime, user.id]);
+
+    // Send reset email
+    const emailSent = await sendPasswordResetEmail(
+      user.email, 
+      resetToken, 
+      user.nom_utilisateur
+    );
+
+    if (!emailSent) {
+      console.error('Failed to send password reset email');
+      return res.status(500).json({ 
+        message: "Erreur lors de l'envoi de l'email. Veuillez réessayer plus tard." 
+      });
+    }
+
+    return res.status(200).json({ 
+      message: "Si cette adresse email est associée à un compte patient, vous recevrez un email de réinitialisation." 
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la demande de réinitialisation:', error);
+    return res.status(500).json({ 
+      message: "Erreur lors de la demande de réinitialisation", 
+      error: error.message 
+    });
+  }
+};
+
+// -------- AUTH: RESET PASSWORD --------
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token et nouveau mot de passe requis" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Le mot de passe doit contenir au moins 6 caractères" });
+    }
+
+    // Check if token is valid and not expired
+    const [utilisateurs] = await db.execute(`
+      SELECT id, nom_utilisateur, email, role
+      FROM utilisateurs 
+      WHERE token_reset_password = ? AND date_expiration_token > NOW()
+    `, [token]);
+
+    if (utilisateurs.length === 0) {
+      return res.status(400).json({ 
+        message: "Token de réinitialisation invalide ou expiré" 
+      });
+    }
+
+    const user = utilisateurs[0];
+
+    // Hash the new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password and clear reset token
+    await db.execute(`
+      UPDATE utilisateurs 
+      SET mot_de_passe = ?, token_reset_password = NULL, date_expiration_token = NULL
+      WHERE id = ?
+    `, [hashedPassword, user.id]);
+
+    return res.status(200).json({ 
+      message: "Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter." 
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation du mot de passe:', error);
+    return res.status(500).json({ 
+      message: "Erreur lors de la réinitialisation du mot de passe", 
+      error: error.message 
+    });
   }
 };

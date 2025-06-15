@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import LoginView from './Login.view';
+import ForgotPasswordDialog from './ForgotPasswordDialog';
 
 const LoginContainer = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -14,35 +16,18 @@ const LoginContainer = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        nom_utilisateur: username.trim(),
-        mot_de_passe: password.trim(),
-      });
-      console.log('Login response:', response.data);
-
-      // Log user data before storing
-      const userData = {
-        id: response.data.user.id,
-        username: response.data.user.nom_utilisateur,
-        role: response.data.user.role,
-        prenom: response.data.user.prenom,
-        nom: response.data.user.nom,
-        id_specifique_role: response.data.user.id_specifique_role // Add for debugging
-      };
-      console.log('Storing in localStorage:', {
-        token: response.data.token,
-        user: userData,
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/login`, {
+        nom_utilisateur: username,
+        mot_de_passe: password
       });
 
-      // Store token and user info in localStorage
+      // Store token and user data
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(response.data.user));
 
-      // Trigger theme update
-      window.dispatchEvent(new Event('userDataChanged'));
+      console.log('Login successful:', response.data);
 
-      // Redirect based on role
-      console.log('User role:', response.data.user.role);
+      // Navigate based on user role
       if (['super_admin', 'admin'].includes(response.data.user.role)) {
         console.log('Navigating to /admin');
         navigate('/admin', { replace: true });
@@ -65,15 +50,30 @@ const LoginContainer = () => {
     }
   };
 
+  const handleForgotPassword = () => {
+    setForgotPasswordOpen(true);
+  };
+
+  const handleCloseForgotPassword = () => {
+    setForgotPasswordOpen(false);
+  };
+
   return (
-    <LoginView
-      username={username}
-      password={password}
-      error={error}
-      setUsername={setUsername}
-      setPassword={setPassword}
-      handleSubmit={handleSubmit}
-    />
+    <>
+      <LoginView
+        username={username}
+        password={password}
+        error={error}
+        setUsername={setUsername}
+        setPassword={setPassword}
+        handleSubmit={handleSubmit}
+        onForgotPassword={handleForgotPassword}
+      />
+      <ForgotPasswordDialog
+        open={forgotPasswordOpen}
+        onClose={handleCloseForgotPassword}
+      />
+    </>
   );
 };
 
