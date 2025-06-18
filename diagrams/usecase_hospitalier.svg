@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; fill: #c53030; }
+      .actor { font-family: Arial, sans-serif; font-size: 14px; fill: #2d3748; font-weight: bold; }
+      .usecase { font-family: Arial, sans-serif; font-size: 12px; fill: #2d3748; text-anchor: middle; }
+      .usecase-oval { fill: #fed7d7; stroke: #c53030; stroke-width: 2; }
+      .actor-stick { stroke: #2d3748; stroke-width: 2; fill: none; }
+      .relationship { stroke: #4a5568; stroke-width: 1; }
+      .system-boundary { fill: none; stroke: #c53030; stroke-width: 3; stroke-dasharray: 10,5; }
+    </style>
+  </defs>
+  
+  <!-- Title -->
+  <text x="400" y="30" class="title" text-anchor="middle">Diagramme de Cas d'Utilisation - Hospitalier</text>
+  
+  <!-- System Boundary -->
+  <rect x="200" y="80" width="520" height="350" class="system-boundary" rx="10"/>
+  <text x="460" y="105" class="actor" text-anchor="middle">Système BluePulse - Module Hospitalier</text>
+  
+  <!-- Actor: Hospitalier -->
+  <g id="hospitalier">
+    <circle cx="100" cy="180" r="15" fill="#fed7d7" stroke="#2d3748" stroke-width="2"/>
+    <line x1="100" y1="195" x2="100" y2="230" class="actor-stick"/>
+    <line x1="85" y1="210" x2="115" y2="210" class="actor-stick"/>
+    <line x1="100" y1="230" x2="85" y2="260" class="actor-stick"/>
+    <line x1="100" y1="230" x2="115" y2="260" class="actor-stick"/>
+    <text x="100" y="280" class="actor" text-anchor="middle">Hospitalier</text>
+  </g>
+  
+  <!-- Use Cases -->
+  <!-- Patient Search -->
+  <ellipse cx="350" cy="150" rx="90" ry="25" class="usecase-oval"/>
+  <text x="350" y="155" class="usecase">Rechercher Patient</text>
+  
+  <!-- Doctor Management -->
+  <ellipse cx="550" cy="180" rx="100" ry="25" class="usecase-oval"/>
+  <text x="550" y="185" class="usecase">Ajouter Médecin</text>
+  <text x="550" y="198" class="usecase">à l'Hôpital</text>
+  
+  <ellipse cx="400" cy="220" rx="100" ry="25" class="usecase-oval"/>
+  <text x="400" y="225" class="usecase">Retirer Médecin</text>
+  <text x="400" y="238" class="usecase">de l'Hôpital</text>
+  
+  <!-- Patient Assignment -->
+  <ellipse cx="320" cy="280" rx="110" ry="25" class="usecase-oval"/>
+  <text x="320" y="285" class="usecase">Assigner Patient</text>
+  <text x="320" y="298" class="usecase">à un Médecin</text>
+  
+  <ellipse cx="580" cy="250" rx="110" ry="25" class="usecase-oval"/>
+  <text x="580" y="255" class="usecase">Assigner Patient</text>
+  <text x="580" y="268" class="usecase">à Plusieurs Médecins</text>
+  
+  <!-- Hospital Management -->
+  <ellipse cx="450" cy="320" rx="100" ry="25" class="usecase-oval"/>
+  <text x="450" y="325" class="usecase">Gérer Admissions</text>
+  <text x="450" y="338" class="usecase">et Sorties</text>
+  
+  <ellipse cx="300" cy="380" rx="90" ry="25" class="usecase-oval"/>
+  <text x="300" y="385" class="usecase">Voir Tableau</text>
+  <text x="300" y="398" class="usecase">de Bord</text>
+  
+  <!-- Relationships -->
+  <line x1="115" y1="170" x2="260" y2="150" class="relationship"/>
+  <line x1="115" y1="180" x2="450" y2="180" class="relationship"/>
+  <line x1="115" y1="190" x2="300" y2="220" class="relationship"/>
+  <line x1="115" y1="200" x2="210" y2="280" class="relationship"/>
+  <line x1="115" y1="210" x2="470" y2="250" class="relationship"/>
+  <line x1="115" y1="220" x2="350" y2="320" class="relationship"/>
+  <line x1="115" y1="230" x2="210" y2="380" class="relationship"/>
+  
+  <!-- Include relationships -->
+  <line x1="350" y1="175" x2="450" y2="180" class="relationship" stroke-dasharray="5,5"/>
+  <text x="400" y="165" class="usecase" style="font-size: 10px;">«include»</text>
+  
+  <line x1="430" y1="280" x2="470" y2="250" class="relationship" stroke-dasharray="5,5"/>
+  <text x="450" y="265" class="usecase" style="font-size: 10px;">«include»</text>
+  
+  <!-- Actor: Médecin (Secondary) -->
+  <g id="medecin">
+    <circle cx="80" cy="350" r="12" fill="#fed7d7" stroke="#2d3748" stroke-width="1"/>
+    <line x1="80" y1="362" x2="80" y2="385" class="actor-stick"/>
+    <line x1="70" y1="375" x2="90" y2="375" class="actor-stick"/>
+    <line x1="80" y1="385" x2="70" y2="405" class="actor-stick"/>
+    <line x1="80" y1="385" x2="90" y2="405" class="actor-stick"/>
+    <text x="80" y="425" class="actor" text-anchor="middle" style="font-size: 12px;">Médecin</text>
+  </g>
+  
+  <!-- Actor: Patient (Secondary) -->
+  <g id="patient">
+    <circle cx="80" cy="450" r="12" fill="#fed7d7" stroke="#2d3748" stroke-width="1"/>
+    <line x1="80" y1="462" x2="80" y2="485" class="actor-stick"/>
+    <line x1="70" y1="475" x2="90" y2="475" class="actor-stick"/>
+    <line x1="80" y1="485" x2="70" y2="505" class="actor-stick"/>
+    <line x1="80" y1="485" x2="90" y2="505" class="actor-stick"/>
+    <text x="80" y="525" class="actor" text-anchor="middle" style="font-size: 12px;">Patient</text>
+  </g>
+  
+  <!-- Secondary relationships -->
+  <line x1="92" y1="370" x2="450" y2="180" class="relationship" stroke-dasharray="3,3"/>
+  <line x1="92" y1="470" x2="260" y2="150" class="relationship" stroke-dasharray="3,3"/>
+  
+  <!-- Legend -->
+  <g id="legend">
+    <rect x="20" y="120" width="150" height="80" fill="#f7fafc" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="95" y="135" class="actor" text-anchor="middle" style="font-size: 12px;">Légende</text>
+    <line x1="30" y1="145" x2="50" y2="145" class="relationship"/>
+    <text x="55" y="150" class="usecase" style="font-size: 10px;">Utilise</text>
+    <line x1="30" y1="160" x2="50" y2="160" class="relationship" stroke-dasharray="5,5"/>
+    <text x="55" y="165" class="usecase" style="font-size: 10px;">Inclut</text>
+    <line x1="30" y1="175" x2="50" y2="175" class="relationship" stroke-dasharray="3,3"/>
+    <text x="55" y="180" class="usecase" style="font-size: 10px;">Interaction</text>
+  </g>
+</svg> 

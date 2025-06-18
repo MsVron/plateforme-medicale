@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant M as "Médecin"
+    participant S as "BluePulse"
+    participant P as "Patient"
+
+    Note over M,P: Consultation Médicale
+
+    M->>S: Ouverture du dossier patient
+    S->>M: Affichage des informations médicales
+
+    M->>S: Saisie de la consultation
+    M->>S: Prescription de traitements
+    
+    alt Analyses nécessaires
+        M->>S: Prescription d'analyses
+        S->>P: Notification laboratoire
+    end
+
+    S->>S: Sauvegarde du dossier
+    S->>P: Dossier mis à jour 

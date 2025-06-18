@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tier1Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#81C784;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="tier2Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#64B5F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="tier3Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF9800;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFB74D;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+
+  
+  <!-- Tier 1: Presentation Layer -->
+  <rect x="50" y="60" width="700" height="140" rx="10" fill="url(#tier1Gradient)" stroke="#388E3C" stroke-width="2"/>
+  <text x="400" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">
+    TIER 1 : COUCHE DE PRÉSENTATION
+  </text>
+  
+  <!-- Frontend components -->
+  <rect x="80" y="100" width="150" height="80" rx="5" fill="#E8F5E8" stroke="#4CAF50" stroke-width="1"/>
+  <text x="155" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2E7D32">React.js</text>
+  <text x="155" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2E7D32">• 45+ Composants</text>
+  <text x="155" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2E7D32">• Hooks Perso</text>
+  <text x="155" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2E7D32">• Services API</text>
+  
+  <rect x="250" y="100" width="150" height="80" rx="5" fill="#E8F5E8" stroke="#4CAF50" stroke-width="1"/>
+  <text x="325" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2E7D32">Material-UI</text>
+  <text x="325" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2E7D32">• Navigation</text>
+  <text x="325" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2E7D32">• Formulaires</text>
+  <text x="325" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2E7D32">• Graphiques</text>
+  
+  <rect x="420" y="100" width="150" height="80" rx="5" fill="#E8F5E8" stroke="#4CAF50" stroke-width="1"/>
+  <text x="495" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2E7D32">Thématisation</text>
+  <text x="495" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2E7D32">• 8 Thèmes</text>
+  <text x="495" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2E7D32">• CSS Variables</text>
+  <text x="495" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2E7D32">• Responsive</text>
+  
+  <!-- Communication arrow 1 -->
+  <path d="M 400 210 L 400 240" stroke="#333" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="450" y="230" font-family="Arial, sans-serif" font-size="12" fill="#333">HTTPS/REST API</text>
+  
+  <!-- Tier 2: Business Logic Layer -->
+  <rect x="50" y="250" width="700" height="140" rx="10" fill="url(#tier2Gradient)" stroke="#1976D2" stroke-width="2"/>
+  <text x="400" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">
+    TIER 2 : COUCHE LOGIQUE MÉTIER
+  </text>
+  
+  <!-- Backend components -->
+  <rect x="80" y="290" width="150" height="80" rx="5" fill="#E3F2FD" stroke="#2196F3" stroke-width="1"/>
+  <text x="155" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1565C0">Authentification</text>
+  <text x="155" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565C0">• JWT Tokens</text>
+  <text x="155" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565C0">• 8 Rôles</text>
+  <text x="155" y="355" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565C0">• Middlewares</text>
+  
+  <rect x="250" y="290" width="150" height="80" rx="5" fill="#E3F2FD" stroke="#2196F3" stroke-width="1"/>
+  <text x="325" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1565C0">Express.js</text>
+  <text x="325" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565C0">• Médecins</text>
+  <text x="325" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565C0">• Patients</text>
+  <text x="325" y="355" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565C0">• Hôpitaux</text>
+  
+  <rect x="420" y="290" width="150" height="80" rx="5" fill="#E3F2FD" stroke="#2196F3" stroke-width="1"/>
+  <text x="495" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1565C0">Services IA</text>
+  <text x="495" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565C0">• Phi-3-mini</text>
+  <text x="495" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565C0">• FastAPI</text>
+  <text x="495" y="355" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565C0">• Google Colab</text>
+  
+  <!-- Communication arrow 2 -->
+  <path d="M 400 400 L 400 430" stroke="#333" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="450" y="420" font-family="Arial, sans-serif" font-size="12" fill="#333">SQL Queries</text>
+  
+  <!-- Tier 3: Data Layer -->
+  <rect x="50" y="440" width="700" height="140" rx="10" fill="url(#tier3Gradient)" stroke="#F57C00" stroke-width="2"/>
+  <text x="400" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">
+    TIER 3 : COUCHE DE DONNÉES
+  </text>
+  
+  <!-- Database components -->
+  <rect x="80" y="480" width="150" height="80" rx="5" fill="#FFF3E0" stroke="#FF9800" stroke-width="1"/>
+  <text x="155" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#E65100">Tables Core</text>
+  <text x="155" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E65100">• utilisateurs</text>
+  <text x="155" y="530" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E65100">• medecins</text>
+  <text x="155" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E65100">• institutions</text>
+  
+  <rect x="250" y="480" width="150" height="80" rx="5" fill="#FFF3E0" stroke="#FF9800" stroke-width="1"/>
+  <text x="325" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#E65100">Données Médicales</text>
+  <text x="325" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E65100">• patients</text>
+  <text x="325" y="530" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E65100">• consultations</text>
+  <text x="325" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E65100">• traitements</text>
+  
+  <rect x="420" y="480" width="150" height="80" rx="5" fill="#FFF3E0" stroke="#FF9800" stroke-width="1"/>
+  <text x="495" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#E65100">Analyses</text>
+  <text x="495" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E65100">• 200+ Types</text>
+  <text x="495" y="530" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E65100">• Résultats</text>
+  <text x="495" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E65100">• Catégories</text>
+  
+  <!-- MySQL Label -->
+  <text x="400" y="580" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+    MySQL Database (25+ Tables)
+  </text>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+  </defs>
+</svg> 

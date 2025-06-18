@@ -15,172 +15,173 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow-x: auto;
         }
     </style>
 </head>
 <body>
     <div class="diagram-container">
-        <svg width="1000" height="700" viewBox="0 0 1000 700">
+        <svg width="1600" height="1000" viewBox="0 0 1600 1000">
             <!-- Title -->
-            <text x="500" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#2c3e50">
-                Diagramme Institutions Médicales - Plateforme Médicale
+            <text x="800" y="40" text-anchor="middle" font-size="24" font-weight="bold" fill="#2c3e50">
+                Diagramme des Cas d'Usage - Institutions Médicales
             </text>
             
             <!-- Main System Box -->
-            <rect x="250" y="80" width="500" height="550" rx="20" ry="20" 
+            <rect x="450" y="100" width="700" height="550" rx="20" ry="20" 
                   fill="none" stroke="#34495e" stroke-width="3"/>
             
             <!-- System Title -->
-            <text x="500" y="110" text-anchor="middle" font-size="16" font-weight="bold" fill="#2c3e50">
-                Système BluePulse - Module Institutions Médicales
+            <text x="800" y="140" text-anchor="middle" font-size="18" font-weight="bold" fill="#2c3e50">
+                Système BluePulse - Plateforme Médicale Unifiée
             </text>
             
-            <!-- Use Cases (Vertical Layout) -->
-            <!-- Authentification -->
-            <ellipse cx="500" cy="150" rx="80" ry="25" fill="#e8f4fd" stroke="#3498db" stroke-width="2"/>
-            <text x="500" y="155" text-anchor="middle" font-size="12" fill="#2c3e50">Authentification</text>
+            <!-- Main Use Cases (Central) -->
+            <!-- Consulter Dossier Patient -->
+            <ellipse cx="800" cy="220" rx="130" ry="35" fill="#e8f4fd" stroke="#3498db" stroke-width="3"/>
+            <text x="800" y="227" text-anchor="middle" font-size="16" font-weight="bold" fill="#2c3e50">Consulter Dossier Patient</text>
             
-            <!-- Recherche de Patients -->
-            <ellipse cx="500" cy="200" rx="90" ry="25" fill="#e8f6f3" stroke="#27ae60" stroke-width="2"/>
-            <text x="500" y="205" text-anchor="middle" font-size="12" fill="#2c3e50">Recherche de Patients</text>
+            <!-- Rechercher Patient -->
+            <ellipse cx="800" cy="320" rx="120" ry="35" fill="#e8f6f3" stroke="#27ae60" stroke-width="3"/>
+            <text x="800" y="327" text-anchor="middle" font-size="16" font-weight="bold" fill="#2c3e50">Rechercher Patient</text>
             
-            <!-- Dossiers Médicaux -->
-            <ellipse cx="500" cy="250" rx="85" ry="25" fill="#fef9e7" stroke="#f39c12" stroke-width="2"/>
-            <text x="500" y="255" text-anchor="middle" font-size="12" fill="#2c3e50">Dossiers Médicaux</text>
+            <!-- Prescrire Traitement -->
+            <ellipse cx="800" cy="420" rx="130" ry="35" fill="#fef9e7" stroke="#f39c12" stroke-width="3"/>
+            <text x="800" y="427" text-anchor="middle" font-size="16" font-weight="bold" fill="#2c3e50">Prescrire Traitement</text>
             
-            <!-- Gestion Multi-Institutionnelle -->
-            <ellipse cx="500" cy="300" rx="110" ry="25" fill="#f4ecf7" stroke="#9b59b6" stroke-width="2"/>
-            <text x="500" y="305" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion Multi-Institutionnelle</text>
+            <!-- Gérer Communication -->
+            <ellipse cx="800" cy="520" rx="130" ry="35" fill="#f4ecf7" stroke="#9b59b6" stroke-width="3"/>
+            <text x="800" y="527" text-anchor="middle" font-size="16" font-weight="bold" fill="#2c3e50">Gérer Communication</text>
             
-            <!-- Gestion des Prescriptions -->
-            <ellipse cx="500" cy="350" rx="100" ry="25" fill="#fdeaea" stroke="#e74c3c" stroke-width="2"/>
-            <text x="500" y="355" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion des Prescriptions</text>
+            <!-- Include Use Cases (Left Side) -->
+            <!-- S'Authentifier -->
+            <ellipse cx="250" cy="200" rx="100" ry="30" fill="#fdeaea" stroke="#e74c3c" stroke-width="2"/>
+            <text x="250" y="207" text-anchor="middle" font-size="14" fill="#2c3e50">S'Authentifier</text>
             
-            <!-- Gestion des Analyses -->
-            <ellipse cx="500" cy="400" rx="95" ry="25" fill="#eaf2f8" stroke="#2980b9" stroke-width="2"/>
-            <text x="500" y="405" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion des Analyses</text>
+            <!-- Vérifier Droits -->
+            <ellipse cx="250" cy="300" rx="100" ry="30" fill="#fdeaea" stroke="#e74c3c" stroke-width="2"/>
+            <text x="250" y="307" text-anchor="middle" font-size="14" fill="#2c3e50">Vérifier Droits</text>
             
-            <!-- Gestion des Admissions -->
-            <ellipse cx="500" cy="450" rx="100" ry="25" fill="#e8f8f5" stroke="#16a085" stroke-width="2"/>
-            <text x="500" y="455" text-anchor="middle" font-size="12" fill="#2c3e50">Gestion des Admissions</text>
+            <!-- Tracer Actions -->
+            <ellipse cx="250" cy="400" rx="100" ry="30" fill="#fdeaea" stroke="#e74c3c" stroke-width="2"/>
+            <text x="250" y="407" text-anchor="middle" font-size="14" fill="#2c3e50">Tracer Actions</text>
             
-            <!-- Dispensation Médicaments -->
-            <ellipse cx="500" cy="500" rx="105" ry="25" fill="#fdf2e9" stroke="#d68910" stroke-width="2"/>
-            <text x="500" y="505" text-anchor="middle" font-size="12" fill="#2c3e50">Dispensation Médicaments</text>
+            <!-- Extend Use Cases (Right Side) -->
+            <!-- Délivrer Médicaments -->
+            <ellipse cx="1350" cy="250" rx="120" ry="30" fill="#eaf2f8" stroke="#2980b9" stroke-width="2"/>
+            <text x="1350" y="257" text-anchor="middle" font-size="14" fill="#2c3e50">Délivrer Médicaments</text>
             
-            <!-- Communication -->
-            <ellipse cx="500" cy="550" rx="80" ry="25" fill="#f8f9fa" stroke="#6c757d" stroke-width="2"/>
-            <text x="500" y="555" text-anchor="middle" font-size="12" fill="#2c3e50">Communication</text>
+            <!-- Effectuer Analyses -->
+            <ellipse cx="1350" cy="350" rx="120" ry="30" fill="#eaf2f8" stroke="#2980b9" stroke-width="2"/>
+            <text x="1350" y="357" text-anchor="middle" font-size="14" fill="#2c3e50">Effectuer Analyses</text>
+            
+            <!-- Hospitaliser Patient -->
+            <ellipse cx="1350" cy="450" rx="120" ry="30" fill="#eaf2f8" stroke="#2980b9" stroke-width="2"/>
+            <text x="1350" y="457" text-anchor="middle" font-size="14" fill="#2c3e50">Hospitaliser Patient</text>
             
             <!-- Actors -->
-            <!-- Hôpital (Left) -->
-            <g id="hopital">
-                <circle cx="100" cy="200" r="15" fill="none" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="100" y1="215" x2="100" y2="260" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="85" y1="230" x2="115" y2="230" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="100" y1="260" x2="85" y2="290" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="100" y1="260" x2="115" y2="290" stroke="#2c3e50" stroke-width="2"/>
-                <text x="100" y="310" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Hôpital</text>
+            <!-- Médecin (Top Left) -->
+            <g id="medecin">
+                <circle cx="150" cy="150" r="20" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="150" y1="170" x2="150" y2="230" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="130" y1="190" x2="170" y2="190" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="150" y1="230" x2="130" y2="270" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="150" y1="230" x2="170" y2="270" stroke="#2c3e50" stroke-width="2"/>
+                <text x="150" y="290" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Médecin</text>
             </g>
             
-            <!-- Pharmacie (Left) -->
-            <g id="pharmacie">
-                <circle cx="100" cy="400" r="15" fill="none" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="100" y1="415" x2="100" y2="460" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="85" y1="430" x2="115" y2="430" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="100" y1="460" x2="85" y2="490" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="100" y1="460" x2="115" y2="490" stroke="#2c3e50" stroke-width="2"/>
-                <text x="100" y="510" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Pharmacie</text>
+            <!-- Pharmacien (Bottom Left) -->
+            <g id="pharmacien">
+                <circle cx="150" cy="700" r="20" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="150" y1="720" x2="150" y2="780" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="130" y1="740" x2="170" y2="740" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="150" y1="780" x2="130" y2="820" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="150" y1="780" x2="170" y2="820" stroke="#2c3e50" stroke-width="2"/>
+                <text x="150" y="840" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Pharmacien</text>
             </g>
             
-            <!-- Laboratoire (Right) -->
-            <g id="laboratoire">
-                <circle cx="900" cy="300" r="15" fill="none" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="900" y1="315" x2="900" y2="360" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="885" y1="330" x2="915" y2="330" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="900" y1="360" x2="885" y2="390" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="900" y1="360" x2="915" y2="390" stroke="#2c3e50" stroke-width="2"/>
-                <text x="900" y="410" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Laboratoire</text>
+            <!-- Laborantin (Top Right) -->
+            <g id="laborantin">
+                <circle cx="1450" cy="150" r="20" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="1450" y1="170" x2="1450" y2="230" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="1430" y1="190" x2="1470" y2="190" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="1450" y1="230" x2="1430" y2="270" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="1450" y1="230" x2="1470" y2="270" stroke="#2c3e50" stroke-width="2"/>
+                <text x="1450" y="290" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Laborantin</text>
             </g>
             
-            <!-- Institution (Right) -->
-            <g id="institution">
-                <circle cx="900" cy="500" r="15" fill="none" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="900" y1="515" x2="900" y2="560" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="885" y1="530" x2="915" y2="530" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="900" y1="560" x2="885" y2="590" stroke="#2c3e50" stroke-width="2"/>
-                <line x1="900" y1="560" x2="915" y2="590" stroke="#2c3e50" stroke-width="2"/>
-                <text x="900" y="610" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Institution</text>
+            <!-- Personnel Hospitalier (Bottom Right) -->
+            <g id="personnel">
+                <circle cx="1450" cy="700" r="20" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="1450" y1="720" x2="1450" y2="780" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="1430" y1="740" x2="1470" y2="740" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="1450" y1="780" x2="1430" y2="820" stroke="#2c3e50" stroke-width="2"/>
+                <line x1="1450" y1="780" x2="1470" y2="820" stroke="#2c3e50" stroke-width="2"/>
+                <text x="1450" y="840" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Personnel</text>
+                <text x="1450" y="855" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Hospitalier</text>
             </g>
             
-            <!-- Connections -->
-            <!-- Hôpital connections -->
-            <line x1="115" y1="180" x2="420" y2="150" stroke="#3498db" stroke-width="2"/>
-            <line x1="115" y1="200" x2="410" y2="200" stroke="#27ae60" stroke-width="2"/>
-            <line x1="115" y1="220" x2="415" y2="250" stroke="#f39c12" stroke-width="2"/>
-            <line x1="115" y1="240" x2="390" y2="300" stroke="#9b59b6" stroke-width="2"/>
-            <line x1="115" y1="260" x2="400" y2="450" stroke="#16a085" stroke-width="2"/>
-            <line x1="115" y1="280" x2="420" y2="550" stroke="#6c757d" stroke-width="2"/>
+            <!-- Main Actor Connections -->
+            <!-- Médecin connections -->
+            <line x1="170" y1="180" x2="670" y2="220" stroke="#3498db" stroke-width="2"/>
+            <line x1="170" y1="200" x2="680" y2="320" stroke="#27ae60" stroke-width="2"/>
+            <line x1="170" y1="220" x2="670" y2="420" stroke="#f39c12" stroke-width="2"/>
+            <line x1="170" y1="240" x2="670" y2="520" stroke="#9b59b6" stroke-width="2"/>
             
-            <!-- Pharmacie connections -->
-            <line x1="115" y1="380" x2="420" y2="150" stroke="#3498db" stroke-width="2"/>
-            <line x1="115" y1="400" x2="410" y2="200" stroke="#27ae60" stroke-width="2"/>
-            <line x1="115" y1="420" x2="415" y2="250" stroke="#f39c12" stroke-width="2"/>
-            <line x1="115" y1="440" x2="390" y2="300" stroke="#9b59b6" stroke-width="2"/>
-            <line x1="115" y1="460" x2="400" y2="350" stroke="#e74c3c" stroke-width="2"/>
-            <line x1="115" y1="480" x2="395" y2="500" stroke="#d68910" stroke-width="2"/>
-            <line x1="115" y1="500" x2="420" y2="550" stroke="#6c757d" stroke-width="2"/>
+            <!-- Pharmacien connections -->
+            <line x1="170" y1="680" x2="670" y2="220" stroke="#3498db" stroke-width="2"/>
+            <line x1="170" y1="700" x2="680" y2="320" stroke="#27ae60" stroke-width="2"/>
+            <line x1="170" y1="720" x2="670" y2="520" stroke="#9b59b6" stroke-width="2"/>
             
-            <!-- Laboratoire connections -->
-            <line x1="885" y1="280" x2="580" y2="150" stroke="#3498db" stroke-width="2"/>
-            <line x1="885" y1="300" x2="590" y2="200" stroke="#27ae60" stroke-width="2"/>
-            <line x1="885" y1="320" x2="585" y2="250" stroke="#f39c12" stroke-width="2"/>
-            <line x1="885" y1="340" x2="610" y2="300" stroke="#9b59b6" stroke-width="2"/>
-            <line x1="885" y1="360" x2="595" y2="400" stroke="#2980b9" stroke-width="2"/>
-            <line x1="885" y1="380" x2="580" y2="550" stroke="#6c757d" stroke-width="2"/>
+            <!-- Laborantin connections -->
+            <line x1="1430" y1="180" x2="930" y2="220" stroke="#3498db" stroke-width="2"/>
+            <line x1="1430" y1="200" x2="920" y2="320" stroke="#27ae60" stroke-width="2"/>
+            <line x1="1430" y1="220" x2="930" y2="520" stroke="#9b59b6" stroke-width="2"/>
             
-            <!-- Institution connections -->
-            <line x1="885" y1="480" x2="580" y2="150" stroke="#3498db" stroke-width="2"/>
-            <line x1="885" y1="500" x2="585" y2="250" stroke="#f39c12" stroke-width="2"/>
-            <line x1="885" y1="520" x2="610" y2="300" stroke="#9b59b6" stroke-width="2"/>
-            <line x1="885" y1="540" x2="580" y2="550" stroke="#6c757d" stroke-width="2"/>
+            <!-- Personnel Hospitalier connections -->
+            <line x1="1430" y1="680" x2="930" y2="220" stroke="#3498db" stroke-width="2"/>
+            <line x1="1430" y1="700" x2="920" y2="320" stroke="#27ae60" stroke-width="2"/>
+            <line x1="1430" y1="720" x2="930" y2="520" stroke="#9b59b6" stroke-width="2"/>
             
-            <!-- Include/Exclude relationships -->
-            <!-- Include relationships (dashed lines with <<include>>) -->
-            <line x1="410" y1="200" x2="420" y2="150" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
-            <text x="430" y="175" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            <!-- Include Relationships (dashed lines from main use cases to include use cases) -->
+            <line x1="670" y1="220" x2="350" y2="200" stroke="#e74c3c" stroke-width="2" stroke-dasharray="10,5"/>
+            <text x="500" y="205" font-size="12" fill="#e74c3c" font-weight="bold">&lt;&lt;include&gt;&gt;</text>
             
-            <line x1="400" y1="350" x2="415" y2="250" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
-            <text x="420" y="300" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            <line x1="680" y1="320" x2="350" y2="200" stroke="#e74c3c" stroke-width="2" stroke-dasharray="10,5"/>
+            <text x="480" y="255" font-size="12" fill="#e74c3c" font-weight="bold">&lt;&lt;include&gt;&gt;</text>
             
-            <line x1="395" y1="400" x2="415" y2="250" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
-            <text x="420" y="325" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            <line x1="670" y1="220" x2="350" y2="300" stroke="#e74c3c" stroke-width="2" stroke-dasharray="10,5"/>
+            <text x="500" y="265" font-size="12" fill="#e74c3c" font-weight="bold">&lt;&lt;include&gt;&gt;</text>
             
-            <line x1="395" y1="500" x2="400" y2="350" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
-            <text x="410" y="425" font-size="10" fill="#7f8c8d">&lt;&lt;include&gt;&gt;</text>
+            <line x1="670" y1="420" x2="350" y2="400" stroke="#e74c3c" stroke-width="2" stroke-dasharray="10,5"/>
+            <text x="500" y="415" font-size="12" fill="#e74c3c" font-weight="bold">&lt;&lt;include&gt;&gt;</text>
             
-            <!-- Extend relationships (dashed lines with <<extends>>) -->
-            <line x1="390" y1="300" x2="400" y2="450" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
-            <text x="410" y="375" font-size="10" fill="#7f8c8d">&lt;&lt;extends&gt;&gt;</text>
+            <!-- Extend Relationships (dashed lines from extend use cases to main use cases) -->
+            <line x1="1230" y1="250" x2="930" y2="420" stroke="#2980b9" stroke-width="2" stroke-dasharray="10,5"/>
+            <text x="1100" y="330" font-size="12" fill="#2980b9" font-weight="bold">&lt;&lt;extends&gt;&gt;</text>
             
-            <line x1="610" y1="300" x2="595" y2="400" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
-            <text x="620" y="350" font-size="10" fill="#7f8c8d">&lt;&lt;extends&gt;&gt;</text>
+            <line x1="1230" y1="350" x2="930" y2="420" stroke="#2980b9" stroke-width="2" stroke-dasharray="10,5"/>
+            <text x="1100" y="390" font-size="12" fill="#2980b9" font-weight="bold">&lt;&lt;extends&gt;&gt;</text>
+            
+            <line x1="1230" y1="450" x2="930" y2="220" stroke="#2980b9" stroke-width="2" stroke-dasharray="10,5"/>
+            <text x="1100" y="340" font-size="12" fill="#2980b9" font-weight="bold">&lt;&lt;extends&gt;&gt;</text>
             
             <!-- Legend -->
-            <rect x="20" y="580" width="200" height="100" rx="5" ry="5" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
-            <text x="30" y="600" font-size="12" font-weight="bold" fill="#2c3e50">Légende:</text>
-            <line x1="30" y1="615" x2="60" y2="615" stroke="#2c3e50" stroke-width="2"/>
-            <text x="70" y="620" font-size="10" fill="#2c3e50">Association</text>
-            <line x1="30" y1="635" x2="60" y2="635" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
-            <text x="70" y="640" font-size="10" fill="#7f8c8d">Include/Extends</text>
+            <rect x="50" y="880" width="350" height="100" rx="5" ry="5" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+            <text x="60" y="905" font-size="14" font-weight="bold" fill="#2c3e50">Légende:</text>
+            <line x1="60" y1="925" x2="100" y2="925" stroke="#2c3e50" stroke-width="2"/>
+            <text x="110" y="930" font-size="12" fill="#2c3e50">Association</text>
+            <line x1="60" y1="945" x2="100" y2="945" stroke="#e74c3c" stroke-width="2" stroke-dasharray="10,5"/>
+            <text x="110" y="950" font-size="12" fill="#e74c3c">Include (requis)</text>
+            <line x1="200" y1="945" x2="240" y2="945" stroke="#2980b9" stroke-width="2" stroke-dasharray="10,5"/>
+            <text x="250" y="950" font-size="12" fill="#2980b9">Extends (optionnel)</text>
             
             <!-- Notes -->
-            <rect x="780" y="580" width="200" height="100" rx="5" ry="5" fill="#fff3cd" stroke="#ffeaa7" stroke-width="1"/>
-            <text x="790" y="600" font-size="12" font-weight="bold" fill="#856404">Notes:</text>
-            <text x="790" y="620" font-size="10" fill="#856404">• Recherche unifiée par CNE</text>
-            <text x="790" y="635" font-size="10" fill="#856404">• Partage sécurisé des données</text>
-            <text x="790" y="650" font-size="10" fill="#856404">• Traçabilité inter-institutions</text>
-            <text x="790" y="665" font-size="10" fill="#856404">• Communication temps réel</text>
+            <rect x="1200" y="880" width="350" height="100" rx="5" ry="5" fill="#fff3cd" stroke="#ffeaa7" stroke-width="1"/>
+            <text x="1210" y="905" font-size="14" font-weight="bold" fill="#856404">Fonctionnalités Principales:</text>
+            <text x="1210" y="925" font-size="12" fill="#856404">• Accès unifié aux dossiers patients</text>
+            <text x="1210" y="945" font-size="12" fill="#856404">• Communication inter-institutionnelle</text>
+            <text x="1210" y="965" font-size="12" fill="#856404">• Traçabilité et sécurité</text>
         </svg>
     </div>
 </body>

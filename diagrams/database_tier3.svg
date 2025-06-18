@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333">
+    Base de Données MySQL - Tier 3 Architecture
+  </text>
+  
+  <!-- Core Tables -->
+  <rect x="50" y="80" width="200" height="120" rx="8" fill="#FFE0B2" stroke="#FF9800" stroke-width="2"/>
+  <text x="150" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#E65100">
+    TABLES CORE
+  </text>
+  <text x="150" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• utilisateurs</text>
+  <text x="150" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• medecins</text>
+  <text x="150" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• institutions</text>
+  <text x="150" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• rendez_vous</text>
+  <text x="150" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• specialites</text>
+  
+  <!-- Medical Data -->
+  <rect x="300" y="80" width="200" height="120" rx="8" fill="#FFE0B2" stroke="#FF9800" stroke-width="2"/>
+  <text x="400" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#E65100">
+    DONNÉES MÉDICALES
+  </text>
+  <text x="400" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• patients</text>
+  <text x="400" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• consultations</text>
+  <text x="400" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• traitements</text>
+  <text x="400" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• allergies</text>
+  <text x="400" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• antecedents</text>
+  
+  <!-- Analysis Data -->
+  <rect x="550" y="80" width="200" height="120" rx="8" fill="#FFE0B2" stroke="#FF9800" stroke-width="2"/>
+  <text x="650" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#E65100">
+    ANALYSES & IMAGERIE
+  </text>
+  <text x="650" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• 200+ Types</text>
+  <text x="650" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• Résultats</text>
+  <text x="650" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• Catégories</text>
+  <text x="650" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• Référentiels</text>
+  <text x="650" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E65100">• Constantes</text>
+  
+  <!-- MySQL Label -->
+  <text x="400" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#E65100">
+    MySQL Database (25+ Tables Interconnectées)
+  </text>
+</svg> 

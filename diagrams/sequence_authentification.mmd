@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant U as "Utilisateur"
+    participant S as "BluePulse"
+
+    Note over U,S: Connexion à la Plateforme
+
+    U->>S: Saisie email et mot de passe
+    S->>S: Vérification des identifiants
+    
+    alt Connexion réussie
+        S->>U: Accès autorisé
+        
+        alt Médecin
+            S->>U: Interface Médecin
+        else Patient  
+            S->>U: Interface Patient
+        else Hôpital/Pharmacie/Laboratoire
+            S->>U: Interface Établissement
+        else Administrateur
+            S->>U: Interface Administration
+        end
+    else Connexion échouée
+        S->>U: Message d'erreur
+    end 

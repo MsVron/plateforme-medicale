@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="550" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; fill: #2563eb; }
+      .actor { font-family: Arial, sans-serif; font-size: 14px; fill: #2d3748; font-weight: bold; }
+      .usecase { font-family: Arial, sans-serif; font-size: 12px; fill: #2d3748; text-anchor: middle; }
+      .usecase-oval { fill: #dbeafe; stroke: #2563eb; stroke-width: 2; }
+      .actor-stick { stroke: #2d3748; stroke-width: 2; fill: none; }
+      .relationship { stroke: #4a5568; stroke-width: 1; }
+      .system-boundary { fill: none; stroke: #2563eb; stroke-width: 3; stroke-dasharray: 10,5; }
+    </style>
+  </defs>
+  
+  <!-- Title -->
+  <text x="400" y="30" class="title" text-anchor="middle">Diagramme de Cas d'Utilisation - Administrateurs</text>
+  
+  <!-- System Boundary -->
+  <rect x="200" y="80" width="520" height="400" class="system-boundary" rx="10"/>
+  <text x="460" y="105" class="actor" text-anchor="middle">Système BluePulse - Module Administration</text>
+  
+  <!-- Actor: Admin -->
+  <g id="admin">
+    <circle cx="100" cy="180" r="15" fill="#dbeafe" stroke="#2d3748" stroke-width="2"/>
+    <line x1="100" y1="195" x2="100" y2="230" class="actor-stick"/>
+    <line x1="85" y1="210" x2="115" y2="210" class="actor-stick"/>
+    <line x1="100" y1="230" x2="85" y2="260" class="actor-stick"/>
+    <line x1="100" y1="230" x2="115" y2="260" class="actor-stick"/>
+    <text x="100" y="280" class="actor" text-anchor="middle">Admin</text>
+  </g>
+  
+  <!-- Actor: Super Admin -->
+  <g id="superadmin">
+    <circle cx="100" cy="350" r="15" fill="#dbeafe" stroke="#2d3748" stroke-width="2"/>
+    <line x1="100" y1="365" x2="100" y2="400" class="actor-stick"/>
+    <line x1="85" y1="380" x2="115" y2="380" class="actor-stick"/>
+    <line x1="100" y1="400" x2="85" y2="430" class="actor-stick"/>
+    <line x1="100" y1="400" x2="115" y2="430" class="actor-stick"/>
+    <text x="100" y="450" class="actor" text-anchor="middle">Super Admin</text>
+  </g>
+  
+  <!-- Use Cases -->
+  <!-- User Management -->
+  <ellipse cx="350" cy="150" rx="90" ry="25" class="usecase-oval"/>
+  <text x="350" y="155" class="usecase">Gérer Utilisateurs</text>
+  
+  <ellipse cx="550" cy="180" rx="100" ry="25" class="usecase-oval"/>
+  <text x="550" y="185" class="usecase">Valider Comptes</text>
+  <text x="550" y="198" class="usecase">Médecins</text>
+  
+  <ellipse cx="400" cy="220" rx="110" ry="25" class="usecase-oval"/>
+  <text x="400" y="225" class="usecase">Approuver</text>
+  <text x="400" y="238" class="usecase">Institutions</text>
+  
+  <!-- System Management -->
+  <ellipse cx="320" cy="280" rx="100" ry="25" class="usecase-oval"/>
+  <text x="320" y="285" class="usecase">Consulter</text>
+  <text x="320" y="298" class="usecase">Statistiques</text>
+  
+  <ellipse cx="580" cy="250" rx="90" ry="25" class="usecase-oval"/>
+  <text x="580" y="255" class="usecase">Gérer Spécialités</text>
+  <text x="580" y="268" class="usecase">Médicales</text>
+  
+  <!-- Super Admin Only -->
+  <ellipse cx="450" cy="320" rx="100" ry="25" class="usecase-oval"/>
+  <text x="450" y="325" class="usecase">Créer</text>
+  <text x="450" y="338" class="usecase">Administrateurs</text>
+  
+  <ellipse cx="300" cy="380" rx="90" ry="25" class="usecase-oval"/>
+  <text x="300" y="385" class="usecase">Gérer Système</text>
+  <text x="300" y="398" class="usecase">Global</text>
+  
+  <ellipse cx="580" cy="350" rx="100" ry="25" class="usecase-oval"/>
+  <text x="580" y="355" class="usecase">Configurer</text>
+  <text x="580" y="368" class="usecase">Paramètres</text>
+  
+  <ellipse cx="450" cy="400" rx="90" ry="25" class="usecase-oval"/>
+  <text x="450" y="405" class="usecase">Voir Logs</text>
+  <text x="450" y="418" class="usecase">Système</text>
+  
+  <!-- Admin Relationships -->
+  <line x1="115" y1="170" x2="260" y2="150" class="relationship"/>
+  <line x1="115" y1="180" x2="450" y2="180" class="relationship"/>
+  <line x1="115" y1="190" x2="290" y2="220" class="relationship"/>
+  <line x1="115" y1="200" x2="220" y2="280" class="relationship"/>
+  <line x1="115" y1="210" x2="490" y2="250" class="relationship"/>
+  
+  <!-- Super Admin Relationships -->
+  <line x1="115" y1="340" x2="260" y2="150" class="relationship"/>
+  <line x1="115" y1="350" x2="450" y2="180" class="relationship"/>
+  <line x1="115" y1="360" x2="290" y2="220" class="relationship"/>
+  <line x1="115" y1="370" x2="220" y2="280" class="relationship"/>
+  <line x1="115" y1="380" x2="490" y2="250" class="relationship"/>
+  <line x1="115" y1="390" x2="350" y2="320" class="relationship"/>
+  <line x1="115" y1="400" x2="210" y2="380" class="relationship"/>
+  <line x1="115" y1="410" x2="480" y2="350" class="relationship"/>
+  <line x1="115" y1="420" x2="360" y2="400" class="relationship"/>
+  
+  <!-- Include relationships -->
+  <line x1="350" y1="175" x2="450" y2="180" class="relationship" stroke-dasharray="5,5"/>
+  <text x="400" y="165" class="usecase" style="font-size: 10px;">«include»</text>
+  
+  <line x1="510" y1="220" x2="520" y2="250" class="relationship" stroke-dasharray="5,5"/>
+  <text x="530" y="235" class="usecase" style="font-size: 10px;">«include»</text>
+  
+  <!-- Extend relationships for Super Admin -->
+  <line x1="350" y1="320" x2="260" y2="150" class="relationship" stroke-dasharray="7,3"/>
+  <text x="290" y="240" class="usecase" style="font-size: 10px;">«extend»</text>
+  
+  <!-- Legend -->
+  <g id="legend">
+    <rect x="20" y="120" width="150" height="100" fill="#f7fafc" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="95" y="135" class="actor" text-anchor="middle" style="font-size: 12px;">Légende</text>
+    <line x1="30" y1="145" x2="50" y2="145" class="relationship"/>
+    <text x="55" y="150" class="usecase" style="font-size: 10px;">Utilise</text>
+    <line x1="30" y1="160" x2="50" y2="160" class="relationship" stroke-dasharray="5,5"/>
+    <text x="55" y="165" class="usecase" style="font-size: 10px;">Inclut</text>
+    <line x1="30" y1="175" x2="50" y2="175" class="relationship" stroke-dasharray="7,3"/>
+    <text x="55" y="180" class="usecase" style="font-size: 10px;">Étend</text>
+    <text x="30" y="195" class="usecase" style="font-size: 10px;">Super Admin:</text>
+    <text x="30" y="205" class="usecase" style="font-size: 10px;">Toutes fonctions</text>
+    <text x="30" y="215" class="usecase" style="font-size: 10px;">+ Système global</text>
+  </g>
+</svg> 

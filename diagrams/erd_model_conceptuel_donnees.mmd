@@ -1,0 +1,68 @@
+erDiagram
+    %% Modèle de Données Simplifié - BluePulse
+    
+    UTILISATEURS {
+        int id PK
+        varchar email
+        varchar role "patient, medecin, institution"
+    }
+
+    PATIENTS {
+        int id PK
+        varchar nom
+        varchar prenom
+        varchar telephone
+        varchar email
+    }
+
+    MEDECINS {
+        int id PK
+        varchar nom
+        varchar prenom
+        varchar specialite
+        decimal tarif_consultation
+    }
+
+    INSTITUTIONS {
+        int id PK
+        varchar nom
+        varchar type "hôpital, pharmacie, laboratoire"
+        varchar adresse
+    }
+
+    RENDEZ_VOUS {
+        int id PK
+        int patient_id FK
+        int medecin_id FK
+        datetime date_heure
+        varchar motif
+        varchar statut "confirmé, terminé, annulé"
+    }
+
+    CONSULTATIONS {
+        int id PK
+        int rendez_vous_id FK
+        text diagnostic
+        text prescription
+    }
+
+    DOSSIER_MEDICAL {
+        int id PK
+        int patient_id FK
+        text allergies
+        text antecedents
+        text traitements
+    }
+
+    %% Relations Principales
+    
+    UTILISATEURS ||--o{ PATIENTS : "profil patient"
+    UTILISATEURS ||--o{ MEDECINS : "profil médecin"
+    UTILISATEURS ||--o{ INSTITUTIONS : "profil institution"
+
+    PATIENTS ||--o{ RENDEZ_VOUS : "prend"
+    MEDECINS ||--o{ RENDEZ_VOUS : "reçoit"
+    
+    RENDEZ_VOUS ||--o| CONSULTATIONS : "génère"
+    
+    PATIENTS ||--|| DOSSIER_MEDICAL : "possède" 

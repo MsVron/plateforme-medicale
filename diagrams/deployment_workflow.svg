@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="460" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; fill: #2563eb; }
+      .box-text { font-family: Arial, sans-serif; font-size: 14px; fill: #1f2937; font-weight: bold; text-anchor: middle; }
+      .sub-text { font-family: Arial, sans-serif; font-size: 12px; fill: #6b7280; text-anchor: middle; }
+      .step-text { font-family: Arial, sans-serif; font-size: 11px; fill: #374151; text-anchor: middle; }
+      .box { fill: #f3f4f6; stroke: #374151; stroke-width: 2; rx: 8; }
+      .github-box { fill: #f8fafc; stroke: #1f2937; stroke-width: 2; }
+      .vercel-box { fill: #fafafa; stroke: #000000; stroke-width: 2; }
+      .railway-box { fill: #f5f3ff; stroke: #7c3aed; stroke-width: 2; }
+      .production-box { fill: #ecfdf5; stroke: #059669; stroke-width: 2; }
+      .arrow { stroke: #374151; stroke-width: 3; fill: none; marker-end: url(#arrowhead); }
+      .down-arrow { stroke: #6b7280; stroke-width: 2; fill: none; marker-end: url(#downarrowhead); }
+    </style>
+    
+    <!-- Arrow markers -->
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+              refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#374151" />
+      </marker>
+      <marker id="downarrowhead" markerWidth="10" markerHeight="7" 
+              refX="5" refY="6" orient="auto">
+        <polygon points="0 0, 10 0, 5 7" fill="#6b7280" />
+      </marker>
+    </defs>
+  </defs>
+  
+  <!-- Title -->
+  <text x="450" y="25" class="title" text-anchor="middle">Workflow de Déploiement BluePulse</text>
+  
+  <!-- Main Workflow Boxes -->
+  
+  <!-- GitHub Box -->
+  <rect x="50" y="60" width="150" height="80" class="github-box"/>
+  <text x="125" y="85" class="box-text">GitHub</text>
+  <text x="125" y="105" class="sub-text">Push</text>
+  
+  <!-- Vercel Box -->
+  <rect x="250" y="60" width="150" height="80" class="vercel-box"/>
+  <text x="325" y="85" class="box-text">Vercel</text>
+  <text x="325" y="105" class="sub-text">Build</text>
+  
+  <!-- Railway Box -->
+  <rect x="450" y="60" width="150" height="80" class="railway-box"/>
+  <text x="525" y="85" class="box-text">Railway</text>
+  <text x="525" y="105" class="sub-text">Deploy</text>
+  
+  <!-- Production Box -->
+  <rect x="650" y="60" width="150" height="80" class="production-box"/>
+  <text x="725" y="85" class="box-text">Production</text>
+  <text x="725" y="105" class="sub-text">Live</text>
+  
+  <!-- Horizontal Arrows -->
+  <line x1="200" y1="100" x2="240" y2="100" class="arrow"/>
+  <line x1="400" y1="100" x2="440" y2="100" class="arrow"/>
+  <line x1="600" y1="100" x2="640" y2="100" class="arrow"/>
+  
+  <!-- Vertical Arrows -->
+  <line x1="125" y1="150" x2="125" y2="180" class="down-arrow"/>
+  <line x1="325" y1="150" x2="325" y2="180" class="down-arrow"/>
+  <line x1="525" y1="150" x2="525" y2="180" class="down-arrow"/>
+  <line x1="725" y1="150" x2="725" y2="180" class="down-arrow"/>
+  
+  <!-- Step Description Boxes -->
+  
+  <!-- Code Change -->
+  <rect x="50" y="190" width="150" height="60" class="box"/>
+  <text x="125" y="210" class="step-text">Code Change</text>
+  <text x="125" y="225" class="step-text">- Git commit</text>
+  <text x="125" y="238" class="step-text">- Auto trigger</text>
+  
+  <!-- Frontend Build -->
+  <rect x="250" y="190" width="150" height="60" class="box"/>
+  <text x="325" y="210" class="step-text">Frontend Build</text>
+  <text x="325" y="225" class="step-text">- React build</text>
+  <text x="325" y="238" class="step-text">- Static files</text>
+  
+  <!-- Backend Deploy -->
+  <rect x="450" y="190" width="150" height="60" class="box"/>
+  <text x="525" y="210" class="step-text">Backend Deploy</text>
+  <text x="525" y="225" class="step-text">- Node.js start</text>
+  <text x="525" y="238" class="step-text">- Database connect</text>
+  
+  <!-- Users Access -->
+  <rect x="650" y="190" width="150" height="60" class="box"/>
+  <text x="725" y="210" class="step-text">Users Access</text>
+  <text x="725" y="225" class="step-text">- HTTPS access</text>
+  <text x="725" y="238" class="step-text">- Full features</text>
+  
+  <!-- Platform Labels -->
+  <text x="125" y="275" class="step-text" style="font-weight: bold;">Git Repository</text>
+  <text x="325" y="275" class="step-text" style="font-weight: bold;">Frontend Platform</text>
+  <text x="525" y="275" class="step-text" style="font-weight: bold;">Backend Platform</text>
+  <text x="725" y="275" class="step-text" style="font-weight: bold;">Live Application</text>
+  
+  <!-- ASCII Diagram Reference -->
+  <text x="50" y="320" class="step-text" style="font-size: 9px; font-family: monospace;">┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐</text>
+  <text x="50" y="335" class="step-text" style="font-size: 9px; font-family: monospace;">│   GitHub    │───▶│   Vercel    │───▶│   Railway   │───▶│ Production  │</text>
+  <text x="50" y="350" class="step-text" style="font-size: 9px; font-family: monospace;">│   Push      │    │   Build     │    │   Deploy    │    │   Live      │</text>
+  <text x="50" y="365" class="step-text" style="font-size: 9px; font-family: monospace;">└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘</text>
+  <text x="50" y="380" class="step-text" style="font-size: 9px; font-family: monospace;">       │                   │                   │                   │</text>
+  <text x="50" y="395" class="step-text" style="font-size: 9px; font-family: monospace;">       ▼                   ▼                   ▼                   ▼</text>
+  <text x="50" y="410" class="step-text" style="font-size: 9px; font-family: monospace;">   Code Change      Frontend Build      Backend Deploy      Users Access</text>
+  <text x="50" y="425" class="step-text" style="font-size: 9px; font-family: monospace;">   - Git commit     - React build       - Node.js start     - HTTPS access</text>
+  <text x="50" y="440" class="step-text" style="font-size: 9px; font-family: monospace;">   - Auto trigger   - Static files      - Database connect  - Full features</text>
+</svg> 

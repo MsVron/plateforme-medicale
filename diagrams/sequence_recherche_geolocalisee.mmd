@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant P as "Patient"
+    participant S as "BluePulse"
+    participant C as "Carte"
+
+    Note over P,C: Recherche de Médecins
+
+    P->>S: Recherche par spécialité ou localisation
+    S->>S: Localisation du patient
+    S->>P: Liste des médecins proches
+
+    S->>C: Affichage sur la carte
+    C->>P: Médecins géolocalisés
+
+    P->>S: Sélection d'un médecin
+    S->>P: Profil détaillé du médecin
+    
+    alt Prise de rendez-vous
+        P->>S: Demande de rendez-vous
+    else Ajout aux favoris
+        P->>S: Sauvegarde en favori
+    end 

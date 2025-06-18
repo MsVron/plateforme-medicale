@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant P as "Patient"
+    participant S as "BluePulse"
+    participant M as "Médecin"
+
+    Note over P,M: Prise de Rendez-vous
+
+    P->>S: Recherche de médecin
+    S->>P: Liste des médecins disponibles
+
+    P->>S: Sélection médecin et créneau
+    S->>S: Vérification disponibilité
+    
+    alt Créneau libre
+        S->>P: Rendez-vous confirmé
+        S->>M: Notification nouveau patient
+        S->>P: Rappel automatique (24h avant)
+    else Créneau occupé
+        S->>P: Proposition d'autres créneaux
+    end 
