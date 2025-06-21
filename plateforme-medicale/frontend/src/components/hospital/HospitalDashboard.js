@@ -26,8 +26,9 @@ import {
   Refresh,
   MedicalServices,
   MonitorHeart,
-  Emergency,
-  Hotel
+  Warning,
+  Hotel,
+  AssignmentInd
 } from '@mui/icons-material';
 import hospitalService from '../../services/hospitalService';
 import PatientSearchTab from './PatientSearchTab';
@@ -35,6 +36,7 @@ import HospitalPatientsTab from './HospitalPatientsTab';
 import WalkInPatientTab from './WalkInPatientTab';
 import BedManagementTab from './BedManagementTab';
 import SurgeryScheduleTab from './SurgeryScheduleTab';
+import HospitalDoctorsTab from './HospitalDoctorsTab';
 
 const HospitalDashboard = () => {
   const [tabValue, setTabValue] = useState(() => {
@@ -45,6 +47,7 @@ const HospitalDashboard = () => {
     if (path.includes('/patient-direct')) return 2;
     if (path.includes('/bed-management')) return 3;
     if (path.includes('/surgery-schedule')) return 4;
+    if (path.includes('/doctors')) return 5;
     return 0; // default to search tab
   });
   const [loading, setLoading] = useState(true);
@@ -76,6 +79,7 @@ const HospitalDashboard = () => {
     else if (path.includes('/patient-direct')) setTabValue(2);
     else if (path.includes('/bed-management')) setTabValue(3);
     else if (path.includes('/surgery-schedule')) setTabValue(4);
+    else if (path.includes('/doctors')) setTabValue(5);
   }, [window.location.pathname]);
 
   const fetchDashboardStats = async () => {
@@ -289,7 +293,7 @@ const HospitalDashboard = () => {
             '&:hover': { transform: 'translateY(-4px)' }
           }}>
             <CardContent sx={{ textAlign: 'center' }}>
-              <Emergency sx={{ fontSize: 40, mb: 1 }} />
+              <Warning sx={{ fontSize: 40, mb: 1 }} />
               <Typography variant="h4" component="div" sx={{ fontWeight: 'bold' }}>
                 {stats.emergencyPatients}
               </Typography>
@@ -440,6 +444,11 @@ const HospitalDashboard = () => {
               label="Chirurgies Programmées" 
               iconPosition="start"
             />
+            <Tab 
+              icon={<AssignmentInd />} 
+              label="Médecins Hôpital" 
+              iconPosition="start"
+            />
           </Tabs>
         </Box>
 
@@ -475,6 +484,13 @@ const HospitalDashboard = () => {
           )}
           {tabValue === 4 && (
             <SurgeryScheduleTab 
+              onSuccess={showSuccess} 
+              onError={showError}
+              onRefresh={fetchDashboardStats}
+            />
+          )}
+          {tabValue === 5 && (
+            <HospitalDoctorsTab 
               onSuccess={showSuccess} 
               onError={showError}
               onRefresh={fetchDashboardStats}

@@ -22,6 +22,8 @@ router.get('/beds/stats', verifyToken, isHospital, hospitalController.getBedStat
 router.get('/beds', verifyToken, isHospital, hospitalController.getBeds);
 router.post('/beds', verifyToken, isHospital, hospitalController.createBed);
 router.put('/beds/:bedId', verifyToken, isHospital, hospitalController.updateBed);
+router.post('/beds/:bedId/assign', verifyToken, isHospital, hospitalController.assignPatientToBed);
+router.post('/beds/:bedId/transfer', verifyToken, isHospital, hospitalController.transferPatient);
 router.get('/wards', verifyToken, isHospital, hospitalController.getWards);
 
 // Surgery management routes
@@ -30,5 +32,10 @@ router.get('/surgeries', verifyToken, isHospital, hospitalController.getSurgerie
 router.post('/surgeries', verifyToken, isHospital, hospitalController.createSurgery);
 router.put('/surgeries/:surgeryId', verifyToken, isHospital, hospitalController.updateSurgery);
 router.get('/operating-rooms', verifyToken, isHospital, hospitalController.getOperatingRooms);
+
+// Doctor management routes
+router.get('/doctors/search', verifyToken, isHospital, hospitalController.searchDoctors);
+router.post('/doctors/:doctorId/assign', verifyToken, isHospital, hospitalController.addDoctorToHospital);
+router.delete('/doctors/:doctorId/remove', verifyToken, isHospital, hospitalController.removeDoctorFromHospital);
 
 module.exports = router; 

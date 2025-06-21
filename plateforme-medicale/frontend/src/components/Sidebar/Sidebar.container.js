@@ -16,7 +16,10 @@ import {
   LocalPharmacy as PharmacyIcon,
   AssignmentInd as AssignmentIndIcon,
   FolderOpen as FolderOpenIcon,
-  ManageAccounts as ManageAccountsIcon
+  ManageAccounts as ManageAccountsIcon,
+  LocalHospital as LocalHospitalIcon,
+  Bed as BedIcon,
+  PersonSearch as PersonSearchIcon
 } from '@mui/icons-material';
 import SidebarView from './Sidebar.view';
 
@@ -66,6 +69,17 @@ const SidebarContainer = () => {
       { text: 'Rechercher un patient', path: '/medecin/patients/search', icon: <SearchIcon /> },
       { text: 'Dossiers médicaux', path: '/medecin/medical-records', icon: <MedicalIcon /> },
       { text: 'Calendrier', path: '/medecin/calendar', icon: <CalendarIcon /> },
+    ];
+  } else if (user.role === 'hospital') {
+    menuItems = [
+      { text: 'Tableau de bord', path: '/hospital/dashboard', icon: <LocalHospitalIcon /> },
+      { text: 'Rechercher Patient', path: '/hospital/patients/search', icon: <PersonSearchIcon /> },
+      { text: 'Patients Hôpital', path: '/hospital/patients', icon: <PeopleIcon /> },
+      { text: 'Patient Direct', path: '/hospital/patient-direct', icon: <PersonAddIcon /> },
+      { text: 'Gestion des Lits', path: '/hospital/bed-management', icon: <BedIcon /> },
+      { text: 'Chirurgies', path: '/hospital/surgery-schedule', icon: <MedicalIcon /> },
+      { text: 'Médecins Hôpital', path: '/hospital/doctors', icon: <AssignmentIndIcon /> },
+      { text: 'Statistiques', path: '/hospital/statistics', icon: <BarChartIcon /> },
     ];
   } else if (user.role === 'institution') {
     menuItems = [

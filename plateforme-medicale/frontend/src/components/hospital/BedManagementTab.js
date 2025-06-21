@@ -27,7 +27,8 @@ import {
   Tooltip,
   CircularProgress,
   LinearProgress,
-  Avatar
+  Avatar,
+  Autocomplete
 } from '@mui/material';
 import {
   Bed,
@@ -44,10 +45,15 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
   const [beds, setBeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bedDialog, setBedDialog] = useState({ open: false, bed: null, mode: 'add' });
+  const [assignmentDialog, setAssignmentDialog] = useState({ open: false, bed: null });
+  const [transferDialog, setTransferDialog] = useState({ open: false, bed: null });
   const [wardFilter, setWardFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [wards, setWards] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [availablePatients, setAvailablePatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   
   const [bedForm, setBedForm] = useState({
     bed_number: '',
@@ -55,6 +61,19 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
     room_number: '',
     bed_type: 'standard',
     maintenance_status: 'available'
+  });
+
+  const [assignmentForm, setAssignmentForm] = useState({
+    patient_id: '',
+    doctor_id: '',
+    admission_reason: '',
+    notes: ''
+  });
+
+  const [transferForm, setTransferForm] = useState({
+    new_bed_id: '',
+    transfer_reason: '',
+    notes: ''
   });
 
   const bedTypes = [
@@ -75,6 +94,8 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
   useEffect(() => {
     fetchBeds();
     fetchWards();
+    fetchPatients();
+    fetchDoctors();
   }, []);
 
   const fetchBeds = async () => {
@@ -96,6 +117,27 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
       setWards(response.wards || []);
     } catch (error) {
       console.error('Error fetching wards:', error);
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      const response = await hospitalService.getHospitalPatients();
+      setPatients(response.patients || []);
+      // Filter patients who are not currently assigned to beds
+      const unassignedPatients = response.patients?.filter(p => !p.bed_number) || [];
+      setAvailablePatients(unassignedPatients);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
+
+  const fetchDoctors = async () => {
+    try {
+      const response = await hospitalService.getHospitalDoctors();
+      setDoctors(response.doctors || []);
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
     }
   };
 
@@ -138,6 +180,50 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
     }
   };
 
+  const handleAssignPatient = (bed) => {
+    setAssignmentForm({
+      patient_id: '',
+      doctor_id: '',
+      admission_reason: '',
+      notes: ''
+    });
+    setAssignmentDialog({ open: true, bed: bed });
+  };
+
+  const handleSaveAssignment = async () => {
+    try {
+      await hospitalService.assignPatientToBed(assignmentDialog.bed.id, assignmentForm);
+      onSuccess('Patient assigné au lit avec succès');
+      setAssignmentDialog({ open: false, bed: null });
+      fetchBeds();
+      fetchPatients();
+      onRefresh();
+    } catch (error) {
+      onError(error.message || 'Erreur lors de l\'assignation');
+    }
+  };
+
+  const handleTransferPatient = (bed) => {
+    setTransferForm({
+      new_bed_id: '',
+      transfer_reason: '',
+      notes: ''
+    });
+    setTransferDialog({ open: true, bed: bed });
+  };
+
+  const handleSaveTransfer = async () => {
+    try {
+      await hospitalService.transferPatient(transferDialog.bed.id, transferForm);
+      onSuccess('Patient transféré avec succès');
+      setTransferDialog({ open: false, bed: null });
+      fetchBeds();
+      onRefresh();
+    } catch (error) {
+      onError(error.message || 'Erreur lors du transfert');
+    }
+  };
+
   const getStatusChip = (bed) => {
     if (bed.maintenance_status !== 'available') {
       const status = maintenanceStatuses.find(s => s.value === bed.maintenance_status);
@@ -164,6 +250,12 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
             (statusFilter === 'available' && !bed.is_occupied && bed.maintenance_status === 'available') ||
             (statusFilter === 'maintenance' && bed.maintenance_status !== 'available'));
   });
+
+  const availableBedsForTransfer = beds.filter(bed => 
+    !bed.is_occupied && 
+    bed.maintenance_status === 'available' && 
+    bed.id !== transferDialog.bed?.id
+  );
 
   if (loading) {
     return (
@@ -251,7 +343,7 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
               >
                 <MenuItem value="all">Tous les services</MenuItem>
                 {wards.map((ward) => (
-                  <MenuItem key={ward} value={ward}>{ward}</MenuItem>
+                  <MenuItem key={ward.name} value={ward.name}>{ward.name}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -332,14 +424,14 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
                   {getStatusChip(bed)}
                 </TableCell>
                 <TableCell>
-                  {bed.patient_name ? (
+                  {bed.patient_prenom && bed.patient_nom ? (
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: 'primary.main' }}>
-                        {bed.patient_name.charAt(0)}
+                        {bed.patient_prenom.charAt(0)}
                       </Avatar>
                       <Box>
                         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                          {bed.patient_name}
+                          {bed.patient_prenom} {bed.patient_nom}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           Admis le {bed.admission_date ? new Date(bed.admission_date).toLocaleDateString() : '-'}
@@ -361,14 +453,14 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
                     </Tooltip>
                     {!bed.is_occupied && bed.maintenance_status === 'available' && (
                       <Tooltip title="Assigner un patient">
-                        <IconButton size="small" color="primary">
+                        <IconButton size="small" color="primary" onClick={() => handleAssignPatient(bed)}>
                           <PersonAdd />
                         </IconButton>
                       </Tooltip>
                     )}
                     {bed.is_occupied && (
                       <Tooltip title="Transférer le patient">
-                        <IconButton size="small" color="warning">
+                        <IconButton size="small" color="warning" onClick={() => handleTransferPatient(bed)}>
                           <SwapHoriz />
                         </IconButton>
                       </Tooltip>
@@ -450,6 +542,139 @@ const BedManagementTab = ({ onSuccess, onError, onRefresh, stats }) => {
           </Button>
           <Button onClick={handleSaveBed} variant="contained">
             {bedDialog.mode === 'add' ? 'Ajouter' : 'Modifier'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Patient Assignment Dialog */}
+      <Dialog open={assignmentDialog.open} onClose={() => setAssignmentDialog({ open: false, bed: null })} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Assigner un Patient au Lit {assignmentDialog.bed?.bed_number}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <Autocomplete
+                options={availablePatients}
+                getOptionLabel={(patient) => `${patient.prenom} ${patient.nom} (${patient.CNE})`}
+                value={availablePatients.find(p => p.id === assignmentForm.patient_id) || null}
+                onChange={(event, newValue) => {
+                  setAssignmentForm(prev => ({ ...prev, patient_id: newValue?.id || '' }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Sélectionner un patient"
+                    required
+                    fullWidth
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Autocomplete
+                options={doctors}
+                getOptionLabel={(doctor) => `Dr. ${doctor.prenom} ${doctor.nom} - ${doctor.specialite}`}
+                value={doctors.find(d => d.id === assignmentForm.doctor_id) || null}
+                onChange={(event, newValue) => {
+                  setAssignmentForm(prev => ({ ...prev, doctor_id: newValue?.id || '' }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Médecin responsable"
+                    required
+                    fullWidth
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Motif d'admission"
+                value={assignmentForm.admission_reason}
+                onChange={(e) => setAssignmentForm(prev => ({ ...prev, admission_reason: e.target.value }))}
+                fullWidth
+                required
+                multiline
+                rows={2}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Notes"
+                value={assignmentForm.notes}
+                onChange={(e) => setAssignmentForm(prev => ({ ...prev, notes: e.target.value }))}
+                fullWidth
+                multiline
+                rows={2}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAssignmentDialog({ open: false, bed: null })}>
+            Annuler
+          </Button>
+          <Button onClick={handleSaveAssignment} variant="contained">
+            Assigner
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Patient Transfer Dialog */}
+      <Dialog open={transferDialog.open} onClose={() => setTransferDialog({ open: false, bed: null })} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Transférer le Patient du Lit {transferDialog.bed?.bed_number}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Nouveau lit</InputLabel>
+                <Select
+                  value={transferForm.new_bed_id}
+                  onChange={(e) => setTransferForm(prev => ({ ...prev, new_bed_id: e.target.value }))}
+                  label="Nouveau lit"
+                  required
+                >
+                  {availableBedsForTransfer.map((bed) => (
+                    <MenuItem key={bed.id} value={bed.id}>
+                      Lit {bed.bed_number} - {bed.ward_name} ({bed.bed_type})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Motif du transfert"
+                value={transferForm.transfer_reason}
+                onChange={(e) => setTransferForm(prev => ({ ...prev, transfer_reason: e.target.value }))}
+                fullWidth
+                required
+                multiline
+                rows={2}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Notes"
+                value={transferForm.notes}
+                onChange={(e) => setTransferForm(prev => ({ ...prev, notes: e.target.value }))}
+                fullWidth
+                multiline
+                rows={2}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTransferDialog({ open: false, bed: null })}>
+            Annuler
+          </Button>
+          <Button onClick={handleSaveTransfer} variant="contained">
+            Transférer
           </Button>
         </DialogActions>
       </Dialog>

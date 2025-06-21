@@ -153,6 +153,55 @@ const hospitalService = {
     } catch (error) {
       throw error.response?.data || error;
     }
+  },
+
+  // Patient-Bed Assignment Methods
+  assignPatientToBed: async (bedId, assignmentData) => {
+    try {
+      const response = await axios.post(`/hospital/beds/${bedId}/assign`, assignmentData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  transferPatient: async (bedId, transferData) => {
+    try {
+      const response = await axios.post(`/hospital/beds/${bedId}/transfer`, transferData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Doctor Management Methods
+  searchDoctors: async (searchCriteria) => {
+    try {
+      const response = await axios.get('/hospital/doctors/search', {
+        params: searchCriteria
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  addDoctorToHospital: async (doctorId, assignmentData) => {
+    try {
+      const response = await axios.post(`/hospital/doctors/${doctorId}/assign`, assignmentData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  removeDoctorFromHospital: async (doctorId) => {
+    try {
+      const response = await axios.delete(`/hospital/doctors/${doctorId}/remove`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
   }
 };
 

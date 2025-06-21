@@ -712,3 +712,310 @@ exports.getOperatingRooms = async (req, res) => {
     });
   }
 };
+
+// Patient-Bed Assignment Methods
+exports.assignPatientToBed = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { bedId } = req.params;
+    const { patient_id, doctor_id, admission_reason, notes } = req.body;
+
+    // Check if bed exists and is available
+    const [beds] = await db.execute(`
+      SELECT id, bed_number, is_occupied, maintenance_status 
+      FROM hospital_beds 
+      WHERE id = ? AND hospital_id = ?
+    `, [bedId, hospitalId]);
+
+    if (beds.length === 0) {
+      return res.status(404).json({ message: 'Lit non trouvé' });
+    }
+
+    const bed = beds[0];
+    if (bed.is_occupied) {
+      return res.status(400).json({ message: 'Ce lit est déjà occupé' });
+    }
+
+    if (bed.maintenance_status !== 'available') {
+      return res.status(400).json({ message: 'Ce lit n\'est pas disponible' });
+    }
+
+    // Check if patient exists
+    const [patients] = await db.execute(
+      'SELECT id, prenom, nom FROM patients WHERE id = ?', 
+      [patient_id]
+    );
+    
+    if (patients.length === 0) {
+      return res.status(404).json({ message: 'Patient non trouvé' });
+    }
+
+    // Check if doctor works at this hospital
+    const [doctorCheck] = await db.execute(`
+      SELECT mi.medecin_id 
+      FROM medecin_institution mi 
+      WHERE mi.medecin_id = ? AND mi.institution_id = ?
+    `, [doctor_id, hospitalId]);
+
+    if (doctorCheck.length === 0) {
+      return res.status(400).json({ 
+        message: 'Ce médecin ne travaille pas dans cet hôpital' 
+      });
+    }
+
+    // Create hospital assignment
+    const [result] = await db.execute(`
+      INSERT INTO hospital_assignments (
+        patient_id, medecin_id, hospital_id, admission_date, 
+        admission_reason, bed_number, ward_name, assigned_by_user_id
+      ) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?)
+    `, [
+      patient_id, doctor_id, hospitalId, admission_reason, 
+      bed.bed_number, bed.ward_name, req.user.id
+    ]);
+
+    // Update bed occupancy
+    await db.execute(`
+      UPDATE hospital_beds 
+      SET is_occupied = TRUE, current_patient_assignment_id = ?
+      WHERE id = ?
+    `, [result.insertId, bedId]);
+
+    return res.status(200).json({ 
+      message: 'Patient assigné au lit avec succès',
+      assignmentId: result.insertId
+    });
+  } catch (error) {
+    console.error('Error assigning patient to bed:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.transferPatient = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { bedId } = req.params;
+    const { new_bed_id, transfer_reason, notes } = req.body;
+
+    // Check if current bed exists and is occupied
+    const [currentBeds] = await db.execute(`
+      SELECT id, bed_number, is_occupied, current_patient_assignment_id 
+      FROM hospital_beds 
+      WHERE id = ? AND hospital_id = ?
+    `, [bedId, hospitalId]);
+
+    if (currentBeds.length === 0) {
+      return res.status(404).json({ message: 'Lit actuel non trouvé' });
+    }
+
+    const currentBed = currentBeds[0];
+    if (!currentBed.is_occupied) {
+      return res.status(400).json({ message: 'Ce lit n\'est pas occupé' });
+    }
+
+    // Check if new bed exists and is available
+    const [newBeds] = await db.execute(`
+      SELECT id, bed_number, ward_name, is_occupied, maintenance_status 
+      FROM hospital_beds 
+      WHERE id = ? AND hospital_id = ?
+    `, [new_bed_id, hospitalId]);
+
+    if (newBeds.length === 0) {
+      return res.status(404).json({ message: 'Nouveau lit non trouvé' });
+    }
+
+    const newBed = newBeds[0];
+    if (newBed.is_occupied) {
+      return res.status(400).json({ message: 'Le nouveau lit est déjà occupé' });
+    }
+
+    if (newBed.maintenance_status !== 'available') {
+      return res.status(400).json({ message: 'Le nouveau lit n\'est pas disponible' });
+    }
+
+    // Update the assignment with new bed information
+    await db.execute(`
+      UPDATE hospital_assignments 
+      SET bed_number = ?, ward_name = ?
+      WHERE id = ?
+    `, [newBed.bed_number, newBed.ward_name, currentBed.current_patient_assignment_id]);
+
+    // Update bed occupancy
+    await db.execute(`
+      UPDATE hospital_beds 
+      SET is_occupied = FALSE, current_patient_assignment_id = NULL
+      WHERE id = ?
+    `, [bedId]);
+
+    await db.execute(`
+      UPDATE hospital_beds 
+      SET is_occupied = TRUE, current_patient_assignment_id = ?
+      WHERE id = ?
+    `, [currentBed.current_patient_assignment_id, new_bed_id]);
+
+    // Log the transfer
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'PATIENT_TRANSFER', 
+      'hospital_assignments', 
+      currentBed.current_patient_assignment_id, 
+      `Transfert du lit ${currentBed.bed_number} vers ${newBed.bed_number}. Motif: ${transfer_reason}`
+    ]);
+
+    return res.status(200).json({ 
+      message: 'Patient transféré avec succès'
+    });
+  } catch (error) {
+    console.error('Error transferring patient:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+// Doctor Management Methods
+exports.searchDoctors = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { prenom, nom, specialite } = req.query;
+
+    let query = `
+      SELECT 
+        m.id, 
+        m.prenom, 
+        m.nom, 
+        s.nom as specialite,
+        m.telephone,
+        m.email,
+        m.est_actif,
+        CASE WHEN mi.medecin_id IS NOT NULL THEN TRUE ELSE FALSE END as is_assigned
+      FROM medecins m
+      JOIN specialites s ON m.specialite_id = s.id
+      LEFT JOIN medecin_institution mi ON m.id = mi.medecin_id AND mi.institution_id = ?
+      WHERE m.est_actif = TRUE
+    `;
+    
+    const params = [hospitalId];
+
+    if (prenom) {
+      query += ' AND m.prenom LIKE ?';
+      params.push(`%${prenom}%`);
+    }
+    
+    if (nom) {
+      query += ' AND m.nom LIKE ?';
+      params.push(`%${nom}%`);
+    }
+    
+    if (specialite) {
+      query += ' AND s.nom LIKE ?';
+      params.push(`%${specialite}%`);
+    }
+
+    query += ' ORDER BY m.nom, m.prenom';
+
+    const [doctors] = await db.execute(query, params);
+
+    return res.status(200).json({ 
+      doctors,
+      totalDoctors: doctors.length
+    });
+  } catch (error) {
+    console.error('Error searching doctors:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.addDoctorToHospital = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { doctorId } = req.params;
+    const { department, start_date, notes } = req.body;
+
+    // Check if doctor exists
+    const [doctors] = await db.execute(
+      'SELECT id, prenom, nom FROM medecins WHERE id = ? AND est_actif = TRUE', 
+      [doctorId]
+    );
+    
+    if (doctors.length === 0) {
+      return res.status(404).json({ message: 'Médecin non trouvé' });
+    }
+
+    // Check if doctor is already assigned to this hospital
+    const [existingAssignment] = await db.execute(`
+      SELECT id FROM medecin_institution 
+      WHERE medecin_id = ? AND institution_id = ?
+    `, [doctorId, hospitalId]);
+
+    if (existingAssignment.length > 0) {
+      return res.status(400).json({ 
+        message: 'Ce médecin travaille déjà dans cet hôpital' 
+      });
+    }
+
+    // Add doctor to hospital
+    await db.execute(`
+      INSERT INTO medecin_institution (
+        medecin_id, institution_id, date_affectation, departement, notes
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [doctorId, hospitalId, start_date || new Date(), department, notes]);
+
+    return res.status(201).json({ 
+      message: 'Médecin ajouté à l\'hôpital avec succès'
+    });
+  } catch (error) {
+    console.error('Error adding doctor to hospital:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.removeDoctorFromHospital = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { doctorId } = req.params;
+
+    // Check if doctor is assigned to this hospital
+    const [assignment] = await db.execute(`
+      SELECT id FROM medecin_institution 
+      WHERE medecin_id = ? AND institution_id = ?
+    `, [doctorId, hospitalId]);
+
+    if (assignment.length === 0) {
+      return res.status(404).json({ 
+        message: 'Ce médecin ne travaille pas dans cet hôpital' 
+      });
+    }
+
+    // Remove doctor from hospital
+    await db.execute(`
+      DELETE FROM medecin_institution 
+      WHERE medecin_id = ? AND institution_id = ?
+    `, [doctorId, hospitalId]);
+
+    return res.status(200).json({ 
+      message: 'Médecin retiré de l\'hôpital avec succès'
+    });
+  } catch (error) {
+    console.error('Error removing doctor from hospital:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
