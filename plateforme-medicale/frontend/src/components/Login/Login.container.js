@@ -40,6 +40,15 @@ const LoginContainer = () => {
       } else if (response.data.user.role === 'institution') {
         console.log('Navigating to /institution');
         navigate('/institution', { replace: true });
+      } else if (response.data.user.role === 'hospital') {
+        console.log('Navigating to /hospital');
+        navigate('/hospital', { replace: true });
+      } else if (response.data.user.role === 'pharmacy') {
+        console.log('Navigating to /pharmacy');
+        navigate('/pharmacy', { replace: true });
+      } else if (response.data.user.role === 'laboratory') {
+        console.log('Navigating to /laboratory');
+        navigate('/laboratory', { replace: true });
       } else {
         console.log('Unknown role, no navigation');
         setError('Rôle utilisateur non reconnu');

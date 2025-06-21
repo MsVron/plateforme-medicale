@@ -72,9 +72,11 @@ router.get('/institutions', verifyToken, isAdmin, async (req, res) => {
             `SELECT 
                 i.*,
                 m.prenom as medecin_proprietaire_prenom,
-                m.nom as medecin_proprietaire_nom
+                m.nom as medecin_proprietaire_nom,
+                u.nom_utilisateur as username
             FROM institutions i
             LEFT JOIN medecins m ON i.medecin_proprietaire_id = m.id
+            LEFT JOIN utilisateurs u ON i.id = u.id_specifique_role AND u.role = i.type_institution
             WHERE i.est_actif = TRUE
             ORDER BY i.nom`
         );
@@ -106,10 +108,11 @@ router.get('/institutions', verifyToken, isAdmin, async (req, res) => {
 router.post('/institutions', verifyToken, isAdmin, async (req, res) => {
     try {
         const db = require('../config/db');
+        const bcrypt = require('bcrypt');
         const { getInstitutionUserRole, isValidInstitutionType } = require('../utils/institutionMapping');
         const {
             nom, adresse, ville, code_postal, pays, telephone, email_contact,
-            description, type
+            description, type, username, password
         } = req.body;
 
         // Validate institution type
@@ -120,19 +123,86 @@ router.post('/institutions', verifyToken, isAdmin, async (req, res) => {
         // Map institution type to user role
         const type_institution = getInstitutionUserRole(type);
 
-        const [result] = await db.execute(
-            `INSERT INTO institutions (
-                nom, adresse, ville, code_postal, pays, telephone, email_contact,
-                description, type, type_institution
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [nom, adresse, ville, code_postal, pays, telephone, email_contact,
-             description, type, type_institution]
-        );
 
-        res.json({ 
-            message: 'Institution ajoutée avec succès',
-            institutionId: result.insertId 
-        });
+
+        // Get connection and start transaction manually
+        const connection = await db.getConnection();
+        
+        try {
+            await connection.beginTransaction();
+            
+            // Insert institution
+            const [result] = await connection.execute(
+                `INSERT INTO institutions (
+                    nom, adresse, ville, code_postal, pays, telephone, email_contact,
+                    description, type, type_institution
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [nom, adresse, ville, code_postal, pays, telephone, email_contact,
+                 description, type, type_institution]
+            );
+
+            const institutionId = result.insertId;
+            let generatedCredentials = null;
+
+            // Generate user account for non-cabinet privé institutions
+            if (type !== 'cabinet privé') {
+                // Validate required fields for user account creation
+                if (!username || !password) {
+                    await connection.rollback();
+                    connection.release();
+                    return res.status(400).json({ message: 'Nom d\'utilisateur et mot de passe requis pour ce type d\'institution' });
+                }
+                
+                // Use provided username and password
+                const finalUsername = username;
+                const finalPassword = password;
+                
+                // Use email_contact or create a default email if empty
+                const userEmail = email_contact || `${finalUsername.replace(/[^a-zA-Z0-9]/g, '')}@institution.local`;
+                
+                // Check if username already exists
+                const [existingUser] = await connection.execute(
+                    'SELECT id FROM utilisateurs WHERE nom_utilisateur = ?',
+                    [finalUsername]
+                );
+                
+                if (existingUser.length > 0) {
+                    await connection.rollback();
+                    connection.release();
+                    return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà utilisé' });
+                }
+                
+                const hashedPassword = await bcrypt.hash(finalPassword, 10);
+
+                // Insert user account
+                await connection.execute(
+                    `INSERT INTO utilisateurs (
+                        nom_utilisateur, mot_de_passe, email, role, id_specifique_role, est_actif, est_verifie
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    [finalUsername, hashedPassword, userEmail, type_institution, institutionId, true, true]
+                );
+
+                generatedCredentials = {
+                    username: finalUsername,
+                    password: finalPassword
+                };
+            }
+
+            await connection.commit();
+            connection.release();
+
+            res.json({ 
+                message: 'Institution ajoutée avec succès',
+                institutionId: institutionId,
+                credentials: generatedCredentials
+            });
+
+        } catch (error) {
+            await connection.rollback();
+            connection.release();
+            throw error;
+        }
+
     } catch (error) {
         console.error('Error adding institution:', error);
         res.status(500).json({ message: 'Erreur lors de l\'ajout de l\'institution' });
@@ -142,11 +212,12 @@ router.post('/institutions', verifyToken, isAdmin, async (req, res) => {
 router.put('/institutions/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const db = require('../config/db');
+        const bcrypt = require('bcrypt');
         const { getInstitutionUserRole, isValidInstitutionType } = require('../utils/institutionMapping');
         const institutionId = req.params.id;
         const {
             nom, adresse, ville, code_postal, pays, telephone, email_contact,
-            description, type
+            description, type, username, password
         } = req.body;
 
         // Validate institution type
@@ -157,17 +228,99 @@ router.put('/institutions/:id', verifyToken, isAdmin, async (req, res) => {
         // Map institution type to user role
         const type_institution = getInstitutionUserRole(type);
 
-        await db.execute(
-            `UPDATE institutions SET 
-                nom = ?, adresse = ?, ville = ?, code_postal = ?, pays = ?,
-                telephone = ?, email_contact = ?, description = ?,
-                type = ?, type_institution = ?
-            WHERE id = ?`,
-            [nom, adresse, ville, code_postal, pays, telephone, email_contact,
-             description, type, type_institution, institutionId]
-        );
+        // Get connection and start transaction manually
+        const connection = await db.getConnection();
 
-        res.json({ message: 'Institution mise à jour avec succès' });
+        try {
+            await connection.beginTransaction();
+            
+            // Update institution
+            await connection.execute(
+                `UPDATE institutions SET 
+                    nom = ?, adresse = ?, ville = ?, code_postal = ?, pays = ?,
+                    telephone = ?, email_contact = ?, description = ?,
+                    type = ?, type_institution = ?
+                WHERE id = ?`,
+                [nom, adresse, ville, code_postal, pays, telephone, email_contact,
+                 description, type, type_institution, institutionId]
+            );
+
+            // Handle user account updates for non-cabinet privé institutions
+            if (type !== 'cabinet privé') {
+                // Check if user account exists for this institution
+                const [existingUser] = await connection.execute(
+                    'SELECT id, nom_utilisateur FROM utilisateurs WHERE id_specifique_role = ? AND role = ?',
+                    [institutionId, type_institution]
+                );
+
+                if (existingUser.length > 0) {
+                    // Update existing user account
+                    const userId = existingUser[0].id;
+                    const currentUsername = existingUser[0].nom_utilisateur;
+
+                    // Check if username changed and if new username is available
+                    if (username && username !== currentUsername) {
+                        const [usernameCheck] = await connection.execute(
+                            'SELECT id FROM utilisateurs WHERE nom_utilisateur = ? AND id != ?',
+                            [username, userId]
+                        );
+
+                        if (usernameCheck.length > 0) {
+                            await connection.rollback();
+                            connection.release();
+                            return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà utilisé' });
+                        }
+
+                        await connection.execute(
+                            'UPDATE utilisateurs SET nom_utilisateur = ? WHERE id = ?',
+                            [username, userId]
+                        );
+                    }
+
+                    // Update password if provided
+                    if (password) {
+                        const hashedPassword = await bcrypt.hash(password, 10);
+                        await connection.execute(
+                            'UPDATE utilisateurs SET mot_de_passe = ? WHERE id = ?',
+                            [hashedPassword, userId]
+                        );
+                    }
+                } else if (username && password) {
+                    // Create new user account if it doesn't exist
+                    const [usernameCheck] = await connection.execute(
+                        'SELECT id FROM utilisateurs WHERE nom_utilisateur = ?',
+                        [username]
+                    );
+
+                    if (usernameCheck.length > 0) {
+                        await connection.rollback();
+                        connection.release();
+                        return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà utilisé' });
+                    }
+
+                    // Use email_contact or create a default email if empty
+                    const userEmail = email_contact || `${username.replace(/[^a-zA-Z0-9]/g, '')}@institution.local`;
+                    
+                    const hashedPassword = await bcrypt.hash(password, 10);
+                    await connection.execute(
+                        `INSERT INTO utilisateurs (
+                            nom_utilisateur, mot_de_passe, email, role, id_specifique_role, est_actif, est_verifie
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                        [username, hashedPassword, userEmail, type_institution, institutionId, true, true]
+                    );
+                }
+            }
+
+            await connection.commit();
+            connection.release();
+            res.json({ message: 'Institution mise à jour avec succès' });
+
+        } catch (error) {
+            await connection.rollback();
+            connection.release();
+            throw error;
+        }
+
     } catch (error) {
         console.error('Error updating institution:', error);
         res.status(500).json({ message: 'Erreur lors de la mise à jour de l\'institution' });

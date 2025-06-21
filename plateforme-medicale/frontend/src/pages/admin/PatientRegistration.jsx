@@ -329,7 +329,7 @@ const PatientRegistration = () => {
             <Box sx={{ p: 3 }}>
                 <Box display="flex" alignItems="center" gap={2} mb={3}>
                     <UserPlus sx={{ fontSize: 32, color: 'primary.main' }} />
-                    <Typography variant="h4" component="h1">
+                    <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
                         Enregistrement Patient sur Site
                     </Typography>
                 </Box>
@@ -375,7 +375,7 @@ const PatientRegistration = () => {
         <Box sx={{ p: 3 }}>
             <Box display="flex" alignItems="center" gap={2} mb={3}>
                 <UserPlus sx={{ fontSize: 32, color: 'primary.main' }} />
-                <Typography variant="h4" component="h1">
+                <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
                     Enregistrement Patient sur Site
                 </Typography>
             </Box>

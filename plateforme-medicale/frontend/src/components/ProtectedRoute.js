@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 // Define valid roles to ensure type safety
-const VALID_ROLES = ['super_admin', 'admin', 'medecin', 'patient', 'institution'];
+const VALID_ROLES = ['super_admin', 'admin', 'medecin', 'patient', 'institution', 'hospital', 'pharmacy', 'laboratory'];
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   // Safely retrieve user and token

@@ -9,6 +9,30 @@ router.post('/login', authController.login);
 // Route de déconnexion
 router.post('/logout', authController.logout);
 
+// Route de vérification du token JWT
+router.get('/verify', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ message: 'Token manquant' });
+    }
+    
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    
+    // Return user role and ID
+    res.json({
+      role: decoded.role,
+      userId: decoded.userId,
+      id_specifique_role: decoded.id_specifique_role
+    });
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(401).json({ message: 'Token invalide' });
+  }
+});
+
 // Route d'inscription patient
 router.post('/register/patient', patientController.addPatient);
 

@@ -3,34 +3,36 @@ import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { CircularProgress, Box } from '@mui/material';
 
-const ProtectedRoute = ({ children, roles = [] }) => {
+const ProtectedRoute = ({ children, allowedRoles = [], roles = [] }) => {
+  // Support both allowedRoles and roles props for backward compatibility
+  const rolesList = allowedRoles.length > 0 ? allowedRoles : roles;
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const verifyAuth = async () => {
+    const verifyAuth = () => {
       try {
         const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
         
-        if (!token) {
+        if (!token || !user) {
           setIsAuthenticated(false);
           setLoading(false);
           return;
         }
         
-        // Verify the token with the backend
-        const response = await axios.get('/api/auth/verify', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const userData = JSON.parse(user);
+        console.log('ProtectedRoute: User data from localStorage:', userData);
         
         setIsAuthenticated(true);
-        setUserRole(response.data.role);
+        setUserRole(userData.role);
         setLoading(false);
       } catch (error) {
         console.error('Authentication error:', error);
         setIsAuthenticated(false);
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setLoading(false);
       }
     };
@@ -50,10 +52,18 @@ const ProtectedRoute = ({ children, roles = [] }) => {
     return <Navigate to="/login" />;
   }
 
-  if (roles.length > 0 && !roles.includes(userRole)) {
+  if (rolesList.length > 0 && !rolesList.includes(userRole)) {
     // User is authenticated but not authorized for this route
+    console.log('ProtectedRoute: Authorization failed');
+    console.log('- Required roles:', rolesList);
+    console.log('- User role:', userRole);
+    console.log('- User role included?', rolesList.includes(userRole));
     return <Navigate to="/unauthorized" />;
   }
+
+  console.log('ProtectedRoute: Access granted');
+  console.log('- Required roles:', rolesList);
+  console.log('- User role:', userRole);
 
   return children;
 };

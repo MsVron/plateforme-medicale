@@ -175,7 +175,7 @@ const MedicalRecord = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
+      <Typography variant="h4" component="h1" gutterBottom sx={{ color: 'white' }}>
         Mon Dossier Médical
       </Typography>
 

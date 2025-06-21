@@ -372,3 +372,343 @@ exports.getHospitalDoctors = async (req, res) => {
     });
   }
 };
+
+// Bed Management Methods
+exports.getBedStatistics = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+
+    // Get total beds and occupancy
+    const [bedStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as totalBeds,
+        SUM(CASE WHEN is_occupied = TRUE THEN 1 ELSE 0 END) as occupiedBeds,
+        SUM(CASE WHEN is_occupied = FALSE AND maintenance_status = 'available' THEN 1 ELSE 0 END) as availableBeds
+      FROM hospital_beds 
+      WHERE hospital_id = ?
+    `, [hospitalId]);
+
+    // Get beds by type
+    const [bedsByType] = await db.execute(`
+      SELECT 
+        bed_type,
+        COUNT(*) as total,
+        SUM(CASE WHEN is_occupied = TRUE THEN 1 ELSE 0 END) as occupied
+      FROM hospital_beds 
+      WHERE hospital_id = ?
+      GROUP BY bed_type
+    `, [hospitalId]);
+
+    // Get ward occupancy
+    const [wardOccupancy] = await db.execute(`
+      SELECT 
+        ward_name,
+        COUNT(*) as total,
+        SUM(CASE WHEN is_occupied = TRUE THEN 1 ELSE 0 END) as occupied
+      FROM hospital_beds 
+      WHERE hospital_id = ?
+      GROUP BY ward_name
+    `, [hospitalId]);
+
+    return res.status(200).json({
+      totalBeds: bedStats[0]?.totalBeds || 0,
+      occupiedBeds: bedStats[0]?.occupiedBeds || 0,
+      availableBeds: bedStats[0]?.availableBeds || 0,
+      bedsByType,
+      wardOccupancy
+    });
+  } catch (error) {
+    console.error('Error fetching bed statistics:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.getBeds = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+
+    const [beds] = await db.execute(`
+      SELECT 
+        hb.*,
+        ha.patient_id,
+        p.prenom as patient_prenom,
+        p.nom as patient_nom
+      FROM hospital_beds hb
+      LEFT JOIN hospital_assignments ha ON hb.current_patient_assignment_id = ha.id
+      LEFT JOIN patients p ON ha.patient_id = p.id
+      WHERE hb.hospital_id = ?
+      ORDER BY hb.ward_name, hb.bed_number
+    `, [hospitalId]);
+
+    return res.status(200).json({ beds });
+  } catch (error) {
+    console.error('Error fetching beds:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.createBed = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { bed_number, ward_name, room_number, bed_type, maintenance_status } = req.body;
+
+    // Check if bed number already exists in this hospital
+    const [existingBed] = await db.execute(`
+      SELECT id FROM hospital_beds 
+      WHERE hospital_id = ? AND bed_number = ?
+    `, [hospitalId, bed_number]);
+
+    if (existingBed.length > 0) {
+      return res.status(400).json({ 
+        message: 'Ce numéro de lit existe déjà dans cet hôpital' 
+      });
+    }
+
+    const [result] = await db.execute(`
+      INSERT INTO hospital_beds (
+        hospital_id, bed_number, ward_name, room_number, 
+        bed_type, maintenance_status, is_occupied
+      ) VALUES (?, ?, ?, ?, ?, ?, FALSE)
+    `, [hospitalId, bed_number, ward_name, room_number, bed_type, maintenance_status]);
+
+    return res.status(201).json({ 
+      message: 'Lit créé avec succès',
+      bedId: result.insertId
+    });
+  } catch (error) {
+    console.error('Error creating bed:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.updateBed = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { bedId } = req.params;
+    const { bed_number, ward_name, room_number, bed_type, maintenance_status } = req.body;
+
+    // Check if bed exists and belongs to this hospital
+    const [existingBed] = await db.execute(`
+      SELECT id FROM hospital_beds 
+      WHERE id = ? AND hospital_id = ?
+    `, [bedId, hospitalId]);
+
+    if (existingBed.length === 0) {
+      return res.status(404).json({ message: 'Lit non trouvé' });
+    }
+
+    await db.execute(`
+      UPDATE hospital_beds 
+      SET bed_number = ?, ward_name = ?, room_number = ?, 
+          bed_type = ?, maintenance_status = ?
+      WHERE id = ? AND hospital_id = ?
+    `, [bed_number, ward_name, room_number, bed_type, maintenance_status, bedId, hospitalId]);
+
+    return res.status(200).json({ message: 'Lit mis à jour avec succès' });
+  } catch (error) {
+    console.error('Error updating bed:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.getWards = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+
+    const [wards] = await db.execute(`
+      SELECT DISTINCT ward_name as name
+      FROM hospital_beds 
+      WHERE hospital_id = ?
+      ORDER BY ward_name
+    `, [hospitalId]);
+
+    return res.status(200).json({ wards });
+  } catch (error) {
+    console.error('Error fetching wards:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+// Surgery Management Methods
+exports.getSurgeryStatistics = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+
+    const [surgeryStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as totalSurgeries,
+        SUM(CASE WHEN status = 'scheduled' THEN 1 ELSE 0 END) as scheduled,
+        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as inProgress,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+      FROM hospital_surgeries 
+      WHERE hospital_id = ?
+    `, [hospitalId]);
+
+    return res.status(200).json({
+      totalSurgeries: surgeryStats[0]?.totalSurgeries || 0,
+      scheduled: surgeryStats[0]?.scheduled || 0,
+      inProgress: surgeryStats[0]?.inProgress || 0,
+      completed: surgeryStats[0]?.completed || 0,
+      cancelled: surgeryStats[0]?.cancelled || 0
+    });
+  } catch (error) {
+    console.error('Error fetching surgery statistics:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.getSurgeries = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+
+    const [surgeries] = await db.execute(`
+      SELECT 
+        hs.*,
+        p.prenom as patient_prenom,
+        p.nom as patient_nom,
+        m1.prenom as surgeon_prenom,
+        m1.nom as surgeon_nom,
+        m2.prenom as assistant_prenom,
+        m2.nom as assistant_nom,
+        m3.prenom as anesthesiologist_prenom,
+        m3.nom as anesthesiologist_nom
+      FROM hospital_surgeries hs
+      JOIN patients p ON hs.patient_id = p.id
+      JOIN medecins m1 ON hs.primary_surgeon_id = m1.id
+      LEFT JOIN medecins m2 ON hs.assistant_surgeon_id = m2.id
+      LEFT JOIN medecins m3 ON hs.anesthesiologist_id = m3.id
+      WHERE hs.hospital_id = ?
+      ORDER BY hs.scheduled_date DESC
+    `, [hospitalId]);
+
+    return res.status(200).json({ surgeries });
+  } catch (error) {
+    console.error('Error fetching surgeries:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.createSurgery = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const surgeryData = req.body;
+
+    const [result] = await db.execute(`
+      INSERT INTO hospital_surgeries (
+        hospital_id, patient_id, primary_surgeon_id, assistant_surgeon_id,
+        anesthesiologist_id, scheduled_date, estimated_duration, surgery_type,
+        procedure_name, operating_room, priority, pre_op_notes, 
+        special_requirements, equipment_needed, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')
+    `, [
+      hospitalId, surgeryData.patient_id, surgeryData.primary_surgeon_id,
+      surgeryData.assistant_surgeon_id, surgeryData.anesthesiologist_id,
+      surgeryData.scheduled_date, surgeryData.estimated_duration,
+      surgeryData.surgery_type, surgeryData.procedure_name,
+      surgeryData.operating_room, surgeryData.priority,
+      surgeryData.pre_op_notes, surgeryData.special_requirements,
+      surgeryData.equipment_needed
+    ]);
+
+    return res.status(201).json({ 
+      message: 'Chirurgie programmée avec succès',
+      surgeryId: result.insertId
+    });
+  } catch (error) {
+    console.error('Error creating surgery:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.updateSurgery = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { surgeryId } = req.params;
+    const surgeryData = req.body;
+
+    // Check if surgery exists and belongs to this hospital
+    const [existingSurgery] = await db.execute(`
+      SELECT id FROM hospital_surgeries 
+      WHERE id = ? AND hospital_id = ?
+    `, [surgeryId, hospitalId]);
+
+    if (existingSurgery.length === 0) {
+      return res.status(404).json({ message: 'Chirurgie non trouvée' });
+    }
+
+    await db.execute(`
+      UPDATE hospital_surgeries 
+      SET patient_id = ?, primary_surgeon_id = ?, assistant_surgeon_id = ?,
+          anesthesiologist_id = ?, scheduled_date = ?, estimated_duration = ?,
+          surgery_type = ?, procedure_name = ?, operating_room = ?,
+          priority = ?, pre_op_notes = ?, special_requirements = ?,
+          equipment_needed = ?
+      WHERE id = ? AND hospital_id = ?
+    `, [
+      surgeryData.patient_id, surgeryData.primary_surgeon_id,
+      surgeryData.assistant_surgeon_id, surgeryData.anesthesiologist_id,
+      surgeryData.scheduled_date, surgeryData.estimated_duration,
+      surgeryData.surgery_type, surgeryData.procedure_name,
+      surgeryData.operating_room, surgeryData.priority,
+      surgeryData.pre_op_notes, surgeryData.special_requirements,
+      surgeryData.equipment_needed, surgeryId, hospitalId
+    ]);
+
+    return res.status(200).json({ message: 'Chirurgie mise à jour avec succès' });
+  } catch (error) {
+    console.error('Error updating surgery:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+exports.getOperatingRooms = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+
+    // For now, return a default set of operating rooms
+    // This could be extended to a proper database table
+    const operatingRooms = [
+      { id: 1, name: 'Bloc 1 - Chirurgie Générale', type: 'general' },
+      { id: 2, name: 'Bloc 2 - Chirurgie Cardiaque', type: 'cardiac' },
+      { id: 3, name: 'Bloc 3 - Neurochirurgie', type: 'neuro' },
+      { id: 4, name: 'Bloc 4 - Chirurgie Orthopédique', type: 'orthopedic' },
+      { id: 5, name: 'Bloc 5 - Chirurgie d\'Urgence', type: 'emergency' }
+    ];
+
+    return res.status(200).json({ rooms: operatingRooms });
+  } catch (error) {
+    console.error('Error fetching operating rooms:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};

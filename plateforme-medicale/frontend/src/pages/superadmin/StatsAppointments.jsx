@@ -151,7 +151,7 @@ const StatsAppointments = () => {
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
         <Box display="flex" alignItems="center" gap={2}>
           <Event sx={{ fontSize: 32, color: 'primary.main' }} />
-          <Typography variant="h4" component="h1">
+          <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
             Analyses des Rendez-vous
           </Typography>
         </Box>

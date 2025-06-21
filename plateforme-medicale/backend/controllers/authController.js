@@ -16,14 +16,17 @@ exports.login = async (req, res) => {
     const [utilisateurs] = await db.execute(`
       SELECT
         u.id, u.nom_utilisateur, u.mot_de_passe, u.email, u.role, u.id_specifique_role, u.est_verifie,
-        COALESCE(sa.prenom, a.prenom, m.prenom, p.prenom, i.nom) AS prenom,
-        COALESCE(sa.nom, a.nom, m.nom, p.nom, '') AS nom
+        COALESCE(sa.prenom, a.prenom, m.prenom, p.prenom, i.nom, ih.nom, ph.nom, lh.nom) AS prenom,
+        COALESCE(sa.nom, a.nom, m.nom, p.nom, '', '', '', '') AS nom
       FROM utilisateurs u
       LEFT JOIN super_admins sa ON u.role = 'super_admin' AND u.id_specifique_role = sa.id
       LEFT JOIN admins a ON u.role = 'admin' AND u.id_specifique_role = a.id
       LEFT JOIN medecins m ON u.role = 'medecin' AND u.id_specifique_role = m.id
       LEFT JOIN patients p ON u.role = 'patient' AND u.id_specifique_role = p.id
       LEFT JOIN institutions i ON u.role = 'institution' AND u.id_specifique_role = i.id
+      LEFT JOIN institutions ih ON u.role = 'hospital' AND u.id_specifique_role = ih.id
+      LEFT JOIN institutions ph ON u.role = 'pharmacy' AND u.id_specifique_role = ph.id
+      LEFT JOIN institutions lh ON u.role = 'laboratory' AND u.id_specifique_role = lh.id
       WHERE u.nom_utilisateur = ?
     `, [nom_utilisateur]);
 

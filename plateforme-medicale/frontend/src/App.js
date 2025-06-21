@@ -75,6 +75,9 @@ import PharmacyHome from './pages/pharmacy/PharmacyHome';
 import LaboratoryDashboard from './components/laboratory/LaboratoryDashboard';
 import LaboratoryHome from './pages/laboratory/LaboratoryHome';
 
+// Import debug component
+import DebugHospital from './components/DebugHospital';
+
 function App() {
   const [currentTheme, setCurrentTheme] = useState(medicalTheme);
 
@@ -428,6 +431,46 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/hospital/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital/patients/search"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital/patients"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital/patient-direct"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital/debug"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <DebugHospital />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Pharmacy routes */}
             <Route
@@ -438,6 +481,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/pharmacy/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['pharmacy']}>
+                  <PharmacyDashboard />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Laboratory routes */}
             <Route
@@ -445,6 +496,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['laboratory']}>
                   <LaboratoryHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/laboratory/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['laboratory']}>
+                  <LaboratoryDashboard />
                 </ProtectedRoute>
               }
             />

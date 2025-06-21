@@ -61,6 +61,98 @@ const hospitalService = {
     } catch (error) {
       throw error.response?.data || error;
     }
+  },
+
+  // Bed Management Methods
+  getBedStatistics: async () => {
+    try {
+      const response = await axios.get('/hospital/beds/stats');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  getBeds: async () => {
+    try {
+      const response = await axios.get('/hospital/beds');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  createBed: async (bedData) => {
+    try {
+      const response = await axios.post('/hospital/beds', bedData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  updateBed: async (bedId, bedData) => {
+    try {
+      const response = await axios.put(`/hospital/beds/${bedId}`, bedData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  getWards: async () => {
+    try {
+      const response = await axios.get('/hospital/wards');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Surgery Management Methods
+  getSurgeryStatistics: async () => {
+    try {
+      const response = await axios.get('/hospital/surgeries/stats');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  getSurgeries: async () => {
+    try {
+      const response = await axios.get('/hospital/surgeries');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  createSurgery: async (surgeryData) => {
+    try {
+      const response = await axios.post('/hospital/surgeries', surgeryData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  updateSurgery: async (surgeryId, surgeryData) => {
+    try {
+      const response = await axios.put(`/hospital/surgeries/${surgeryId}`, surgeryData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  getOperatingRooms: async () => {
+    try {
+      const response = await axios.get('/hospital/operating-rooms');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
   }
 };
 

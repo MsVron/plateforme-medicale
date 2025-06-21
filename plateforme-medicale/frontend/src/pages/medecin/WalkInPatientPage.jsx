@@ -373,7 +373,7 @@ const WalkInPatientPage = () => {
           <IconButton onClick={() => navigate('/medecin')} sx={{ mr: 2 }}>
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h4" component="h1">
+          <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
             Patient inscrit avec succès !
           </Typography>
         </Box>

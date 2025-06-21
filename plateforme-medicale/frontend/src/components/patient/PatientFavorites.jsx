@@ -101,7 +101,7 @@ const PatientFavorites = () => {
   return (
     <Container maxWidth="xl" sx={{ width: '100% !important', minWidth: '800px !important' }}>
       <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'white' }}>
           <FavoriteIcon color="primary" />
           Mes médecins favoris
         </Typography>
