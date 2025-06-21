@@ -235,4 +235,21 @@ SELECT * FROM laboratory_patient_tests WHERE request_status = 'requested';
 UPDATE analysis_workflow SET step_status = 'completed' WHERE id = 123;
 ```
 
-This comprehensive enhancement ensures that all institution types can effectively access and manage patient medical records while maintaining security, compliance, and data integrity. 
+This comprehensive enhancement ensures that all institution types can effectively access and manage patient medical records while maintaining security, compliance, and data integrity.
+
+## 📝 Recent Updates
+
+### Medecin-Institution Table Enhancements (2024)
+The `medecin_institution` table has been enhanced with additional columns to better track doctor affiliations:
+
+**New Columns Added:**
+- `date_affectation DATE NOT NULL` - Official assignment date (replaces date_debut functionality)
+- `departement VARCHAR(100) DEFAULT NULL` - Department within the institution
+- `notes TEXT DEFAULT NULL` - Additional notes about the affiliation
+
+**Migration Applied:**
+- Migration file: `add_medecin_institution_columns.sql`
+- Existing `date_debut` column maintained for backward compatibility
+- Data automatically copied from `date_debut` to `date_affectation` during migration
+
+This enhancement provides better tracking of doctor assignments within institutions and allows for more detailed affiliation management. 

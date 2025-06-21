@@ -309,7 +309,10 @@ exports.getHospitalDoctors = async (req, res) => {
         s.nom as specialite,
         m.telephone,
         m.email_professionnel,
-        m.est_actif
+        m.est_actif,
+        mi.departement,
+        mi.date_affectation,
+        mi.notes
       FROM medecins m
       JOIN specialites s ON m.specialite_id = s.id
       JOIN medecin_institution mi ON m.id = mi.medecin_id
@@ -921,7 +924,7 @@ exports.addDoctorToHospital = async (req, res) => {
 
     // Check if doctor is already assigned to this hospital
     const [existingAssignment] = await db.execute(`
-      SELECT id FROM medecin_institution 
+      SELECT medecin_id FROM medecin_institution 
       WHERE medecin_id = ? AND institution_id = ?
     `, [doctorId, hospitalId]);
 
@@ -931,12 +934,12 @@ exports.addDoctorToHospital = async (req, res) => {
       });
     }
 
-    // Add doctor to hospital
+    // Add doctor to hospital - using correct column names
     await db.execute(`
       INSERT INTO medecin_institution (
-        medecin_id, institution_id, date_affectation, departement, notes
-      ) VALUES (?, ?, ?, ?, ?)
-    `, [doctorId, hospitalId, start_date || new Date(), department, notes]);
+        medecin_id, institution_id, date_affectation, departement, notes, est_principal
+      ) VALUES (?, ?, ?, ?, ?, ?)
+    `, [doctorId, hospitalId, start_date || new Date().toISOString().split('T')[0], department, notes, false]);
 
     return res.status(201).json({ 
       message: 'Médecin ajouté à l\'hôpital avec succès'

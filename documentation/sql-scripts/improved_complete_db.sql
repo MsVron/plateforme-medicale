@@ -114,7 +114,10 @@ CREATE TABLE medecin_institution (
   institution_id INT,
   est_principal BOOLEAN DEFAULT FALSE,
   date_debut DATE NOT NULL,
+  date_affectation DATE NOT NULL,
   date_fin DATE,
+  departement VARCHAR(100) DEFAULT NULL,
+  notes TEXT DEFAULT NULL,
   PRIMARY KEY (medecin_id, institution_id),
   FOREIGN KEY (medecin_id) REFERENCES medecins(id),
   FOREIGN KEY (institution_id) REFERENCES institutions(id)

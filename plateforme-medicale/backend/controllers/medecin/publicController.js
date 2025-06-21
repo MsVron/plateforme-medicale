@@ -9,7 +9,9 @@ exports.getPublicMedecins = async (req, res) => {
       m.tarif_consultation, m.latitude, m.longitude, m.temps_consultation_moyen,
       m.accepte_patients_walk_in
       FROM medecins m 
-      WHERE m.est_actif = true
+      LEFT JOIN institutions i ON m.institution_id = i.id
+      WHERE m.est_actif = true 
+      AND (i.type IS NULL OR i.type != 'cabinet privé')
       ORDER BY m.nom, m.prenom
     `);
 
@@ -43,6 +45,7 @@ exports.getPublicMedecinById = async (req, res) => {
       LEFT JOIN specialites s ON m.specialite_id = s.id
       LEFT JOIN institutions i ON m.institution_id = i.id
       WHERE m.id = ? AND m.est_actif = true
+      AND (i.type IS NULL OR i.type != 'cabinet privé')
     `;
     
     const [medecins] = await db.execute(query, [id]);

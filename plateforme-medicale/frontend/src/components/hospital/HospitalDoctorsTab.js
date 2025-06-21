@@ -284,6 +284,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Médecin</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>INPE</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Spécialité</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Département</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Contact</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Statut</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
@@ -314,6 +315,14 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                             label={doctor.specialite} 
                             size="small" 
                             color="primary" 
+                            variant="outlined" 
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={doctor.departement || 'Non assigné'} 
+                            size="small" 
+                            color={doctor.departement ? 'info' : 'default'} 
                             variant="outlined" 
                           />
                         </TableCell>
