@@ -21,7 +21,8 @@ import {
   TableRow,
   Paper,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  Alert
 } from '@mui/material';
 import {
   Search,
@@ -29,11 +30,14 @@ import {
   LocalPharmacy,
   Medication,
   CheckCircle,
-  Schedule
+  Schedule,
+  PersonAdd
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacyService';
 
 const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
+  const navigate = useNavigate();
   const [searchForm, setSearchForm] = useState({
     prenom: '',
     nom: '',
@@ -242,7 +246,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
                         size="small"
                         sx={{ fontWeight: 'bold' }}
                       >
-                        Voir Prescriptions
+                        Voir prescriptions
                       </Button>
                     </Box>
                   </CardContent>
@@ -251,6 +255,26 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
             ))}
           </Grid>
         </Box>
+      )}
+
+      {/* No Results Message */}
+      {searchResults.length === 0 && (searchForm.prenom || searchForm.nom || searchForm.cne) && !searching && (
+        <Alert severity="info" sx={{ mt: 3 }}>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Aucun patient trouvé avec ces critères de recherche.
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Le patient que vous recherchez n'est peut-être pas encore enregistré dans le système.
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<PersonAdd />}
+            onClick={() => navigate('/medecin/walk-in-patient')}
+            sx={{ fontWeight: 'bold' }}
+          >
+            Ajouter un patient sur place
+          </Button>
+        </Alert>
       )}
 
       {/* Prescriptions Dialog */}

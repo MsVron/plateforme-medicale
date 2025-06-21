@@ -73,13 +73,9 @@ const SidebarContainer = () => {
   } else if (user.role === 'hospital') {
     menuItems = [
       { text: 'Tableau de bord', path: '/hospital/dashboard', icon: <LocalHospitalIcon /> },
-      { text: 'Rechercher Patient', path: '/hospital/patients/search', icon: <PersonSearchIcon /> },
-      { text: 'Patients Hôpital', path: '/hospital/patients', icon: <PeopleIcon /> },
-      { text: 'Patient Direct', path: '/hospital/patient-direct', icon: <PersonAddIcon /> },
-      { text: 'Gestion des Lits', path: '/hospital/bed-management', icon: <BedIcon /> },
-      { text: 'Chirurgies', path: '/hospital/surgery-schedule', icon: <MedicalIcon /> },
       { text: 'Médecins Hôpital', path: '/hospital/doctors', icon: <AssignmentIndIcon /> },
-      { text: 'Statistiques', path: '/hospital/statistics', icon: <BarChartIcon /> },
+      { text: 'Patients Sans Rendez-vous', path: '/hospital/walk-in', icon: <PersonAddIcon /> },
+      { text: 'Admissions', path: '/hospital/admissions', icon: <MedicalIcon /> },
     ];
   } else if (user.role === 'institution') {
     menuItems = [

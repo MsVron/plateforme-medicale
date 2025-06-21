@@ -13,7 +13,8 @@ import {
   Edit as EditIcon,
   Person as PersonIcon,
   Clear as ClearIcon,
-  Badge as BadgeIcon
+  Badge as BadgeIcon,
+  PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
 
 const PatientSearch = () => {
@@ -379,6 +380,16 @@ const PatientSearch = () => {
                   <Typography variant="body2" color="textSecondary" sx={{ mt: 2, fontStyle: 'italic' }}>
                     <strong>Rappel:</strong> La recherche nécessite une correspondance exacte pour les noms et le CIN.
                   </Typography>
+                  <Box sx={{ mt: 3, textAlign: 'center' }}>
+                    <Button
+                      variant="contained"
+                      startIcon={<PersonAddIcon />}
+                      onClick={() => navigate('/medecin/walk-in-patient')}
+                      sx={{ fontWeight: 'bold' }}
+                    >
+                      Ajouter un patient sur place
+                    </Button>
+                  </Box>
                 </Alert>
               )}
             </>

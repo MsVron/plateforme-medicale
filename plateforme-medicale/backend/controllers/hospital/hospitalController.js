@@ -65,98 +65,64 @@ exports.admitPatient = async (req, res) => {
   try {
     const hospitalId = req.user.id_specifique_role;
     const { patientId } = req.params;
-    const { 
-      medecin_id, 
-      admission_reason, 
-      bed_number, 
-      ward_name 
-    } = req.body;
-
-    // Validate required fields
-    if (!medecin_id || !admission_reason) {
-      return res.status(400).json({ 
-        message: 'Médecin et motif d\'admission sont requis' 
-      });
-    }
+    const { admission_date, reason, reason_type, department, notes } = req.body;
 
     // Check if patient exists
     const [patients] = await db.execute(
-      'SELECT id, prenom, nom FROM patients WHERE id = ?', 
+      'SELECT id FROM patients WHERE id = ?',
       [patientId]
     );
-    
+
     if (patients.length === 0) {
-      return res.status(404).json({ message: 'Patient non trouvé' });
-    }
-
-    // Check if doctor works at this hospital
-    const [doctorCheck] = await db.execute(`
-      SELECT mi.medecin_id 
-      FROM medecin_institution mi 
-      WHERE mi.medecin_id = ? AND mi.institution_id = ?
-    `, [medecin_id, hospitalId]);
-
-    if (doctorCheck.length === 0) {
-      return res.status(400).json({ 
-        message: 'Ce médecin ne travaille pas dans cet hôpital' 
+      return res.status(404).json({
+        success: false,
+        message: 'Patient non trouvé'
       });
     }
 
-    // Check if patient is already admitted to this hospital
-    const [existingAssignment] = await db.execute(`
-      SELECT id FROM hospital_assignments 
-      WHERE patient_id = ? AND hospital_id = ? AND status = 'active'
-    `, [patientId, hospitalId]);
+    // Check if patient is already admitted and not discharged
+    const [existingAdmissions] = await db.execute(
+      'SELECT id FROM hospital_assignments WHERE patient_id = ? AND hospital_id = ? AND discharge_date IS NULL',
+      [patientId, hospitalId]
+    );
 
-    if (existingAssignment.length > 0) {
-      return res.status(400).json({ 
-        message: 'Patient déjà admis dans cet hôpital' 
+    if (existingAdmissions.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Le patient est déjà admis dans cet hôpital'
       });
     }
 
-    // Create hospital assignment
-    const [result] = await db.execute(`
-      INSERT INTO hospital_assignments (
-        patient_id, medecin_id, hospital_id, admission_date, 
-        admission_reason, bed_number, ward_name, assigned_by_user_id
-      ) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?)
-    `, [
-      patientId, medecin_id, hospitalId, admission_reason, 
-      bed_number, ward_name, req.user.id
-    ]);
+    // Insert admission record
+    const [result] = await db.execute(
+      `INSERT INTO hospital_assignments 
+       (patient_id, hospital_id, admission_date, reason, reason_type, department, notes, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [patientId, hospitalId, admission_date, reason, reason_type, department, notes]
+    );
 
-    // Update bed occupancy if bed number provided
-    if (bed_number) {
-      await db.execute(`
-        UPDATE hospital_beds 
-        SET is_occupied = TRUE, current_patient_assignment_id = ?
-        WHERE hospital_id = ? AND bed_number = ?
-      `, [result.insertId, hospitalId, bed_number]);
-    }
+    // Add to medical record
+    await db.execute(
+      `INSERT INTO medical_notes 
+       (patient_id, doctor_id, note_type, content, created_at) 
+       VALUES (?, ?, 'admission', ?, NOW())`,
+      [
+        patientId, 
+        req.user.id, 
+        `Admission hospitalière - ${reason_type}: ${reason}${department ? ` (Département: ${department})` : ''}${notes ? ` - Notes: ${notes}` : ''}`
+      ]
+    );
 
-    // Log the admission
-    await db.execute(`
-      INSERT INTO historique_actions (
-        utilisateur_id, action_type, table_concernee, 
-        enregistrement_id, description
-      ) VALUES (?, ?, ?, ?, ?)
-    `, [
-      req.user.id, 
-      'PATIENT_ADMISSION', 
-      'hospital_assignments', 
-      result.insertId, 
-      `Admission de ${patients[0].prenom} ${patients[0].nom}`
-    ]);
-
-    return res.status(201).json({ 
+    res.json({
+      success: true,
       message: 'Patient admis avec succès',
-      assignmentId: result.insertId
+      data: { id: result.insertId }
     });
   } catch (error) {
-    console.error('Erreur lors de l\'admission:', error);
-    return res.status(500).json({ 
-      message: 'Erreur serveur', 
-      error: error.message 
+    console.error('Error admitting patient:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'admission du patient'
     });
   }
 };
@@ -166,62 +132,52 @@ exports.dischargePatient = async (req, res) => {
   try {
     const hospitalId = req.user.id_specifique_role;
     const { assignmentId } = req.params;
-    const { discharge_reason } = req.body;
+    const { discharge_date, discharge_reason, discharge_notes } = req.body;
 
-    // Validate assignment exists and belongs to this hospital
-    const [assignments] = await db.execute(`
-      SELECT ha.*, p.prenom, p.nom 
-      FROM hospital_assignments ha
-      JOIN patients p ON ha.patient_id = p.id
-      WHERE ha.id = ? AND ha.hospital_id = ? AND ha.status = 'active'
-    `, [assignmentId, hospitalId]);
+    // Check if assignment exists and belongs to this hospital
+    const [assignments] = await db.execute(
+      'SELECT patient_id FROM hospital_assignments WHERE id = ? AND hospital_id = ? AND discharge_date IS NULL',
+      [assignmentId, hospitalId]
+    );
 
     if (assignments.length === 0) {
-      return res.status(404).json({ 
-        message: 'Assignment non trouvé ou patient déjà sorti' 
+      return res.status(404).json({
+        success: false,
+        message: 'Admission non trouvée ou patient déjà sorti'
       });
     }
 
-    const assignment = assignments[0];
+    const patientId = assignments[0].patient_id;
 
-    // Update assignment status
-    await db.execute(`
-      UPDATE hospital_assignments 
-      SET status = 'discharged', discharge_date = NOW(), discharge_reason = ?
-      WHERE id = ?
-    `, [discharge_reason, assignmentId]);
+    // Update discharge information
+    await db.execute(
+      `UPDATE hospital_assignments 
+       SET discharge_date = ?, discharge_reason = ?, discharge_notes = ?, updated_at = NOW()
+       WHERE id = ?`,
+      [discharge_date, discharge_reason, discharge_notes, assignmentId]
+    );
 
-    // Free up the bed
-    if (assignment.bed_number) {
-      await db.execute(`
-        UPDATE hospital_beds 
-        SET is_occupied = FALSE, current_patient_assignment_id = NULL
-        WHERE hospital_id = ? AND bed_number = ?
-      `, [hospitalId, assignment.bed_number]);
-    }
+    // Add to medical record
+    await db.execute(
+      `INSERT INTO medical_notes 
+       (patient_id, doctor_id, note_type, content, created_at) 
+       VALUES (?, ?, 'discharge', ?, NOW())`,
+      [
+        patientId, 
+        req.user.id, 
+        `Sortie hospitalière - ${discharge_reason}${discharge_notes ? ` - Notes: ${discharge_notes}` : ''}`
+      ]
+    );
 
-    // Log the discharge
-    await db.execute(`
-      INSERT INTO historique_actions (
-        utilisateur_id, action_type, table_concernee, 
-        enregistrement_id, description
-      ) VALUES (?, ?, ?, ?, ?)
-    `, [
-      req.user.id, 
-      'PATIENT_DISCHARGE', 
-      'hospital_assignments', 
-      assignmentId, 
-      `Sortie de ${assignment.prenom} ${assignment.nom}`
-    ]);
-
-    return res.status(200).json({ 
+    res.json({
+      success: true,
       message: 'Patient sorti avec succès'
     });
   } catch (error) {
-    console.error('Erreur lors de la sortie:', error);
-    return res.status(500).json({ 
-      message: 'Erreur serveur', 
-      error: error.message 
+    console.error('Error discharging patient:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la sortie du patient'
     });
   }
 };
@@ -1019,3 +975,112 @@ exports.removeDoctorFromHospital = async (req, res) => {
     });
   }
 };
+
+// Get hospital admissions
+exports.getHospitalAdmissions = async (req, res) => {
+  try {
+    const hospitalId = req.user.institution_id || req.user.id;
+
+    const query = `
+      SELECT 
+        ha.*,
+        p.prenom as patient_prenom,
+        p.nom as patient_nom,
+        p.CNE as patient_cne,
+        p.telephone as patient_telephone
+      FROM hospital_assignments ha
+      JOIN patients p ON ha.patient_id = p.id
+      WHERE ha.hospital_id = ?
+      ORDER BY ha.admission_date DESC
+    `;
+
+    const [admissions] = await db.execute(query, [hospitalId]);
+
+    res.json({
+      success: true,
+      data: admissions
+    });
+  } catch (error) {
+    console.error('Error fetching hospital admissions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des admissions'
+    });
+  }
+};
+
+// Get doctor statistics
+exports.getDoctorStats = async (req, res) => {
+  try {
+    const hospitalId = req.user.institution_id || req.user.id;
+
+    const [stats] = await db.execute(`
+      SELECT 
+        COUNT(*) as totalDoctors,
+        COUNT(CASE WHEN hd.status = 'active' THEN 1 END) as activeDoctors
+      FROM hospital_doctors hd
+      WHERE hd.hospital_id = ?
+    `, [hospitalId]);
+
+    res.json({
+      success: true,
+      data: stats[0] || { totalDoctors: 0, activeDoctors: 0 }
+    });
+  } catch (error) {
+    console.error('Error fetching doctor stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des statistiques des médecins'
+    });
+  }
+};
+
+// Get admission statistics
+exports.getAdmissionStats = async (req, res) => {
+  try {
+    const hospitalId = req.user.institution_id || req.user.id;
+
+    const [stats] = await db.execute(`
+      SELECT 
+        COUNT(*) as totalAdmissions,
+        COUNT(CASE WHEN discharge_date IS NULL THEN 1 END) as currentPatients
+      FROM hospital_assignments
+      WHERE hospital_id = ?
+    `, [hospitalId]);
+
+    res.json({
+      success: true,
+      data: stats[0] || { totalAdmissions: 0, currentPatients: 0 }
+    });
+  } catch (error) {
+    console.error('Error fetching admission stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des statistiques d\'admission'
+    });
+  }
+};
+
+// Get all medical specialties
+exports.getSpecialties = async (req, res) => {
+  try {
+    const [specialties] = await db.execute(`
+      SELECT id, nom, description
+      FROM specialites
+      ORDER BY nom ASC
+    `);
+
+    res.json({
+      success: true,
+      data: specialties
+    });
+  } catch (error) {
+    console.error('Error fetching specialties:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des spécialités'
+    });
+  }
+};
+
+

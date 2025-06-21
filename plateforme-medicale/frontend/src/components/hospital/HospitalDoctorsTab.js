@@ -45,9 +45,14 @@ import {
 import hospitalService from '../../services/hospitalService';
 
 const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
+  // Provide default functions if not provided
+  const handleSuccess = onSuccess || ((message) => console.log('Success:', message));
+  const handleError = onError || ((message) => console.error('Error:', message));
+  const handleRefresh = onRefresh || (() => {});
   const [tabValue, setTabValue] = useState(0);
   const [hospitalDoctors, setHospitalDoctors] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
+  const [specialties, setSpecialties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [addDialog, setAddDialog] = useState({ open: false, doctor: null });
@@ -64,13 +69,6 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
     notes: ''
   });
 
-  const specialties = [
-    'Cardiologie', 'Dermatologie', 'Endocrinologie', 'Gastroentérologie',
-    'Gynécologie', 'Neurologie', 'Oncologie', 'Ophtalmologie',
-    'Orthopédie', 'Pédiatrie', 'Psychiatrie', 'Radiologie',
-    'Urologie', 'Anesthésie', 'Chirurgie générale', 'Médecine interne'
-  ];
-
   const departments = [
     'Urgences', 'Cardiologie', 'Chirurgie', 'Médecine interne',
     'Pédiatrie', 'Gynécologie-Obstétrique', 'Orthopédie', 'Neurologie',
@@ -78,8 +76,27 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
   ];
 
   useEffect(() => {
-    fetchHospitalDoctors();
+    fetchInitialData();
   }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
+      // Fetch both hospital doctors and specialties in parallel
+      const [doctorsResponse, specialtiesResponse] = await Promise.all([
+        hospitalService.getHospitalDoctors(),
+        hospitalService.getSpecialties()
+      ]);
+      
+      setHospitalDoctors(doctorsResponse.doctors || []);
+      setSpecialties(specialtiesResponse.data || []);
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+      handleError('Erreur lors du chargement des données');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchHospitalDoctors = async () => {
     try {
@@ -88,7 +105,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
       setHospitalDoctors(response.doctors || []);
     } catch (error) {
       console.error('Error fetching hospital doctors:', error);
-      onError('Erreur lors du chargement des médecins');
+      handleError('Erreur lors du chargement des médecins');
     } finally {
       setLoading(false);
     }
@@ -101,7 +118,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
       setSearchResults(response.doctors || []);
     } catch (error) {
       console.error('Error searching doctors:', error);
-      onError('Erreur lors de la recherche');
+      handleError('Erreur lors de la recherche');
     } finally {
       setSearchLoading(false);
     }
@@ -119,13 +136,13 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
   const handleSaveAdd = async () => {
     try {
       await hospitalService.addDoctorToHospital(addDialog.doctor.id, addForm);
-      onSuccess('Médecin ajouté à l\'hôpital avec succès');
+      handleSuccess('Médecin ajouté à l\'hôpital avec succès');
       setAddDialog({ open: false, doctor: null });
       fetchHospitalDoctors();
       handleSearch(); // Refresh search results
-      onRefresh();
+      handleRefresh();
     } catch (error) {
-      onError(error.message || 'Erreur lors de l\'ajout');
+      handleError(error.message || 'Erreur lors de l\'ajout');
     }
   };
 
@@ -133,11 +150,11 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
     if (window.confirm('Êtes-vous sûr de vouloir retirer ce médecin de l\'hôpital ?')) {
       try {
         await hospitalService.removeDoctorFromHospital(doctorId);
-        onSuccess('Médecin retiré de l\'hôpital avec succès');
+        handleSuccess('Médecin retiré de l\'hôpital avec succès');
         fetchHospitalDoctors();
-        onRefresh();
+        handleRefresh();
       } catch (error) {
-        onError(error.message || 'Erreur lors de la suppression');
+        handleError(error.message || 'Erreur lors de la suppression');
       }
     }
   };
@@ -164,7 +181,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
           Gestion des Médecins de l'Hôpital
         </Typography>
         <Tooltip title="Actualiser">
-          <IconButton onClick={fetchHospitalDoctors} color="primary">
+          <IconButton onClick={fetchInitialData} color="primary">
             <Refresh />
           </IconButton>
         </Tooltip>
@@ -365,9 +382,11 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                 <Grid item xs={12} sm={3}>
                   <Autocomplete
                     options={specialties}
+                    getOptionLabel={(option) => typeof option === 'string' ? option : option.nom}
                     value={searchForm.specialite}
                     onChange={(event, newValue) => {
-                      setSearchForm(prev => ({ ...prev, specialite: newValue || '' }));
+                      const value = typeof newValue === 'string' ? newValue : (newValue ? newValue.nom : '');
+                      setSearchForm(prev => ({ ...prev, specialite: value }));
                     }}
                     renderInput={(params) => (
                       <TextField

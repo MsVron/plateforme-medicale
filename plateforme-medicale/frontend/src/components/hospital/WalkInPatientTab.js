@@ -12,7 +12,8 @@ import {
   Select,
   MenuItem,
   CircularProgress,
-  Alert
+  Alert,
+  Snackbar
 } from '@mui/material';
 import {
   PersonAdd,
@@ -24,7 +25,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { fr } from 'date-fns/locale';
 import hospitalService from '../../services/hospitalService';
 
-const WalkInPatientTab = ({ onSuccess, onError, onRefresh }) => {
+const WalkInPatientTab = ({ onStatsUpdate }) => {
   const [patientForm, setPatientForm] = useState({
     prenom: '',
     nom: '',
@@ -41,6 +42,7 @@ const WalkInPatientTab = ({ onSuccess, onError, onRefresh }) => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const handleFieldChange = (field, value) => {
     setPatientForm(prev => ({
@@ -78,33 +80,24 @@ const WalkInPatientTab = ({ onSuccess, onError, onRefresh }) => {
       newErrors.email = 'Format d\'email invalide';
     }
 
-    // Phone validation
-    if (patientForm.telephone && !/^[0-9+\-\s()]+$/.test(patientForm.telephone)) {
-      newErrors.telephone = 'Format de téléphone invalide';
-    }
-
-    // Age validation
-    if (patientForm.date_naissance) {
-      const age = new Date().getFullYear() - new Date(patientForm.date_naissance).getFullYear();
-      if (age < 0 || age > 150) {
-        newErrors.date_naissance = 'Date de naissance invalide';
-      }
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      onError('Veuillez corriger les erreurs dans le formulaire');
+      setSnackbar({ open: true, message: 'Veuillez corriger les erreurs dans le formulaire', severity: 'error' });
       return;
     }
 
     try {
       setSubmitting(true);
-      await hospitalService.addWalkInPatient(patientForm);
-      onSuccess('Patient ajouté avec succès');
+      await hospitalService.addWalkInPatient({
+        ...patientForm,
+        date_naissance: patientForm.date_naissance ? patientForm.date_naissance.toISOString().split('T')[0] : null
+      });
+      
+      setSnackbar({ open: true, message: 'Patient ajouté avec succès', severity: 'success' });
       
       // Reset form
       setPatientForm({
@@ -122,10 +115,14 @@ const WalkInPatientTab = ({ onSuccess, onError, onRefresh }) => {
         pays: 'Maroc'
       });
       
-      onRefresh();
+      if (onStatsUpdate) onStatsUpdate();
     } catch (error) {
       console.error('Error adding patient:', error);
-      onError(error.message || 'Erreur lors de l\'ajout du patient');
+      setSnackbar({ 
+        open: true, 
+        message: error.message || 'Erreur lors de l\'ajout du patient', 
+        severity: 'error' 
+      });
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +132,7 @@ const WalkInPatientTab = ({ onSuccess, onError, onRefresh }) => {
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
       <Box>
         <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.dark' }}>
-          Ajouter un Patient Direct
+          Ajouter un Patient Sans Rendez-vous
         </Typography>
 
         <Card sx={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
@@ -224,7 +221,6 @@ const WalkInPatientTab = ({ onSuccess, onError, onRefresh }) => {
                   onChange={(e) => handleFieldChange('CNE', e.target.value.toUpperCase())}
                   error={!!errors.CNE}
                   helperText={errors.CNE}
-                  sx={{ mb: 2 }}
                 />
               </Grid>
 
@@ -343,6 +339,20 @@ const WalkInPatientTab = ({ onSuccess, onError, onRefresh }) => {
             </Grid>
           </CardContent>
         </Card>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </LocalizationProvider>
   );

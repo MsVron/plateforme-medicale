@@ -38,4 +38,16 @@ router.get('/doctors/search', verifyToken, isHospital, hospitalController.search
 router.post('/doctors/:doctorId/assign', verifyToken, isHospital, hospitalController.addDoctorToHospital);
 router.delete('/doctors/:doctorId/remove', verifyToken, isHospital, hospitalController.removeDoctorFromHospital);
 
+// Hospital admissions routes
+router.get('/admissions', verifyToken, isHospital, hospitalController.getHospitalAdmissions);
+router.post('/patients/:patientId/admit', verifyToken, isHospital, hospitalController.admitPatient);
+router.put('/assignments/:assignmentId/discharge', verifyToken, isHospital, hospitalController.dischargePatient);
+
+// Statistics routes
+router.get('/stats/doctors', verifyToken, isHospital, hospitalController.getDoctorStats);
+router.get('/stats/admissions', verifyToken, isHospital, hospitalController.getAdmissionStats);
+
+// Get all medical specialties
+router.get('/specialties', hospitalController.getSpecialties);
+
 module.exports = router; 

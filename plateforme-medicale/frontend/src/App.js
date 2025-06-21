@@ -330,6 +330,14 @@ function App() {
               }
             />
             <Route
+              path="/medecin/patients/search"
+              element={
+                <ProtectedRoute allowedRoles={['medecin']}>
+                  <PatientSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/medecin/medical-records"
               element={
                 <ProtectedRoute allowedRoles={['medecin']}>
@@ -404,6 +412,14 @@ function App() {
               }
             />
             <Route
+              path="/patient/doctor-search"
+              element={
+                <ProtectedRoute allowedRoles={['patient']}>
+                  <DoctorSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/book-appointment/:doctorId"
               element={
                 <ProtectedRoute allowedRoles={['patient']}>
@@ -440,7 +456,7 @@ function App() {
               }
             />
             <Route
-              path="/hospital/patients/search"
+              path="/hospital/doctors"
               element={
                 <ProtectedRoute allowedRoles={['hospital']}>
                   <HospitalDashboard />
@@ -448,7 +464,7 @@ function App() {
               }
             />
             <Route
-              path="/hospital/patients"
+              path="/hospital/walk-in"
               element={
                 <ProtectedRoute allowedRoles={['hospital']}>
                   <HospitalDashboard />
@@ -456,7 +472,7 @@ function App() {
               }
             />
             <Route
-              path="/hospital/patient-direct"
+              path="/hospital/admissions"
               element={
                 <ProtectedRoute allowedRoles={['hospital']}>
                   <HospitalDashboard />

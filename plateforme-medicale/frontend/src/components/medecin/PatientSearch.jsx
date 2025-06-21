@@ -16,7 +16,7 @@ import {
   IconButton,
   InputAdornment
 } from '@mui/material';
-import { Search as SearchIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Visibility as VisibilityIcon, PersonAdd as PersonAddIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../utils/dateUtils';
@@ -89,7 +89,22 @@ const PatientSearch = () => {
         </Box>
       ) : searched ? (
         patients.length === 0 ? (
-          <Typography>Aucun patient trouvé.</Typography>
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Aucun patient trouvé.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Le patient que vous recherchez n'est pas encore enregistré dans le système.
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<PersonAddIcon />}
+              onClick={() => navigate('/medecin/walk-in-patient')}
+              sx={{ fontWeight: 'bold' }}
+            >
+              Ajouter un patient sur place
+            </Button>
+          </Box>
         ) : (
           <TableContainer component={Paper}>
             <Table>
