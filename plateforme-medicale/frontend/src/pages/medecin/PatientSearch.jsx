@@ -67,7 +67,7 @@ const PatientSearch = () => {
       return;
     }
     if (cne.trim() && cne.trim().length < 3) {
-      setError('Le CNE doit contenir au moins 3 caractères');
+      setError('Le CIN doit contenir au moins 3 caractères');
       return;
     }
 
@@ -117,14 +117,24 @@ const PatientSearch = () => {
     const criteria = [];
     if (searchCriteria.prenom.trim()) criteria.push(`Prénom: "${searchCriteria.prenom.trim()}"`);
     if (searchCriteria.nom.trim()) criteria.push(`Nom: "${searchCriteria.nom.trim()}"`);
-    if (searchCriteria.cne.trim()) criteria.push(`CNE: "${searchCriteria.cne.trim()}"`);
+    if (searchCriteria.cne.trim()) criteria.push(`CIN: "${searchCriteria.cne.trim()}"`);
     return criteria;
   };
 
   return (
     <Container maxWidth="lg">
-      <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-        <SearchIcon sx={{ mr: 1 }} /> Recherche de patients
+      <Typography 
+        variant="h4" 
+        gutterBottom 
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          color: 'white !important',
+          textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+          mb: 3
+        }}
+      >
+        <SearchIcon sx={{ mr: 1, color: 'white !important' }} /> Recherche de patients
       </Typography>
       
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -162,7 +172,7 @@ const PatientSearch = () => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="CNE exact"
+                label="CIN exact"
                 variant="outlined"
                 value={searchCriteria.cne}
                 onChange={(e) => handleInputChange('cne', e.target.value)}
@@ -211,13 +221,28 @@ const PatientSearch = () => {
           {searched && (
             <>
               <Box sx={{ mb: 2 }}>
-                <Typography variant="h6" gutterBottom>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    color: 'white !important',
+                    textShadow: '1px 1px 3px rgba(0,0,0,0.8)'
+                  }}
+                >
                   {patients.length} résultat{patients.length !== 1 ? 's' : ''} trouvé{patients.length !== 1 ? 's' : ''}
                 </Typography>
                 
                 {getActiveSearchCriteria().length > 0 && (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                    <Typography variant="body2" sx={{ mr: 1, alignSelf: 'center' }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, mt: 2 }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        mr: 1, 
+                        alignSelf: 'center', 
+                        color: 'white !important',
+                        textShadow: '1px 1px 3px rgba(0,0,0,0.8)'
+                      }}
+                    >
                       Critères de recherche:
                     </Typography>
                     {getActiveSearchCriteria().map((criterion, index) => (
@@ -225,8 +250,15 @@ const PatientSearch = () => {
                         key={index}
                         label={criterion} 
                         size="small" 
-                        variant="outlined" 
+                        variant="filled" 
                         color="primary"
+                        sx={{
+                          fontWeight: 'medium',
+                          color: 'white !important',
+                          '& .MuiChip-label': {
+                            color: 'white !important'
+                          }
+                        }}
                       />
                     ))}
                   </Box>
@@ -243,7 +275,7 @@ const PatientSearch = () => {
                         <TableCell>Patient</TableCell>
                         <TableCell>Âge</TableCell>
                         <TableCell>Sexe</TableCell>
-                        <TableCell>CNE</TableCell>
+                        <TableCell>CIN</TableCell>
                         <TableCell>Contact</TableCell>
                         <TableCell>Statut</TableCell>
                         <TableCell align="center">Actions</TableCell>
@@ -265,6 +297,9 @@ const PatientSearch = () => {
                                     size="small" 
                                     color="secondary" 
                                     variant="outlined"
+                                    sx={{
+                                      fontWeight: 'medium'
+                                    }}
                                   />
                                 )}
                               </Box>
@@ -287,9 +322,31 @@ const PatientSearch = () => {
                           </TableCell>
                           <TableCell>
                             {patient.a_rendez_vous_avec_medecin ? (
-                              <Chip label="Patient suivi" color="success" size="small" />
+                              <Chip 
+                                label="Patient suivi" 
+                                color="success" 
+                                size="small" 
+                                sx={{ 
+                                  color: 'white !important',
+                                  fontWeight: 'medium',
+                                  '& .MuiChip-label': {
+                                    color: 'white !important'
+                                  }
+                                }}
+                              />
                             ) : (
-                              <Chip label="Nouveau patient" color="info" size="small" />
+                              <Chip 
+                                label="Nouveau patient" 
+                                color="info" 
+                                size="small" 
+                                sx={{ 
+                                  color: 'white !important',
+                                  fontWeight: 'medium',
+                                  '& .MuiChip-label': {
+                                    color: 'white !important'
+                                  }
+                                }}
+                              />
                             )}
                           </TableCell>
                           <TableCell align="center">
@@ -319,7 +376,9 @@ const PatientSearch = () => {
                 <Alert severity="info">
                   Aucun patient trouvé avec ces critères de recherche exacts.
                   <br />
-                  <strong>Rappel:</strong> La recherche nécessite une correspondance exacte pour les noms et le CNE.
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 2, fontStyle: 'italic' }}>
+                    <strong>Rappel:</strong> La recherche nécessite une correspondance exacte pour les noms et le CIN.
+                  </Typography>
                 </Alert>
               )}
             </>

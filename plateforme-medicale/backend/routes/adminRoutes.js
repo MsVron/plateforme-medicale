@@ -106,18 +106,27 @@ router.get('/institutions', verifyToken, isAdmin, async (req, res) => {
 router.post('/institutions', verifyToken, isAdmin, async (req, res) => {
     try {
         const db = require('../config/db');
+        const { getInstitutionUserRole, isValidInstitutionType } = require('../utils/institutionMapping');
         const {
             nom, adresse, ville, code_postal, pays, telephone, email_contact,
-            site_web, description, type
+            description, type
         } = req.body;
+
+        // Validate institution type
+        if (!isValidInstitutionType(type)) {
+            return res.status(400).json({ message: 'Type d\'institution invalide' });
+        }
+
+        // Map institution type to user role
+        const type_institution = getInstitutionUserRole(type);
 
         const [result] = await db.execute(
             `INSERT INTO institutions (
                 nom, adresse, ville, code_postal, pays, telephone, email_contact,
-                site_web, description, type
+                description, type, type_institution
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [nom, adresse, ville, code_postal, pays, telephone, email_contact,
-             site_web, description, type]
+             description, type, type_institution]
         );
 
         res.json({ 
@@ -133,20 +142,29 @@ router.post('/institutions', verifyToken, isAdmin, async (req, res) => {
 router.put('/institutions/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const db = require('../config/db');
+        const { getInstitutionUserRole, isValidInstitutionType } = require('../utils/institutionMapping');
         const institutionId = req.params.id;
         const {
             nom, adresse, ville, code_postal, pays, telephone, email_contact,
-            site_web, description, type
+            description, type
         } = req.body;
+
+        // Validate institution type
+        if (!isValidInstitutionType(type)) {
+            return res.status(400).json({ message: 'Type d\'institution invalide' });
+        }
+
+        // Map institution type to user role
+        const type_institution = getInstitutionUserRole(type);
 
         await db.execute(
             `UPDATE institutions SET 
                 nom = ?, adresse = ?, ville = ?, code_postal = ?, pays = ?,
-                telephone = ?, email_contact = ?, site_web = ?, description = ?,
-                type = ?
+                telephone = ?, email_contact = ?, description = ?,
+                type = ?, type_institution = ?
             WHERE id = ?`,
             [nom, adresse, ville, code_postal, pays, telephone, email_contact,
-             site_web, description, type, institutionId]
+             description, type, type_institution, institutionId]
         );
 
         res.json({ message: 'Institution mise à jour avec succès' });

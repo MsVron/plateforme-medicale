@@ -36,6 +36,12 @@ import InstitutionManagement from './pages/admin/InstitutionManagement';
 import PharmacyManagement from './pages/admin/PharmacyManagement';
 import PatientRegistration from './pages/admin/PatientRegistration';
 import Statistics from './pages/admin/Statistics';
+import AppointmentEmailManagement from './pages/admin/AppointmentEmailManagement';
+
+// Import appointment email pages
+import AppointmentConfirmation from './pages/AppointmentConfirmation';
+import AppointmentSuccess from './pages/AppointmentSuccess';
+import AppointmentError from './pages/AppointmentError';
 
 // Import Super Admin Statistics Pages
 import StatsOverview from './pages/superadmin/StatsOverview';
@@ -133,6 +139,11 @@ function App() {
           } />
           <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          
+          {/* Appointment email routes - public access */}
+          <Route path="/appointment/confirm" element={<AppointmentConfirmation />} />
+          <Route path="/appointment/success" element={<AppointmentSuccess />} />
+          <Route path="/appointment/error" element={<AppointmentError />} />
 
           {/* Protected routes with DashboardLayout */}
           <Route element={<DashboardLayout />}>
@@ -190,6 +201,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
                   <Statistics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/appointment-emails"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
+                  <AppointmentEmailManagement />
                 </ProtectedRoute>
               }
             />
@@ -300,34 +319,10 @@ function App() {
               }
             />
             <Route
-              path="/medecin/appointments"
-              element={
-                <ProtectedRoute allowedRoles={['medecin']}>
-                  <MedecinAppointments />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/medecin/patients/search"
+              path="/medecin/patient-search"
               element={
                 <ProtectedRoute allowedRoles={['medecin']}>
                   <PatientSearch />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/medecin/patients/:patientId/medical-record"
-              element={
-                <ProtectedRoute allowedRoles={['medecin']}>
-                  <PatientMedicalRecord />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/medecin/patients/:patientId/dossier"
-              element={
-                <ProtectedRoute allowedRoles={['medecin']}>
-                  <MedicalDossier />
                 </ProtectedRoute>
               }
             />
@@ -340,18 +335,26 @@ function App() {
               }
             />
             <Route
-              path="/medecin/patient-direct"
+              path="/medecin/walk-in"
               element={
-                <ProtectedRoute allowedRoles={['medecin', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['medecin']}>
                   <WalkInPatientPage />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/medecin/calendar"
+              path="/medecin/patient/:patientId"
               element={
                 <ProtectedRoute allowedRoles={['medecin']}>
-                  <MedecinCalendar />
+                  <PatientMedicalRecord />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/medecin/dossier/:patientId"
+              element={
+                <ProtectedRoute allowedRoles={['medecin']}>
+                  <MedicalDossier />
                 </ProtectedRoute>
               }
             />
@@ -362,30 +365,6 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['patient']}>
                   <PatientHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/patient/medical-record"
-              element={
-                <ProtectedRoute allowedRoles={['patient']}>
-                  <MedicalRecord />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/patient/search-doctors"
-              element={
-                <ProtectedRoute allowedRoles={['patient']}>
-                  <DoctorSearch />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/patient/doctor-search"
-              element={
-                <ProtectedRoute allowedRoles={['patient']}>
-                  <DoctorSearch />
                 </ProtectedRoute>
               }
             />
@@ -406,7 +385,23 @@ function App() {
               }
             />
             <Route
-              path="/patient/book-appointment/:doctorId"
+              path="/patient/medical-record"
+              element={
+                <ProtectedRoute allowedRoles={['patient']}>
+                  <MedicalRecord />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/search-doctors"
+              element={
+                <ProtectedRoute allowedRoles={['patient']}>
+                  <DoctorSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/book-appointment/:doctorId"
               element={
                 <ProtectedRoute allowedRoles={['patient']}>
                   <AppointmentBookingPage />
@@ -433,14 +428,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/hospital/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['hospital']}>
-                  <HospitalDashboard />
-                </ProtectedRoute>
-              }
-            />
 
             {/* Pharmacy routes */}
             <Route
@@ -448,14 +435,6 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['pharmacy']}>
                   <PharmacyHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/pharmacy/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['pharmacy']}>
-                  <PharmacyDashboard />
                 </ProtectedRoute>
               }
             />
@@ -469,18 +448,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/laboratory/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['laboratory']}>
-                  <LaboratoryDashboard />
-                </ProtectedRoute>
-              }
-            />
           </Route>
-
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>
     </ThemeProvider>

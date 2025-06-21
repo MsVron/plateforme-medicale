@@ -38,7 +38,7 @@ import {
   Save as SaveIcon,
   Cancel as CancelIcon
 } from '@mui/icons-material';
-import AnalysisSection from './AnalysisSection';
+import AnalysisRequestSection from './AnalysisRequestSection';
 import PatientProfileEditor from './PatientProfileEditor';
 import WeightHeightHistory from './WeightHeightHistory';
 import { formatDate, formatDateTime } from '../../utils/dateUtils';
@@ -375,8 +375,8 @@ const MedicalDossier = () => {
                 {calculateAge(patient.date_naissance)} ans • {patient.sexe === 'M' ? 'Homme' : 'Femme'}
               </Typography>
               {patient.CNE && (
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                  CNE: {patient.CNE}
+                <Typography variant="body2" color="textSecondary">
+                  CIN: {patient.CNE}
                 </Typography>
               )}
             </Box>
@@ -480,9 +480,9 @@ const MedicalDossier = () => {
                     />
                   </ListItem>
                   <ListItem>
-                    <ListItemText 
-                      primary="CNE" 
-                      secondary={patient.CNE || 'Non renseigné'} 
+                    <ListItemText
+                      primary="CIN"
+                      secondary={patient.CNE || 'Non renseigné'}
                     />
                   </ListItem>
                   <ListItem>
@@ -844,11 +844,12 @@ const MedicalDossier = () => {
           </AccordionDetails>
         </Accordion>
 
-        {/* 4. Analyses Section - Recent test results */}
+        {/* 4. Analysis Requests Section - Request test results */}
         <Paper sx={{ p: 2, mb: 2 }}>
-          <AnalysisSection 
+          <AnalysisRequestSection 
             patientId={patientId}
             analyses={analyses}
+            imagingResults={imageries}
             onRefresh={fetchDossier}
           />
         </Paper>

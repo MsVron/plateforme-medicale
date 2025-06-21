@@ -154,16 +154,16 @@ const PatientRegistration = () => {
                 break;
                 
             case 'CNE':
-                if (!value || value.trim().length === 0) {
-                    error = 'Le CNE est requis';
-                } else if (!/^[A-Z]{1,2}[0-9]{6,8}$/.test(value.trim())) {
-                    error = 'Format CNE invalide (ex: A123456 ou AB1234567)';
+                if (!value.trim()) {
+                    error = 'Le CIN est requis';
+                } else if (!/^[A-Za-z]{1,2}[A-Za-z0-9]{6,18}$/.test(value.trim())) {
+                    error = 'Format CIN invalide (ex: A123456 ou AB1234567)';
                 }
                 if (formData.CNE_confirm) {
                     if (value !== formData.CNE_confirm) {
                         setErrors(prevErrors => ({
                             ...prevErrors,
-                            CNE_confirm: 'Les CNE ne correspondent pas'
+                            CNE_confirm: 'Les CIN ne correspondent pas'
                         }));
                     } else {
                         setErrors(prevErrors => ({
@@ -175,10 +175,10 @@ const PatientRegistration = () => {
                 break;
                 
             case 'CNE_confirm':
-                if (!value || value.trim().length === 0) {
-                    error = 'La confirmation du CNE est requise';
+                if (!value.trim()) {
+                    error = 'La confirmation du CIN est requise';
                 } else if (value !== formData.CNE) {
-                    error = 'Les CNE ne correspondent pas';
+                    error = 'Les CIN ne correspondent pas';
                 }
                 break;
                 
@@ -468,31 +468,35 @@ const PatientRegistration = () => {
 
                             <Grid item xs={12} md={6}>
                                 <TextField
+                                    required
                                     fullWidth
+                                    id="CNE"
                                     name="CNE"
-                                    label="CNE *"
+                                    label="CIN *"
                                     value={formData.CNE}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                     error={shouldShowError('CNE')}
                                     helperText={shouldShowError('CNE') ? errors.CNE : 'Format: A123456 ou AB1234567'}
-                                    required
+                                    variant="outlined"
                                     sx={getCNEFieldColor('CNE')}
                                 />
                             </Grid>
 
                             <Grid item xs={12} md={6}>
                                 <TextField
+                                    required
                                     fullWidth
+                                    id="CNE_confirm"
                                     name="CNE_confirm"
-                                    label="Confirmer CNE *"
+                                    label="Confirmer CIN *"
                                     value={formData.CNE_confirm}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                     onPaste={handleCNEConfirmPaste}
                                     error={shouldShowError('CNE_confirm')}
-                                    helperText={shouldShowError('CNE_confirm') ? errors.CNE_confirm : 'Retapez le CNE (copier-coller désactivé)'}
-                                    required
+                                    helperText={shouldShowError('CNE_confirm') ? errors.CNE_confirm : 'Retapez le CIN (copier-coller désactivé)'}
+                                    variant="outlined"
                                     sx={getCNEFieldColor('CNE_confirm')}
                                 />
                             </Grid>

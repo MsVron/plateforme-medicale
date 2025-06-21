@@ -9,6 +9,10 @@ router.get('/patients/search', verifyToken, isLaboratory, laboratoryController.s
 // Test request routes
 router.get('/patients/:patientId/test-requests', verifyToken, isLaboratory, laboratoryController.getPatientTestRequests);
 
+// Request acceptance routes
+router.post('/test-requests/:testRequestId/accept', verifyToken, isLaboratory, laboratoryController.acceptTestRequest);
+router.post('/imaging-requests/:imagingRequestId/accept', verifyToken, isLaboratory, laboratoryController.acceptImagingRequest);
+
 // Result upload routes
 router.put('/test-requests/:testRequestId/results', verifyToken, isLaboratory, laboratoryController.uploadTestResults);
 router.put('/imaging-requests/:imagingRequestId/results', verifyToken, isLaboratory, laboratoryController.uploadImagingResults);

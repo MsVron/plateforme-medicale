@@ -24,6 +24,7 @@ import {
   Stop
 } from '@mui/icons-material';
 import laboratoryService from '../../services/laboratoryService';
+import axios from '../../services/axiosConfig';
 
 const PendingWorkTab = ({ onSuccess, onError, onRefresh }) => {
   const [pendingWork, setPendingWork] = useState([]);
@@ -47,10 +48,34 @@ const PendingWorkTab = ({ onSuccess, onError, onRefresh }) => {
     }
   };
 
+  const handleAcceptRequest = async (testRequestId, requestType) => {
+    try {
+      setUpdatingStatus(prev => ({ ...prev, [testRequestId]: true }));
+      const token = localStorage.getItem('token');
+      
+      const endpoint = requestType === 'analysis' 
+        ? `/laboratory/test-requests/${testRequestId}/accept`
+        : `/laboratory/imaging-requests/${testRequestId}/accept`;
+      
+      await axios.post(endpoint, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      onSuccess('Demande acceptée et assignée');
+      fetchPendingWork();
+      onRefresh();
+    } catch (error) {
+      console.error('Accept request error:', error);
+      onError(error.message || 'Erreur lors de l\'acceptation de la demande');
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [testRequestId]: false }));
+    }
+  };
+
   const handleStatusUpdate = async (testRequestId, newStatus) => {
     try {
       setUpdatingStatus(prev => ({ ...prev, [testRequestId]: true }));
-      // For now, just show success message - backend endpoint might not exist yet
+      // This would update the status in the backend
       onSuccess(`Statut mis à jour: ${getStatusLabel(newStatus)}`);
       fetchPendingWork();
       onRefresh();
@@ -64,22 +89,24 @@ const PendingWorkTab = ({ onSuccess, onError, onRefresh }) => {
 
   const getStatusLabel = (status) => {
     const labels = {
-      'pending': 'En attente',
+      'requested': 'Demandée',
       'in_progress': 'En cours',
-      'completed': 'Terminé',
-      'cancelled': 'Annulé'
+      'completed': 'Terminée',
+      'validated': 'Validée',
+      'cancelled': 'Annulée'
     };
     return labels[status] || status;
   };
 
   const getStatusChip = (testRequest) => {
     const statusConfig = {
-      'pending': { label: 'En attente', color: 'warning', icon: <Schedule /> },
+      'requested': { label: 'Demandée', color: 'warning', icon: <Schedule /> },
       'in_progress': { label: 'En cours', color: 'info', icon: <Science /> },
-      'completed': { label: 'Terminé', color: 'success', icon: <CheckCircle /> }
+      'completed': { label: 'Terminée', color: 'success', icon: <CheckCircle /> },
+      'validated': { label: 'Validée', color: 'success', icon: <CheckCircle /> }
     };
     
-    const config = statusConfig[testRequest.status] || { label: testRequest.status, color: 'default', icon: <Schedule /> };
+    const config = statusConfig[testRequest.request_status || testRequest.status] || { label: testRequest.request_status || testRequest.status, color: 'default', icon: <Schedule /> };
     return <Chip label={config.label} color={config.color} size="small" icon={config.icon} />;
   };
 
@@ -106,8 +133,9 @@ const PendingWorkTab = ({ onSuccess, onError, onRefresh }) => {
   const getProgressValue = (testRequest) => {
     // This would be calculated based on actual progress tracking
     // For now, we'll use a simple heuristic based on status and time
-    if (testRequest.status === 'completed') return 100;
-    if (testRequest.status === 'in_progress') {
+    const status = testRequest.request_status || testRequest.status;
+    if (status === 'completed' || status === 'validated') return 100;
+    if (status === 'in_progress') {
       const daysInProgress = calculateDaysAgo(testRequest.started_date || testRequest.request_date);
       return Math.min(daysInProgress * 25, 75); // Assume 4 days for completion
     }
@@ -174,7 +202,7 @@ const PendingWorkTab = ({ onSuccess, onError, onRefresh }) => {
                         {testRequest.patient_name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        CNE: {testRequest.patient_cne}
+                        CIN: {testRequest.patient_cne}
                       </Typography>
                     </Box>
                   </Box>
@@ -235,25 +263,25 @@ const PendingWorkTab = ({ onSuccess, onError, onRefresh }) => {
 
                   {/* Action Buttons */}
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {testRequest.status === 'pending' && (
+                    {(testRequest.request_status === 'requested' || testRequest.status === 'requested') && (
                       <Button
                         variant="contained"
                         startIcon={updatingStatus[testRequest.id] ? <CircularProgress size={16} /> : <PlayArrow />}
-                        onClick={() => handleStatusUpdate(testRequest.id, 'in_progress')}
+                        onClick={() => handleAcceptRequest(testRequest.id, testRequest.request_type || 'analysis')}
                         disabled={updatingStatus[testRequest.id]}
                         size="small"
                         sx={{ fontWeight: 'bold' }}
                       >
-                        Commencer
+                        Accepter
                       </Button>
                     )}
                     
-                    {testRequest.status === 'in_progress' && (
+                    {(testRequest.request_status === 'in_progress' || testRequest.status === 'in_progress') && (
                       <>
                         <Button
                           variant="outlined"
                           startIcon={updatingStatus[testRequest.id] ? <CircularProgress size={16} /> : <Pause />}
-                          onClick={() => handleStatusUpdate(testRequest.id, 'pending')}
+                          onClick={() => handleStatusUpdate(testRequest.id, 'requested')}
                           disabled={updatingStatus[testRequest.id]}
                           size="small"
                           sx={{ fontWeight: 'bold' }}

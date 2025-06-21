@@ -155,13 +155,14 @@ const TestRequestsTab = ({ onSuccess, onError, onRefresh }) => {
 
   const getTestStatusChip = (testRequest) => {
     const statusConfig = {
-      'pending': { label: 'En attente', color: 'warning', icon: <Schedule /> },
+      'requested': { label: 'Demandée', color: 'warning', icon: <Schedule /> },
       'in_progress': { label: 'En cours', color: 'info', icon: <Science /> },
-      'completed': { label: 'Terminé', color: 'success', icon: <CheckCircle /> },
-      'cancelled': { label: 'Annulé', color: 'error', icon: <Schedule /> }
+      'completed': { label: 'Terminée', color: 'success', icon: <CheckCircle /> },
+      'validated': { label: 'Validée', color: 'success', icon: <CheckCircle /> },
+      'cancelled': { label: 'Annulée', color: 'error', icon: <Schedule /> }
     };
     
-    const config = statusConfig[testRequest.status] || { label: testRequest.status, color: 'default', icon: <Schedule /> };
+    const config = statusConfig[testRequest.request_status || testRequest.status] || { label: testRequest.request_status || testRequest.status, color: 'default', icon: <Schedule /> };
     return <Chip label={config.label} color={config.color} size="small" icon={config.icon} />;
   };
 
@@ -214,7 +215,7 @@ const TestRequestsTab = ({ onSuccess, onError, onRefresh }) => {
             <Grid item xs={12} md={8}>
               <TextField
                 fullWidth
-                placeholder="Rechercher par patient, CNE, analyse ou médecin..."
+                placeholder="Rechercher par patient, CIN, analyse ou médecin..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{
@@ -236,10 +237,11 @@ const TestRequestsTab = ({ onSuccess, onError, onRefresh }) => {
                   label="Statut"
                 >
                   <MenuItem value="all">Tous</MenuItem>
-                  <MenuItem value="pending">En attente</MenuItem>
+                  <MenuItem value="requested">Demandée</MenuItem>
                   <MenuItem value="in_progress">En cours</MenuItem>
-                  <MenuItem value="completed">Terminé</MenuItem>
-                  <MenuItem value="cancelled">Annulé</MenuItem>
+                  <MenuItem value="completed">Terminée</MenuItem>
+                  <MenuItem value="validated">Validée</MenuItem>
+                  <MenuItem value="cancelled">Annulée</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -289,7 +291,7 @@ const TestRequestsTab = ({ onSuccess, onError, onRefresh }) => {
                           {testRequest.patient_name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          CNE: {testRequest.patient_cne}
+                          CIN: {testRequest.patient_cne}
                         </Typography>
                       </Box>
                     </Box>
@@ -331,18 +333,19 @@ const TestRequestsTab = ({ onSuccess, onError, onRefresh }) => {
                           <Visibility />
                         </IconButton>
                       </Tooltip>
-                      {testRequest.status === 'pending' && (
-                        <Tooltip title="Commencer l'analyse">
+                      {(testRequest.request_status === 'requested' || testRequest.status === 'requested') && (
+                        <Tooltip title="Accepter la demande">
                           <IconButton 
                             size="small" 
                             color="info"
                             onClick={() => handleStatusUpdate(testRequest.id, 'in_progress')}
                           >
-                            <Science />
+                            <Assignment />
                           </IconButton>
                         </Tooltip>
                       )}
-                      {(testRequest.status === 'pending' || testRequest.status === 'in_progress') && (
+                      {((testRequest.request_status === 'in_progress' || testRequest.status === 'in_progress') || 
+                        (testRequest.request_status === 'completed' || testRequest.status === 'completed')) && (
                         <Tooltip title="Télécharger résultats">
                           <IconButton 
                             size="small" 
@@ -375,7 +378,7 @@ const TestRequestsTab = ({ onSuccess, onError, onRefresh }) => {
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              <strong>Patient:</strong> {resultsDialog.testRequest?.patient_name} (CNE: {resultsDialog.testRequest?.patient_cne})
+              <strong>Patient:</strong> {resultsDialog.testRequest?.patient_name} (CIN: {resultsDialog.testRequest?.patient_cne})
             </Typography>
             
             <Grid container spacing={3}>

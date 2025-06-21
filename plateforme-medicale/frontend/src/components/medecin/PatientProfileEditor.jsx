@@ -163,9 +163,10 @@ const PatientProfileEditor = ({ open, onClose, patient, onSuccess, onError }) =>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="CNE"
+                  label="CIN"
                   value={formData.CNE}
                   onChange={(e) => handleChange('CNE', e.target.value)}
+                  variant="outlined"
                 />
               </Grid>
               <Grid item xs={12} sm={6}>

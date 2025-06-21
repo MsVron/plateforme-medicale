@@ -107,46 +107,54 @@ exports.getPatientTestRequests = async (req, res) => {
   }
 };
 
-// Upload test results
+// Upload test results (Labs provide actual test results)
 exports.uploadTestResults = async (req, res) => {
   try {
     const laboratoryId = req.user.id_specifique_role;
     const { testRequestId } = req.params;
     const { 
-      valeurs, 
+      valeur_numerique,
+      valeur_texte,
+      unite,
+      valeur_normale_min,
+      valeur_normale_max,
       interpretation, 
-      commentaires, 
-      fichier_resultat,
-      technician_id 
+      est_normal,
+      est_critique,
+      notes_techniques,
+      document_url,
+      technician_user_id 
     } = req.body;
 
-    // Validate test request exists and is pending
+    // Validate test request exists and is assigned to this lab or available
     const [testRequests] = await db.execute(`
       SELECT ra.*, p.prenom, p.nom, ta.nom as test_name
       FROM resultats_analyses ra
       JOIN patients p ON ra.patient_id = p.id
       JOIN types_analyses ta ON ra.type_analyse_id = ta.id
-      WHERE ra.id = ? AND ra.statut IN ('en_attente', 'en_cours')
-    `, [testRequestId]);
+      WHERE ra.id = ? AND ra.request_status IN ('requested', 'in_progress')
+        AND (ra.laboratory_id IS NULL OR ra.laboratory_id = ?)
+    `, [testRequestId, laboratoryId]);
 
     if (testRequests.length === 0) {
       return res.status(404).json({ 
-        message: 'Demande de test non trouvée ou déjà complétée' 
+        message: 'Demande de test non trouvée, déjà complétée, ou non assignée à ce laboratoire' 
       });
     }
 
     const testRequest = testRequests[0];
 
     // Validate technician if provided
-    if (technician_id) {
+    if (technician_user_id) {
       const [technicians] = await db.execute(`
-        SELECT id FROM laboratory_technicians 
-        WHERE id = ? AND laboratory_id = ? AND is_active = TRUE
-      `, [technician_id, laboratoryId]);
+        SELECT lt.id FROM laboratory_technicians lt
+        JOIN utilisateurs u ON lt.user_id = u.id
+        WHERE u.id = ? AND lt.laboratory_id = ? AND lt.is_active = TRUE
+      `, [technician_user_id, laboratoryId]);
 
       if (technicians.length === 0) {
         return res.status(400).json({ 
-          message: 'Technicien non trouvé ou inactif' 
+          message: 'Technicien non trouvé ou non autorisé pour ce laboratoire' 
         });
       }
     }
@@ -156,22 +164,32 @@ exports.uploadTestResults = async (req, res) => {
     await conn.beginTransaction();
 
     try {
-      // Update test results
+      // Update test results with actual values
       await conn.execute(`
         UPDATE resultats_analyses 
         SET 
-          valeurs = ?,
+          valeur_numerique = ?,
+          valeur_texte = ?,
+          unite = ?,
+          valeur_normale_min = ?,
+          valeur_normale_max = ?,
           interpretation = ?,
-          commentaires = ?,
-          fichier_resultat = ?,
+          est_normal = ?,
+          est_critique = ?,
+          notes_techniques = ?,
+          document_url = ?,
           date_realisation = NOW(),
-          statut = 'termine',
-          laboratoire_id = ?,
-          technician_id = ?
+          request_status = 'completed',
+          laboratory_id = ?,
+          technician_user_id = ?,
+          date_status_updated = NOW()
         WHERE id = ?
       `, [
-        valeurs, interpretation, commentaires, fichier_resultat,
-        laboratoryId, technician_id, testRequestId
+        valeur_numerique || null, valeur_texte || null, unite || null,
+        valeur_normale_min || null, valeur_normale_max || null,
+        interpretation || null, est_normal || null, est_critique || false,
+        notes_techniques || null, document_url || null,
+        laboratoryId, technician_user_id || null, testRequestId
       ]);
 
       // Log the result upload
@@ -209,34 +227,51 @@ exports.uploadTestResults = async (req, res) => {
   }
 };
 
-// Upload imaging results
+// Upload imaging results (Labs provide actual imaging results)
 exports.uploadImagingResults = async (req, res) => {
   try {
     const laboratoryId = req.user.id_specifique_role;
     const { imagingRequestId } = req.params;
     const { 
-      findings, 
       interpretation, 
-      recommendations, 
-      image_files,
-      technician_id 
+      conclusion, 
+      image_urls,
+      technician_user_id,
+      radiologist_id
     } = req.body;
 
-    // Validate imaging request exists and is pending
+    // Validate imaging request exists and is assigned to this lab
     const [imagingRequests] = await db.execute(`
-      SELECT ir.*, p.prenom, p.nom
-      FROM imaging_requests ir
-      JOIN patients p ON ir.patient_id = p.id
-      WHERE ir.id = ? AND ir.status IN ('pending', 'in_progress')
-    `, [imagingRequestId]);
+      SELECT ri.*, p.prenom, p.nom, ti.nom as imaging_type
+      FROM resultats_imagerie ri
+      JOIN patients p ON ri.patient_id = p.id
+      JOIN types_imagerie ti ON ri.type_imagerie_id = ti.id
+      WHERE ri.id = ? AND ri.request_status IN ('scheduled', 'in_progress')
+        AND ri.institution_realisation_id = ?
+    `, [imagingRequestId, laboratoryId]);
 
     if (imagingRequests.length === 0) {
       return res.status(404).json({ 
-        message: 'Demande d\'imagerie non trouvée ou déjà complétée' 
+        message: 'Demande d\'imagerie non trouvée, déjà complétée, ou non assignée à ce laboratoire' 
       });
     }
 
     const imagingRequest = imagingRequests[0];
+
+    // Validate technician if provided
+    if (technician_user_id) {
+      const [technicians] = await db.execute(`
+        SELECT lt.id FROM laboratory_technicians lt
+        JOIN utilisateurs u ON lt.user_id = u.id
+        WHERE u.id = ? AND lt.laboratory_id = ? AND lt.is_active = TRUE
+      `, [technician_user_id, laboratoryId]);
+
+      if (technicians.length === 0) {
+        return res.status(400).json({ 
+          message: 'Technicien non trouvé ou non autorisé pour ce laboratoire' 
+        });
+      }
+    }
 
     // Start transaction
     const conn = await db.getConnection();
@@ -245,20 +280,20 @@ exports.uploadImagingResults = async (req, res) => {
     try {
       // Update imaging results
       await conn.execute(`
-        UPDATE imaging_requests 
+        UPDATE resultats_imagerie 
         SET 
-          findings = ?,
           interpretation = ?,
-          recommendations = ?,
-          image_files = ?,
-          completion_date = NOW(),
-          status = 'completed',
-          assigned_laboratory_id = ?,
-          assigned_technician_id = ?
+          conclusion = ?,
+          image_urls = ?,
+          date_realisation = NOW(),
+          request_status = 'completed',
+          technician_assigned_id = ?,
+          medecin_radiologue_id = ?,
+          date_status_updated = NOW()
         WHERE id = ?
       `, [
-        findings, interpretation, recommendations, JSON.stringify(image_files),
-        laboratoryId, technician_id, imagingRequestId
+        interpretation || null, conclusion || null, image_urls || null,
+        technician_user_id || null, radiologist_id || null, imagingRequestId
       ]);
 
       // Log the result upload
@@ -270,7 +305,7 @@ exports.uploadImagingResults = async (req, res) => {
       `, [
         req.user.id, 
         'IMAGING_RESULTS_UPLOADED', 
-        'imaging_requests', 
+        'resultats_imagerie', 
         imagingRequestId, 
         `Résultats d'imagerie uploadés pour ${imagingRequest.imaging_type} - ${imagingRequest.prenom} ${imagingRequest.nom}`
       ]);
@@ -305,39 +340,59 @@ exports.getPendingWork = async (req, res) => {
     const [pendingTests] = await db.execute(`
       SELECT 
         ra.id,
-        ra.date_demande,
-        ra.statut,
+        ra.date_prescription,
+        ra.request_status,
+        ra.priority,
+        ra.clinical_indication,
         ta.nom as test_name,
-        ta.type_analyse,
+        ta.description as test_description,
         CONCAT(p.prenom, ' ', p.nom) as patient_name,
         p.CNE,
-        CONCAT(m.prenom, ' ', m.nom) as medecin_demandeur
+        CONCAT(m.prenom, ' ', m.nom) as medecin_demandeur,
+        m.specialite_id
       FROM resultats_analyses ra
       JOIN types_analyses ta ON ra.type_analyse_id = ta.id
       JOIN patients p ON ra.patient_id = p.id
-      JOIN medecins m ON ra.medecin_id = m.id
-      WHERE ra.statut IN ('en_attente', 'en_cours')
-        AND (ra.laboratoire_id IS NULL OR ra.laboratoire_id = ?)
-      ORDER BY ra.date_demande ASC
+      JOIN medecins m ON ra.medecin_prescripteur_id = m.id
+      WHERE ra.request_status IN ('requested', 'in_progress')
+        AND (ra.laboratory_id IS NULL OR ra.laboratory_id = ?)
+      ORDER BY 
+        CASE ra.priority 
+          WHEN 'urgent' THEN 1 
+          WHEN 'normal' THEN 2 
+        END,
+        ra.date_prescription ASC
     `, [laboratoryId]);
 
     // Get pending imaging requests
     const [pendingImaging] = await db.execute(`
       SELECT 
-        ir.id,
-        ir.request_date,
-        ir.status,
-        ir.imaging_type,
-        ir.urgency_level,
+        ri.id,
+        ri.date_prescription,
+        ri.request_status,
+        ri.priority,
+        ri.clinical_indication,
+        ti.nom as imaging_type,
+        ti.description as imaging_description,
         CONCAT(p.prenom, ' ', p.nom) as patient_name,
         p.CNE,
-        CONCAT(m.prenom, ' ', m.nom) as medecin_demandeur
-      FROM imaging_requests ir
-      JOIN patients p ON ir.patient_id = p.id
-      JOIN medecins m ON ir.requesting_doctor_id = m.id
-      WHERE ir.status IN ('pending', 'in_progress')
-        AND (ir.assigned_laboratory_id IS NULL OR ir.assigned_laboratory_id = ?)
-      ORDER BY ir.urgency_level DESC, ir.request_date ASC
+        CONCAT(m.prenom, ' ', m.nom) as medecin_demandeur,
+        ri.contrast_required,
+        ri.patient_preparation_instructions
+      FROM resultats_imagerie ri
+      JOIN types_imagerie ti ON ri.type_imagerie_id = ti.id
+      JOIN patients p ON ri.patient_id = p.id
+      JOIN medecins m ON ri.medecin_prescripteur_id = m.id
+      WHERE ri.request_status IN ('requested', 'scheduled', 'in_progress')
+        AND (ri.institution_realisation_id IS NULL OR ri.institution_realisation_id = ?)
+      ORDER BY 
+        CASE ri.priority 
+          WHEN 'emergency' THEN 1
+          WHEN 'stat' THEN 2
+          WHEN 'urgent' THEN 3 
+          WHEN 'routine' THEN 4
+        END,
+        ri.date_prescription ASC
     `, [laboratoryId]);
 
     return res.status(200).json({ 
@@ -347,6 +402,127 @@ exports.getPendingWork = async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur lors de la récupération du travail en attente:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+// Accept/Assign test request to laboratory
+exports.acceptTestRequest = async (req, res) => {
+  try {
+    const laboratoryId = req.user.id_specifique_role;
+    const { testRequestId } = req.params;
+    const { technician_user_id, estimated_completion_date } = req.body;
+
+    // Validate test request exists and is available
+    const [testRequests] = await db.execute(`
+      SELECT ra.*, p.prenom, p.nom, ta.nom as test_name
+      FROM resultats_analyses ra
+      JOIN patients p ON ra.patient_id = p.id
+      JOIN types_analyses ta ON ra.type_analyse_id = ta.id
+      WHERE ra.id = ? AND ra.request_status = 'requested'
+        AND (ra.laboratory_id IS NULL OR ra.laboratory_id = ?)
+    `, [testRequestId, laboratoryId]);
+
+    if (testRequests.length === 0) {
+      return res.status(404).json({ 
+        message: 'Demande de test non trouvée ou déjà assignée' 
+      });
+    }
+
+    // Update test request to assign it to this laboratory
+    await db.execute(`
+      UPDATE resultats_analyses 
+      SET 
+        request_status = 'in_progress',
+        laboratory_id = ?,
+        technician_user_id = ?,
+        date_status_updated = NOW()
+      WHERE id = ?
+    `, [laboratoryId, technician_user_id || null, testRequestId]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'ACCEPT_TEST_REQUEST', 
+      'resultats_analyses', 
+      testRequestId, 
+      `Demande de test acceptée par le laboratoire ID ${laboratoryId}`
+    ]);
+
+    return res.status(200).json({ 
+      message: 'Demande de test acceptée avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'acceptation de la demande de test:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+// Accept/Assign imaging request to laboratory
+exports.acceptImagingRequest = async (req, res) => {
+  try {
+    const laboratoryId = req.user.id_specifique_role;
+    const { imagingRequestId } = req.params;
+    const { technician_user_id, scheduled_date } = req.body;
+
+    // Validate imaging request exists and is available
+    const [imagingRequests] = await db.execute(`
+      SELECT ri.*, p.prenom, p.nom, ti.nom as imaging_type
+      FROM resultats_imagerie ri
+      JOIN patients p ON ri.patient_id = p.id
+      JOIN types_imagerie ti ON ri.type_imagerie_id = ti.id
+      WHERE ri.id = ? AND ri.request_status = 'requested'
+        AND (ri.institution_realisation_id IS NULL OR ri.institution_realisation_id = ?)
+    `, [imagingRequestId, laboratoryId]);
+
+    if (imagingRequests.length === 0) {
+      return res.status(404).json({ 
+        message: 'Demande d\'imagerie non trouvée ou déjà assignée' 
+      });
+    }
+
+    // Update imaging request to assign it to this laboratory
+    await db.execute(`
+      UPDATE resultats_imagerie 
+      SET 
+        request_status = 'scheduled',
+        institution_realisation_id = ?,
+        technician_assigned_id = ?,
+        scheduled_date = ?,
+        date_status_updated = NOW()
+      WHERE id = ?
+    `, [laboratoryId, technician_user_id || null, scheduled_date || null, imagingRequestId]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'ACCEPT_IMAGING_REQUEST', 
+      'resultats_imagerie', 
+      imagingRequestId, 
+      `Demande d'imagerie acceptée par le laboratoire ID ${laboratoryId}`
+    ]);
+
+    return res.status(200).json({ 
+      message: 'Demande d\'imagerie acceptée avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'acceptation de la demande d\'imagerie:', error);
     return res.status(500).json({ 
       message: 'Erreur serveur', 
       error: error.message 

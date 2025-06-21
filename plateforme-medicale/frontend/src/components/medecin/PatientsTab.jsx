@@ -105,7 +105,7 @@ const PatientsTab = ({ patients }) => {
                                             </Typography>
                                             {patient.CNE && (
                                                 <Typography variant="body2" sx={{ mb: 0.5 }}>
-                                                    <strong>CNE:</strong> {patient.CNE}
+                                                    <strong>CIN:</strong> {patient.CNE}
                                                 </Typography>
                                             )}
                                             {patient.email && (

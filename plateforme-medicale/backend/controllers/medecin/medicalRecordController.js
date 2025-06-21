@@ -1,3 +1,16 @@
+/**
+ * MEDICAL RECORD CONTROLLER - LAB & ANALYSIS FOCUSED
+ * 
+ * This controller handles:
+ * - Lab analysis requests and workflow
+ * - Imaging requests and workflow
+ * - Medical consultations
+ * - Legacy medical record functionality
+ * 
+ * For patient dossier management, treatments, and measurements,
+ * see medicalDossierController.js
+ */
+
 const db = require('../../config/db');
 const { searchPatients } = require('../../utils/patientSearch');
 
@@ -392,85 +405,7 @@ exports.updateConsultation = async (req, res) => {
   }
 };
 
-// Add medical history
-exports.addMedicalHistory = async (req, res) => {
-  try {
-    const medecinId = req.user.id_specifique_role;
-    const { 
-      patient_id, type, description, date_debut, date_fin, est_chronique 
-    } = req.body;
-
-    // Validate required fields
-    if (!patient_id || !type || !description) {
-      return res.status(400).json({ message: 'ID du patient, type et description sont obligatoires' });
-    }
-
-    // Insert medical history
-    const [result] = await db.execute(`
-      INSERT INTO antecedents_medicaux (
-        patient_id, type, description, date_debut, date_fin, est_chronique, medecin_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [
-      patient_id,
-      type,
-      description,
-      date_debut || null,
-      date_fin || null,
-      est_chronique || false,
-      medecinId
-    ]);
-
-    return res.status(201).json({ 
-      message: 'Antécédent médical ajouté avec succès', 
-      antecedentId: result.insertId 
-    });
-  } catch (error) {
-    console.error('Erreur lors de l\'ajout d\'un antécédent médical:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
-  }
-};
-
-// Add treatment
-exports.addTreatment = async (req, res) => {
-  try {
-    const medecinId = req.user.id_specifique_role;
-    const { 
-      patient_id, medicament_id, posologie, date_debut, date_fin, est_permanent, instructions, rappel_prise, frequence_rappel
-    } = req.body;
-
-    // Validate required fields
-    if (!patient_id || !medicament_id || !posologie || !date_debut) {
-      return res.status(400).json({ message: 'ID du patient, ID du médicament, posologie et date de début sont obligatoires' });
-    }
-
-    // Insert treatment
-    const [result] = await db.execute(`
-      INSERT INTO traitements (
-        patient_id, medicament_id, posologie, date_debut, date_fin, 
-        est_permanent, medecin_prescripteur_id, instructions, rappel_prise, frequence_rappel
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      patient_id,
-      medicament_id,
-      posologie,
-      date_debut,
-      date_fin || null,
-      est_permanent || false,
-      medecinId,
-      instructions || null,
-      rappel_prise || false,
-      frequence_rappel || null
-    ]);
-
-    return res.status(201).json({ 
-      message: 'Traitement ajouté avec succès', 
-      traitementId: result.insertId 
-    });
-  } catch (error) {
-    console.error('Erreur lors de l\'ajout d\'un traitement:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
-  }
-};
+// REMOVED: addMedicalHistory and addTreatment - moved to medicalDossierController for better service layer architecture
 
 // Add medical document
 exports.addMedicalDocument = async (req, res) => {
@@ -510,37 +445,7 @@ exports.addMedicalDocument = async (req, res) => {
   }
 };
 
-// Get medications list (for prescriptions)
-exports.getMedications = async (req, res) => {
-  try {
-    const [medicaments] = await db.execute(`
-      SELECT id, nom_commercial, nom_molecule, dosage, forme, description
-      FROM medicaments
-      ORDER BY nom_commercial
-    `);
-
-    return res.status(200).json({ medicaments });
-  } catch (error) {
-    console.error('Erreur lors de la récupération des médicaments:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
-  }
-};
-
-// Get allergies list
-exports.getAllergies = async (req, res) => {
-  try {
-    const [allergies] = await db.execute(`
-      SELECT id, nom, description
-      FROM allergies
-      ORDER BY nom
-    `);
-
-    return res.status(200).json({ allergies });
-  } catch (error) {
-    console.error('Erreur lors de la récupération des allergies:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
-  }
-};
+// REMOVED: getMedications and getAllergies - moved to medicalDossierController for consistency with service layer
 
 // Add patient allergy
 exports.addPatientAllergy = async (req, res) => {
@@ -584,41 +489,7 @@ exports.addPatientAllergy = async (req, res) => {
   }
 };
 
-// Add patient note
-exports.addPatientNote = async (req, res) => {
-  try {
-    const medecinId = req.user.id_specifique_role;
-    const { 
-      patient_id, contenu, est_important, categorie 
-    } = req.body;
-
-    // Validate required fields
-    if (!patient_id || !contenu) {
-      return res.status(400).json({ message: 'ID du patient et contenu sont obligatoires' });
-    }
-
-    // Insert note
-    const [result] = await db.execute(`
-      INSERT INTO notes_patient (
-        patient_id, medecin_id, contenu, est_important, categorie
-      ) VALUES (?, ?, ?, ?, ?)
-    `, [
-      patient_id,
-      medecinId,
-      contenu,
-      est_important || false,
-      categorie || 'general'
-    ]);
-
-    return res.status(201).json({ 
-      message: 'Note ajoutée avec succès', 
-      noteId: result.insertId 
-    });
-  } catch (error) {
-    console.error('Erreur lors de l\'ajout d\'une note:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
-  }
-};
+// REMOVED: addPatientNote - moved to medicalDossierController for service layer consistency
 
 // Get patient notes
 exports.getPatientNotes = async (req, res) => {
@@ -772,7 +643,12 @@ exports.getAnalysisCategories = async (req, res) => {
     const [categories] = await db.execute(`
       SELECT id, nom, description, ordre_affichage
       FROM categories_analyses
-      ORDER BY ordre_affichage ASC, nom ASC
+      ORDER BY 
+        CASE 
+          WHEN LOWER(nom) = 'autre' THEN 1 
+          ELSE 0 
+        END,
+        nom ASC
     `);
 
     return res.status(200).json(categories);
@@ -803,7 +679,13 @@ exports.getAnalysisTypes = async (req, res) => {
       params.push(categoryId);
     }
     
-    query += ' ORDER BY ca.ordre_affichage ASC, ta.ordre_affichage ASC, ta.nom ASC';
+    query += ` ORDER BY 
+      CASE 
+        WHEN LOWER(ca.nom) = 'autre' THEN 1 
+        ELSE 0 
+      END,
+      ca.nom ASC, 
+      ta.nom ASC`;
     
     const [types] = await db.execute(query, params);
 
@@ -814,49 +696,45 @@ exports.getAnalysisTypes = async (req, res) => {
   }
 };
 
-// IMPROVED: Add analysis result
-exports.addAnalysisResult = async (req, res) => {
+// REQUEST ANALYSIS (Doctors can only request, not add results)
+exports.requestAnalysis = async (req, res) => {
   try {
     const medecinId = req.user.id_specifique_role;
     const { patientId } = req.params;
     const {
       type_analyse_id,
-      date_prescription,
-      date_realisation,
-      laboratoire,
-      valeur_numerique,
-      valeur_texte,
-      unite,
-      valeur_normale_min,
-      valeur_normale_max,
-      interpretation,
-      est_normal,
-      est_critique,
-      document_url,
-      notes_techniques
+      priority,
+      clinical_indication,
+      sample_type,
+      special_instructions,
+      preferred_laboratory_id
     } = req.body;
 
     // Validate required fields
-    if (!type_analyse_id || !date_prescription) {
+    if (!type_analyse_id || !clinical_indication) {
       return res.status(400).json({ 
-        message: 'Type d\'analyse et date de prescription sont obligatoires' 
+        message: 'Type d\'analyse et indication clinique sont obligatoires' 
       });
     }
 
-    // Insert analysis result
+    // Get doctor's institution for the request
+    const [doctorInfo] = await db.execute(`
+      SELECT institution_id FROM medecins WHERE id = ?
+    `, [medecinId]);
+
+    const requestingInstitutionId = doctorInfo.length > 0 ? doctorInfo[0].institution_id : null;
+
+    // Insert analysis request (without results - only the request)
     const [result] = await db.execute(`
       INSERT INTO resultats_analyses (
         patient_id, type_analyse_id, medecin_prescripteur_id, date_prescription,
-        date_realisation, laboratoire, valeur_numerique, valeur_texte, unite,
-        valeur_normale_min, valeur_normale_max, interpretation, est_normal,
-        est_critique, document_url, notes_techniques
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        request_status, priority, clinical_indication, sample_type,
+        requesting_institution_id, laboratory_id
+      ) VALUES (?, ?, ?, NOW(), 'requested', ?, ?, ?, ?, ?)
     `, [
-      patientId, type_analyse_id, medecinId, date_prescription,
-      date_realisation || null, laboratoire || null, valeur_numerique || null,
-      valeur_texte || null, unite || null, valeur_normale_min || null,
-      valeur_normale_max || null, interpretation || null, est_normal || null,
-      est_critique || false, document_url || null, notes_techniques || null
+      patientId, type_analyse_id, medecinId, 
+      priority || 'normal', clinical_indication, sample_type || null,
+      requestingInstitutionId, preferred_laboratory_id || null
     ]);
 
     // Log action
@@ -867,141 +745,67 @@ exports.addAnalysisResult = async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?)
     `, [
       req.user.id, 
-      'ADD_ANALYSIS', 
+      'REQUEST_ANALYSIS', 
       'resultats_analyses', 
       result.insertId, 
-      `Ajout d'un résultat d'analyse pour le patient ID ${patientId}`
+      `Demande d'analyse pour le patient ID ${patientId}`
     ]);
 
     return res.status(201).json({ 
-      message: 'Résultat d\'analyse ajouté avec succès',
-      analysisId: result.insertId
+      message: 'Demande d\'analyse envoyée avec succès',
+      requestId: result.insertId
     });
   } catch (error) {
-    console.error('Erreur lors de l\'ajout du résultat d\'analyse:', error);
+    console.error('Erreur lors de la demande d\'analyse:', error);
     return res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
 
-// IMPROVED: Update analysis result
-exports.updateAnalysisResult = async (req, res) => {
+// UPDATE ANALYSIS REQUEST (Doctors can only modify their requests before lab processes them)
+exports.updateAnalysisRequest = async (req, res) => {
   try {
     const medecinId = req.user.id_specifique_role;
-    const { patientId, analysisId } = req.params;
+    const { patientId, requestId } = req.params;
     const {
-      date_realisation,
-      laboratoire,
-      valeur_numerique,
-      valeur_texte,
-      unite,
-      valeur_normale_min,
-      valeur_normale_max,
-      interpretation,
-      est_normal,
-      est_critique,
-      document_url,
-      notes_techniques
+      priority,
+      clinical_indication,
+      sample_type,
+      special_instructions,
+      preferred_laboratory_id
     } = req.body;
 
-    // Validate analysis exists and belongs to this patient
-    const [analyses] = await db.execute(`
-      SELECT id, medecin_prescripteur_id
+    // Validate analysis request exists and belongs to this patient and doctor
+    const [requests] = await db.execute(`
+      SELECT id, medecin_prescripteur_id, request_status
       FROM resultats_analyses
-      WHERE id = ? AND patient_id = ?
-    `, [analysisId, patientId]);
+      WHERE id = ? AND patient_id = ? AND medecin_prescripteur_id = ?
+    `, [requestId, patientId, medecinId]);
 
-    if (analyses.length === 0) {
-      return res.status(404).json({ message: 'Résultat d\'analyse non trouvé' });
+    if (requests.length === 0) {
+      return res.status(404).json({ message: 'Demande d\'analyse non trouvée' });
     }
 
-    // Check if doctor has permission to modify
-    const analysis = analyses[0];
-    if (analysis.medecin_prescripteur_id !== medecinId) {
-      // Check if current doctor is treating this patient
-      const [appointments] = await db.execute(
-        'SELECT id FROM rendez_vous WHERE patient_id = ? AND medecin_id = ? LIMIT 1',
-        [patientId, medecinId]
-      );
-      
-      if (appointments.length === 0) {
-        return res.status(403).json({ 
-          message: 'Vous n\'êtes pas autorisé à modifier ce résultat d\'analyse' 
-        });
-      }
-    }
-
-    // Update analysis result
-    await db.execute(`
-      UPDATE resultats_analyses SET
-        date_realisation = COALESCE(?, date_realisation),
-        laboratoire = COALESCE(?, laboratoire),
-        valeur_numerique = COALESCE(?, valeur_numerique),
-        valeur_texte = COALESCE(?, valeur_texte),
-        unite = COALESCE(?, unite),
-        valeur_normale_min = COALESCE(?, valeur_normale_min),
-        valeur_normale_max = COALESCE(?, valeur_normale_max),
-        interpretation = COALESCE(?, interpretation),
-        est_normal = COALESCE(?, est_normal),
-        est_critique = COALESCE(?, est_critique),
-        document_url = COALESCE(?, document_url),
-        notes_techniques = COALESCE(?, notes_techniques),
-        medecin_interpreteur_id = ?,
-        date_interpretation = NOW()
-      WHERE id = ?
-    `, [
-      date_realisation, laboratoire, valeur_numerique, valeur_texte, unite,
-      valeur_normale_min, valeur_normale_max, interpretation, est_normal,
-      est_critique, document_url, notes_techniques, medecinId, analysisId
-    ]);
-
-    // Log action
-    await db.execute(`
-      INSERT INTO historique_actions (
-        utilisateur_id, action_type, table_concernee, 
-        enregistrement_id, description
-      ) VALUES (?, ?, ?, ?, ?)
-    `, [
-      req.user.id, 
-      'UPDATE_ANALYSIS', 
-      'resultats_analyses', 
-      analysisId, 
-      `Modification du résultat d'analyse ID ${analysisId} pour le patient ID ${patientId}`
-    ]);
-
-    return res.status(200).json({ message: 'Résultat d\'analyse mis à jour avec succès' });
-  } catch (error) {
-    console.error('Erreur lors de la modification du résultat d\'analyse:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
-  }
-};
-
-// IMPROVED: Delete analysis result
-exports.deleteAnalysisResult = async (req, res) => {
-  try {
-    const medecinId = req.user.id_specifique_role;
-    const { patientId, analysisId } = req.params;
-
-    // Validate analysis exists and belongs to this patient
-    const [analyses] = await db.execute(`
-      SELECT id, medecin_prescripteur_id
-      FROM resultats_analyses
-      WHERE id = ? AND patient_id = ?
-    `, [analysisId, patientId]);
-
-    if (analyses.length === 0) {
-      return res.status(404).json({ message: 'Résultat d\'analyse non trouvé' });
-    }
-
-    // Check if doctor has permission to delete (original prescriber only)
-    const analysis = analyses[0];
-    if (analysis.medecin_prescripteur_id !== medecinId) {
-      return res.status(403).json({ 
-        message: 'Seul le médecin prescripteur peut supprimer ce résultat d\'analyse' 
+    const request = requests[0];
+    
+    // Only allow modifications if request hasn't been processed yet
+    if (request.request_status !== 'requested') {
+      return res.status(400).json({ 
+        message: 'Cette demande d\'analyse ne peut plus être modifiée car elle est déjà en cours de traitement' 
       });
     }
 
-    // Delete analysis result
-    await db.execute('DELETE FROM resultats_analyses WHERE id = ?', [analysisId]);
+    // Update analysis request
+    await db.execute(`
+      UPDATE resultats_analyses SET
+        priority = COALESCE(?, priority),
+        clinical_indication = COALESCE(?, clinical_indication),
+        sample_type = COALESCE(?, sample_type),
+        laboratory_id = COALESCE(?, laboratory_id),
+        date_status_updated = NOW()
+      WHERE id = ?
+    `, [
+      priority, clinical_indication, sample_type, preferred_laboratory_id, requestId
+    ]);
 
     // Log action
     await db.execute(`
@@ -1011,15 +815,282 @@ exports.deleteAnalysisResult = async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?)
     `, [
       req.user.id, 
-      'DELETE_ANALYSIS', 
+      'UPDATE_ANALYSIS_REQUEST', 
       'resultats_analyses', 
-      analysisId, 
-      `Suppression du résultat d'analyse ID ${analysisId} pour le patient ID ${patientId}`
+      requestId, 
+      `Modification de la demande d'analyse ID ${requestId} pour le patient ID ${patientId}`
     ]);
 
-    return res.status(200).json({ message: 'Résultat d\'analyse supprimé avec succès' });
+    return res.status(200).json({ message: 'Demande d\'analyse mise à jour avec succès' });
   } catch (error) {
-    console.error('Erreur lors de la suppression du résultat d\'analyse:', error);
+    console.error('Erreur lors de la modification de la demande d\'analyse:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// CANCEL ANALYSIS REQUEST (Doctors can only cancel their own requests if not yet processed)
+exports.cancelAnalysisRequest = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { patientId, requestId } = req.params;
+
+    // Validate analysis request exists and belongs to this patient and doctor
+    const [requests] = await db.execute(`
+      SELECT id, medecin_prescripteur_id, request_status
+      FROM resultats_analyses
+      WHERE id = ? AND patient_id = ? AND medecin_prescripteur_id = ?
+    `, [requestId, patientId, medecinId]);
+
+    if (requests.length === 0) {
+      return res.status(404).json({ message: 'Demande d\'analyse non trouvée' });
+    }
+
+    const request = requests[0];
+    
+    // Only allow cancellation if request hasn't been processed yet
+    if (request.request_status !== 'requested') {
+      return res.status(400).json({ 
+        message: 'Cette demande d\'analyse ne peut plus être annulée car elle est déjà en cours de traitement' 
+      });
+    }
+
+    // Update request status to cancelled instead of deleting
+    await db.execute(`
+      UPDATE resultats_analyses 
+      SET request_status = 'cancelled', date_status_updated = NOW()
+      WHERE id = ?
+    `, [requestId]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'CANCEL_ANALYSIS_REQUEST', 
+      'resultats_analyses', 
+      requestId, 
+      `Annulation de la demande d'analyse ID ${requestId} pour le patient ID ${patientId}`
+    ]);
+
+    return res.status(200).json({ message: 'Demande d\'analyse annulée avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de l\'annulation de la demande d\'analyse:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// REQUEST IMAGING (Doctors request imaging studies)
+exports.requestImaging = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { patientId } = req.params;
+    const {
+      type_imagerie_id,
+      priority,
+      clinical_indication,
+      patient_preparation_instructions,
+      contrast_required,
+      contrast_type,
+      special_instructions,
+      preferred_laboratory_id
+    } = req.body;
+
+    // Validate required fields
+    if (!type_imagerie_id || !clinical_indication) {
+      return res.status(400).json({ 
+        message: 'Type d\'imagerie et indication clinique sont obligatoires' 
+      });
+    }
+
+    // Get doctor's institution for the request
+    const [doctorInfo] = await db.execute(`
+      SELECT institution_id FROM medecins WHERE id = ?
+    `, [medecinId]);
+
+    const requestingInstitutionId = doctorInfo.length > 0 ? doctorInfo[0].institution_id : null;
+
+    // Insert imaging request
+    const [result] = await db.execute(`
+      INSERT INTO resultats_imagerie (
+        patient_id, type_imagerie_id, medecin_prescripteur_id, date_prescription,
+        request_status, priority, clinical_indication, patient_preparation_instructions,
+        contrast_required, contrast_type, special_instructions, requesting_institution_id,
+        institution_realisation_id
+      ) VALUES (?, ?, ?, NOW(), 'requested', ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      patientId, type_imagerie_id, medecinId,
+      priority || 'routine', clinical_indication, patient_preparation_instructions || null,
+      contrast_required || false, contrast_type || null, special_instructions || null,
+      requestingInstitutionId, preferred_laboratory_id || null
+    ]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'REQUEST_IMAGING', 
+      'resultats_imagerie', 
+      result.insertId, 
+      `Demande d'imagerie pour le patient ID ${patientId}`
+    ]);
+
+    return res.status(201).json({ 
+      message: 'Demande d\'imagerie envoyée avec succès',
+      requestId: result.insertId
+    });
+  } catch (error) {
+    console.error('Erreur lors de la demande d\'imagerie:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// GET IMAGING TYPES
+exports.getImagingTypes = async (req, res) => {
+  try {
+    const [types] = await db.execute(`
+      SELECT id, nom, description
+      FROM types_imagerie
+      ORDER BY nom ASC
+    `);
+
+    return res.status(200).json(types);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des types d\'imagerie:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// UPDATE IMAGING REQUEST
+exports.updateImagingRequest = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { patientId, requestId } = req.params;
+    const {
+      priority,
+      clinical_indication,
+      patient_preparation_instructions,
+      contrast_required,
+      contrast_type,
+      special_instructions,
+      preferred_laboratory_id
+    } = req.body;
+
+    // Validate imaging request exists and belongs to this patient and doctor
+    const [requests] = await db.execute(`
+      SELECT id, medecin_prescripteur_id, request_status
+      FROM resultats_imagerie
+      WHERE id = ? AND patient_id = ? AND medecin_prescripteur_id = ?
+    `, [requestId, patientId, medecinId]);
+
+    if (requests.length === 0) {
+      return res.status(404).json({ message: 'Demande d\'imagerie non trouvée' });
+    }
+
+    const request = requests[0];
+    
+    // Only allow modifications if request hasn't been processed yet
+    if (request.request_status !== 'requested') {
+      return res.status(400).json({ 
+        message: 'Cette demande d\'imagerie ne peut plus être modifiée car elle est déjà en cours de traitement' 
+      });
+    }
+
+    // Update imaging request
+    await db.execute(`
+      UPDATE resultats_imagerie SET
+        priority = COALESCE(?, priority),
+        clinical_indication = COALESCE(?, clinical_indication),
+        patient_preparation_instructions = COALESCE(?, patient_preparation_instructions),
+        contrast_required = COALESCE(?, contrast_required),
+        contrast_type = COALESCE(?, contrast_type),
+        special_instructions = COALESCE(?, special_instructions),
+        institution_realisation_id = COALESCE(?, institution_realisation_id),
+        date_status_updated = NOW()
+      WHERE id = ?
+    `, [
+      priority, clinical_indication, patient_preparation_instructions,
+      contrast_required, contrast_type, special_instructions, 
+      preferred_laboratory_id, requestId
+    ]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'UPDATE_IMAGING_REQUEST', 
+      'resultats_imagerie', 
+      requestId, 
+      `Modification de la demande d'imagerie ID ${requestId} pour le patient ID ${patientId}`
+    ]);
+
+    return res.status(200).json({ message: 'Demande d\'imagerie mise à jour avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la modification de la demande d\'imagerie:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// CANCEL IMAGING REQUEST
+exports.cancelImagingRequest = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { patientId, requestId } = req.params;
+
+    // Validate imaging request exists and belongs to this patient and doctor
+    const [requests] = await db.execute(`
+      SELECT id, medecin_prescripteur_id, request_status
+      FROM resultats_imagerie
+      WHERE id = ? AND patient_id = ? AND medecin_prescripteur_id = ?
+    `, [requestId, patientId, medecinId]);
+
+    if (requests.length === 0) {
+      return res.status(404).json({ message: 'Demande d\'imagerie non trouvée' });
+    }
+
+    const request = requests[0];
+    
+    // Only allow cancellation if request hasn't been processed yet
+    if (request.request_status !== 'requested') {
+      return res.status(400).json({ 
+        message: 'Cette demande d\'imagerie ne peut plus être annulée car elle est déjà en cours de traitement' 
+      });
+    }
+
+    // Update request status to cancelled
+    await db.execute(`
+      UPDATE resultats_imagerie 
+      SET request_status = 'cancelled', date_status_updated = NOW()
+      WHERE id = ?
+    `, [requestId]);
+
+    // Log action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'CANCEL_IMAGING_REQUEST', 
+      'resultats_imagerie', 
+      requestId, 
+      `Annulation de la demande d'imagerie ID ${requestId} pour le patient ID ${patientId}`
+    ]);
+
+    return res.status(200).json({ message: 'Demande d\'imagerie annulée avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de l\'annulation de la demande d\'imagerie:', error);
     return res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 }; 

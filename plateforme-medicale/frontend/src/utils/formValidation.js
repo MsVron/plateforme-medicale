@@ -154,30 +154,30 @@ export const validatePostalCode = (postalCode) => {
 };
 
 /**
- * Validates a CNE (Carte Nationale d'Étudiant) according to database schema (VARCHAR(20))
- * @param {string} cne - The CNE to validate
- * @returns {Object} - Contains whether the CNE is valid and any error message
+ * Validates a CIN (Carte d'Identité Nationale) according to database schema (VARCHAR(20))
+ * @param {string} cne - The CIN to validate
+ * @returns {Object} - Contains whether the CIN is valid and any error message
  */
 export const validateCNE = (cne) => {
   if (!cne) {
-    return { isValid: true, errorMessage: "" }; // CNE is optional for regular registration
+    return { isValid: true, errorMessage: "" }; // CIN is optional for regular registration
   }
   
-  // Check length constraint from database
+  // Basic length check
   if (cne.length > 20) {
-    return { 
-      isValid: false, 
-      errorMessage: "Le CNE ne doit pas dépasser 20 caractères" 
+    return {
+      isValid: false,
+      errorMessage: "Le CIN ne doit pas dépasser 20 caractères"
     };
   }
   
-  // Standardized CNE format: 1-2 letters followed by 6-18 characters (alphanumeric)
+  // Standardized CIN format: 1-2 letters followed by 6-18 characters (alphanumeric)
   const cneRegex = /^[A-Za-z]{1,2}[A-Za-z0-9]{6,18}$/;
   
   if (!cneRegex.test(cne)) {
-    return { 
-      isValid: false, 
-      errorMessage: "Le CNE doit comporter 1 ou 2 lettres suivies de 6 à 18 caractères alphanumériques" 
+    return {
+      isValid: false,
+      errorMessage: "Le CIN doit comporter 1 ou 2 lettres suivies de 6 à 18 caractères alphanumériques"
     };
   }
   
@@ -185,55 +185,55 @@ export const validateCNE = (cne) => {
 };
 
 /**
- * Validates a required CNE
- * @param {string} cne - The CNE to validate
- * @returns {Object} - Contains whether the CNE is valid and any error message
+ * Validates a required CIN
+ * @param {string} cne - The CIN to validate
+ * @returns {Object} - Contains whether the CIN is valid and any error message
  */
 export const validateCNERequired = (cne) => {
   if (!cne || cne.trim().length === 0) {
-    return { isValid: false, errorMessage: "Le CNE est requis" };
+    return { isValid: false, errorMessage: "Le CIN est requis" };
   }
   
   return validateCNE(cne);
 };
 
 /**
- * Validates CNE confirmation field
- * @param {string} cne - The original CNE
- * @param {string} cneConfirm - The CNE confirmation
+ * Validates CIN confirmation field
+ * @param {string} cne - The original CIN
+ * @param {string} cneConfirm - The CIN confirmation
  * @returns {Object} - Contains whether the confirmation is valid and any error message
  */
 export const validateCNEConfirmation = (cne, cneConfirm) => {
   if (!cneConfirm || cneConfirm.trim().length === 0) {
-    return { isValid: false, errorMessage: "La confirmation du CNE est requise" };
+    return { isValid: false, errorMessage: "La confirmation du CIN est requise" };
   }
   
   if (cne !== cneConfirm) {
-    return { isValid: false, errorMessage: "Les CNE ne correspondent pas" };
+    return { isValid: false, errorMessage: "Les CIN ne correspondent pas" };
   }
   
   return { isValid: true, errorMessage: "" };
 };
 
 /**
- * Validates CNE confirmation field (optional version)
- * @param {string} cne - The original CNE
- * @param {string} cneConfirm - The CNE confirmation
+ * Validates CIN confirmation field (optional version)
+ * @param {string} cne - The original CIN
+ * @param {string} cneConfirm - The CIN confirmation
  * @returns {Object} - Contains whether the confirmation is valid and any error message
  */
 export const validateCNEConfirmationOptional = (cne, cneConfirm) => {
-  // If no CNE is provided, confirmation is not needed
+  // If no CIN is provided, confirmation is not needed
   if (!cne || cne.trim().length === 0) {
     return { isValid: true, errorMessage: "" };
   }
   
-  // If CNE is provided but confirmation is empty
+  // If CIN is provided but confirmation is empty
   if (!cneConfirm || cneConfirm.trim().length === 0) {
-    return { isValid: false, errorMessage: "La confirmation du CNE est requise" };
+    return { isValid: false, errorMessage: "La confirmation du CIN est requise" };
   }
   
   if (cne !== cneConfirm) {
-    return { isValid: false, errorMessage: "Les CNE ne correspondent pas" };
+    return { isValid: false, errorMessage: "Les CIN ne correspondent pas" };
   }
   
   return { isValid: true, errorMessage: "" };
@@ -508,13 +508,13 @@ export const validateAppointmentMotif = (motif) => {
  */
 export const validateMedicalLicenseNumber = (licenseNumber) => {
   if (!licenseNumber || licenseNumber.trim().length === 0) {
-    return { isValid: false, errorMessage: "Le numéro d'ordre est requis" };
+    return { isValid: false, errorMessage: "L'INPE est requis" };
   }
   
   if (licenseNumber.length > 50) {
     return { 
       isValid: false, 
-      errorMessage: "Le numéro d'ordre ne doit pas dépasser 50 caractères" 
+      errorMessage: "L'INPE ne doit pas dépasser 50 caractères" 
     };
   }
   
@@ -524,7 +524,7 @@ export const validateMedicalLicenseNumber = (licenseNumber) => {
   if (!licenseRegex.test(licenseNumber)) {
     return { 
       isValid: false, 
-      errorMessage: "Format de numéro d'ordre invalide" 
+      errorMessage: "Format d'INPE invalide" 
     };
   }
   

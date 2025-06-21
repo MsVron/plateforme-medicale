@@ -141,15 +141,12 @@ const ManagePatients = () => {
       <Table sx={{ mt: 2 }}>
         <TableHead>
           <TableRow>
-            <TableCell>Prénom</TableCell>
             <TableCell>Nom</TableCell>
+            <TableCell>Prénom</TableCell>
             <TableCell>Date de naissance</TableCell>
             <TableCell>Sexe</TableCell>
-            <TableCell>CNE</TableCell>
-            <TableCell>Groupe sanguin</TableCell>
-            <TableCell>Email</TableCell>
             <TableCell>Téléphone</TableCell>
-            <TableCell>Ville</TableCell>
+            <TableCell>CIN</TableCell>
             <TableCell>Actif</TableCell>
             <TableCell>Actions</TableCell>
           </TableRow>
@@ -157,15 +154,12 @@ const ManagePatients = () => {
         <TableBody>
           {patients.map((patient) => (
             <TableRow key={patient.id}>
-              <TableCell>{patient.prenom}</TableCell>
               <TableCell>{patient.nom}</TableCell>
+              <TableCell>{patient.prenom}</TableCell>
               <TableCell>{formatDate(patient.date_naissance)}</TableCell>
               <TableCell>{patient.sexe}</TableCell>
-              <TableCell>{patient.CNE || '-'}</TableCell>
-              <TableCell>{patient.groupe_sanguin || '-'}</TableCell>
-              <TableCell>{patient.email || '-'}</TableCell>
               <TableCell>{patient.telephone || '-'}</TableCell>
-              <TableCell>{patient.ville || '-'}</TableCell>
+              <TableCell>{patient.CNE || '-'}</TableCell>
               <TableCell>{patient.est_actif ? 'Oui' : 'Non'}</TableCell>
               <TableCell>
                 <Button color="primary" onClick={() => handleOpen(patient)}>
@@ -253,7 +247,22 @@ const ManagePatients = () => {
             <MenuItem value="M">Homme</MenuItem>
             <MenuItem value="F">Femme</MenuItem>
           </TextField>
-                    <TextField            margin="dense"            label="CNE"            fullWidth            value={formData.CNE}            onChange={(e) => setFormData({ ...formData, CNE: e.target.value })}          />          <TextField            margin="dense"            label="Confirmer le CNE"            fullWidth            value={formData.CNE_confirm}            onChange={(e) => setFormData({ ...formData, CNE_confirm: e.target.value })}            onPaste={(e) => e.preventDefault()}            helperText="Saisissez à nouveau le CNE (copier-coller désactivé)"          />
+          <TextField
+            margin="dense"
+            label="CIN"
+            fullWidth
+            value={formData.CNE}
+            onChange={(e) => setFormData({ ...formData, CNE: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Confirmer le CIN"
+            fullWidth
+            value={formData.CNE_confirm}
+            onChange={(e) => setFormData({ ...formData, CNE_confirm: e.target.value })}
+            onPaste={(e) => e.preventDefault()}
+            helperText="Saisissez à nouveau le CIN (copier-coller désactivé)"
+          />
           <TextField
             margin="dense"
             label="Groupe sanguin"

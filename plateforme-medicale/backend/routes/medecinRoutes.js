@@ -49,15 +49,15 @@ router.get('/medecin/patients/search', verifyToken, medicalRecordController.sear
 router.get('/medecin/patients/:patientId/medical-record', verifyToken, medicalRecordController.getPatientMedicalRecord);
 router.post('/medecin/consultations', verifyToken, medicalRecordController.addConsultation);
 router.put('/medecin/consultations/:consultationId', verifyToken, medicalRecordController.updateConsultation);
-router.post('/medecin/medical-history', verifyToken, medicalRecordController.addMedicalHistory);
-router.post('/medecin/treatments', verifyToken, medicalRecordController.addTreatment);
 router.post('/medecin/documents', verifyToken, medicalRecordController.addMedicalDocument);
-router.get('/medecin/medications', verifyToken, medicalRecordController.getMedications);
-router.get('/medecin/allergies', verifyToken, medicalRecordController.getAllergies);
 router.post('/medecin/patient-allergies', verifyToken, medicalRecordController.addPatientAllergy);
 
-// New enhanced features routes
-router.post('/medecin/patient-notes', verifyToken, medicalRecordController.addPatientNote);
+// Legacy routes now redirected to medicalDossierController for consistency
+router.post('/medecin/medical-history', verifyToken, medicalDossierController.addMedicalHistory);
+router.post('/medecin/treatments', verifyToken, medicalDossierController.addTreatment);
+router.get('/medecin/medications', verifyToken, medicalDossierController.getMedications);
+router.get('/medecin/allergies', verifyToken, medicalDossierController.getAllergies);
+router.post('/medecin/patient-notes', verifyToken, medicalDossierController.addPatientNote);
 router.get('/medecin/patients/:patientId/notes', verifyToken, medicalRecordController.getPatientNotes);
 router.post('/medecin/follow-up-reminders', verifyToken, medicalRecordController.addFollowUpReminder);
 router.get('/medecin/patients/:patientId/reminders', verifyToken, medicalRecordController.getFollowUpReminders);
@@ -77,13 +77,19 @@ router.post('/medecin/patients/:patientId/treatments', verifyToken, medicalDossi
 router.put('/medecin/patients/:patientId/treatments/:treatmentId', verifyToken, medicalDossierController.updateTreatment);
 router.delete('/medecin/patients/:patientId/treatments/:treatmentId', verifyToken, medicalDossierController.deleteTreatment);
 
-// IMPROVED: Analysis management routes with categories
+// IMPROVED: Analysis request management routes (doctors request, labs provide results)
 router.get('/medecin/analysis-categories', verifyToken, medicalRecordController.getAnalysisCategories);
 router.get('/medecin/analysis-types', verifyToken, medicalRecordController.getAnalysisTypes);
 router.get('/medecin/analysis-types/:categoryId', verifyToken, medicalRecordController.getAnalysisTypes);
-router.post('/medecin/patients/:patientId/analyses', verifyToken, medicalRecordController.addAnalysisResult);
-router.put('/medecin/patients/:patientId/analyses/:analysisId', verifyToken, medicalRecordController.updateAnalysisResult);
-router.delete('/medecin/patients/:patientId/analyses/:analysisId', verifyToken, medicalRecordController.deleteAnalysisResult);
+router.post('/medecin/patients/:patientId/analysis-requests', verifyToken, medicalRecordController.requestAnalysis);
+router.put('/medecin/patients/:patientId/analysis-requests/:requestId', verifyToken, medicalRecordController.updateAnalysisRequest);
+router.delete('/medecin/patients/:patientId/analysis-requests/:requestId', verifyToken, medicalRecordController.cancelAnalysisRequest);
+
+// Imaging request management routes
+router.get('/medecin/imaging-types', verifyToken, medicalRecordController.getImagingTypes);
+router.post('/medecin/patients/:patientId/imaging-requests', verifyToken, medicalRecordController.requestImaging);
+router.put('/medecin/patients/:patientId/imaging-requests/:requestId', verifyToken, medicalRecordController.updateImagingRequest);
+router.delete('/medecin/patients/:patientId/imaging-requests/:requestId', verifyToken, medicalRecordController.cancelImagingRequest);
 
 // Patient profile update routes (all fields modifiable by doctor)
 router.put('/medecin/patients/:patientId/profile', verifyToken, medicalDossierController.updatePatientProfile);

@@ -12,26 +12,25 @@ exports.getUpcomingAppointments = async (req, res) => {
     const pageLimit = limit ? parseInt(limit) : 10;
     const pageOffset = offset ? parseInt(offset) : 0;
     
-    // Base query to get appointments
-    let query = `
-      SELECT 
-        rv.id, rv.date_heure_debut, rv.date_heure_fin, rv.motif, rv.statut,
-        p.id as patient_id, p.prenom as patient_prenom, p.nom as patient_nom,
-        p.date_naissance, p.sexe, p.telephone, p.email,
-        i.nom as institution_nom
-      FROM rendez_vous rv
-      JOIN patients p ON rv.patient_id = p.id
-      JOIN institutions i ON rv.institution_id = i.id
-      WHERE rv.medecin_id = ? 
-      AND rv.date_heure_debut >= ?
-      AND rv.statut NOT IN ('annulé', 'patient absent', 'terminé')
-      ORDER BY rv.date_heure_debut ASC
-    `;
-    
-    const params = [
-      medecinId,
-      date ? new Date(date) : new Date()
-    ];
+      // Base query to get appointments
+  let query = `
+    SELECT 
+      rv.id, rv.date_heure_debut, rv.date_heure_fin, rv.motif, rv.statut,
+      p.id as patient_id, p.prenom as patient_prenom, p.nom as patient_nom,
+      p.date_naissance, p.sexe, p.telephone, p.email,
+      i.nom as institution_nom
+    FROM rendez_vous rv
+    JOIN patients p ON rv.patient_id = p.id
+    JOIN institutions i ON rv.institution_id = i.id
+    WHERE rv.medecin_id = ? 
+    AND DATE(rv.date_heure_debut) >= CURDATE()
+    AND rv.statut NOT IN ('annulé', 'terminé')
+    ORDER BY rv.date_heure_debut ASC
+  `;
+  
+  const params = [
+    medecinId
+  ];
     
     // Add pagination
     if (pageLimit) {
@@ -61,9 +60,9 @@ exports.getUpcomingAppointments = async (req, res) => {
       `SELECT COUNT(*) as total 
        FROM rendez_vous rv 
        WHERE rv.medecin_id = ? 
-       AND rv.date_heure_debut >= ?
-       AND rv.statut NOT IN ('annulé', 'patient absent', 'terminé')`,
-      [medecinId, date ? new Date(date) : new Date()]
+       AND DATE(rv.date_heure_debut) >= CURDATE()
+       AND rv.statut NOT IN ('annulé', 'terminé')`,
+      [medecinId]
     );
     
     return res.status(200).json({

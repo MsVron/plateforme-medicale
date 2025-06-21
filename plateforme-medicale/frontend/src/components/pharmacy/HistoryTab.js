@@ -182,7 +182,7 @@ const HistoryTab = ({ onSuccess, onError, onRefresh }) => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  placeholder="Rechercher par nom, CNE ou médecin..."
+                  placeholder="Rechercher par nom, CIN ou médecin..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
@@ -268,7 +268,7 @@ const HistoryTab = ({ onSuccess, onError, onRefresh }) => {
                             {prescription.patient_name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            CNE: {prescription.patient_cne}
+                            CIN: {prescription.patient_cne}
                           </Typography>
                         </Box>
                       </Box>

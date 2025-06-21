@@ -8,7 +8,7 @@ CREATE TABLE institutions (
   adresse VARCHAR(255) NOT NULL,
   ville VARCHAR(100) NOT NULL,
   code_postal VARCHAR(10) NOT NULL,
-  pays VARCHAR(50) NOT NULL DEFAULT 'France',
+  pays VARCHAR(50) NOT NULL DEFAULT 'Maroc',
   telephone VARCHAR(20) DEFAULT NULL,
   email_contact VARCHAR(100) NOT NULL,
   site_web VARCHAR(255) DEFAULT NULL,
@@ -19,9 +19,10 @@ CREATE TABLE institutions (
   longitude DECIMAL(11, 8) DEFAULT NULL,
   est_actif BOOLEAN DEFAULT TRUE,
   date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  type ENUM('hôpital','clinique','cabinet privé','centre médical','laboratoire','autre') NOT NULL DEFAULT 'autre',
+  type ENUM('hôpital','clinique','cabinet privé','centre médical','laboratoire','pharmacie','autre') NOT NULL DEFAULT 'autre',
   medecin_proprietaire_id INT DEFAULT NULL,
-  type_institution ENUM('pharmacy', 'hospital', 'laboratory', 'clinic', 'hôpital', 'clinique', 'cabinet privé', 'centre médical', 'laboratoire', 'autre') DEFAULT 'autre',
+  -- type_institution maps to user roles: hospital, pharmacy, laboratory, institution
+  type_institution ENUM('hospital', 'pharmacy', 'laboratory', 'institution') DEFAULT 'institution',
   status ENUM('pending', 'approved', 'rejected') DEFAULT 'approved'
 );
 

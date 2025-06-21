@@ -106,10 +106,38 @@ const WeightHeightHistory = ({ patientId, onSuccess, onError }) => {
 
   const handleEditMeasurement = (measurement) => {
     setEditingMeasurement(measurement);
+    
+    // Since backend now returns clean YYYY-MM-DD strings, this is much simpler
+    let dateValue = '';
+    if (measurement.date_mesure) {
+      // The backend should now return dates in YYYY-MM-DD format
+      if (typeof measurement.date_mesure === 'string' && measurement.date_mesure.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        dateValue = measurement.date_mesure;
+      } else {
+        // Fallback for any other format
+        try {
+          const date = new Date(measurement.date_mesure);
+          if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            dateValue = `${year}-${month}-${day}`;
+          } else {
+            dateValue = new Date().toISOString().split('T')[0];
+          }
+        } catch (error) {
+          console.error('Error parsing date:', error);
+          dateValue = new Date().toISOString().split('T')[0];
+        }
+      }
+    } else {
+      dateValue = new Date().toISOString().split('T')[0];
+    }
+    
     setFormData({
       poids: measurement.poids || '',
       taille: measurement.taille || '',
-      date_mesure: measurement.date_mesure ? measurement.date_mesure.split('T')[0] : '',
+      date_mesure: dateValue,
       notes: measurement.notes || ''
     });
     setDialogOpen(true);
@@ -118,12 +146,20 @@ const WeightHeightHistory = ({ patientId, onSuccess, onError }) => {
   const handleSaveMeasurement = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      // Handle empty values properly - send null for empty strings
       const measurementData = {
-        poids: formData.poids ? parseFloat(formData.poids) : null,
-        taille: formData.taille ? parseInt(formData.taille) : null,
+        poids: formData.poids && formData.poids !== '' && formData.poids !== '0' ? parseFloat(formData.poids) : null,
+        taille: formData.taille && formData.taille !== '' && formData.taille !== '0' ? parseInt(formData.taille) : null,
         date_mesure: formData.date_mesure,
-        notes: formData.notes
+        notes: formData.notes || ''
       };
+
+      // Validate that at least one measurement is provided for new entries
+      if (!editingMeasurement && !measurementData.poids && !measurementData.taille) {
+        onError('Au moins le poids ou la taille doit être fourni');
+        return;
+      }
 
       if (editingMeasurement) {
         await axios.put(
@@ -443,7 +479,7 @@ const WeightHeightHistory = ({ patientId, onSuccess, onError }) => {
                   return (
                     <TableRow key={measurement.id}>
                       <TableCell>
-                        {formatDate(measurement.date_mesure)}
+                        {measurement.date_mesure ? formatDate(measurement.date_mesure) : '-'}
                       </TableCell>
                       <TableCell>
                         {measurement.poids ? `${measurement.poids} kg` : '-'}
@@ -553,7 +589,12 @@ const WeightHeightHistory = ({ patientId, onSuccess, onError }) => {
           <Button 
             onClick={handleSaveMeasurement}
             variant="contained"
-            disabled={!formData.poids && !formData.taille}
+            disabled={
+              // For new measurements, require at least one value
+              !editingMeasurement && 
+              (!formData.poids || formData.poids === '') && 
+              (!formData.taille || formData.taille === '')
+            }
           >
             {editingMeasurement ? 'Modifier' : 'Ajouter'}
           </Button>

@@ -65,12 +65,12 @@ const WalkInPatientTab = ({ onSuccess, onError, onRefresh }) => {
     if (!patientForm.nom.trim()) newErrors.nom = 'Le nom est requis';
     if (!patientForm.date_naissance) newErrors.date_naissance = 'La date de naissance est requise';
     if (!patientForm.sexe) newErrors.sexe = 'Le sexe est requis';
-    if (!patientForm.CNE.trim()) newErrors.CNE = 'Le CNE est requis';
-    if (!patientForm.CNE_confirm.trim()) newErrors.CNE_confirm = 'La confirmation du CNE est requise';
+    if (!patientForm.CNE.trim()) newErrors.CNE = 'Le CIN est requis';
+    if (!patientForm.CNE_confirm.trim()) newErrors.CNE_confirm = 'La confirmation du CIN est requise';
 
-    // CNE validation
+    // CIN validation
     if (patientForm.CNE && patientForm.CNE_confirm && patientForm.CNE !== patientForm.CNE_confirm) {
-      newErrors.CNE_confirm = 'Les CNE ne correspondent pas';
+      newErrors.CNE_confirm = 'Les CIN ne correspondent pas';
     }
 
     // Email validation
@@ -218,24 +218,25 @@ const WalkInPatientTab = ({ onSuccess, onError, onRefresh }) => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="CNE *"
+                  required
+                  label="CIN *"
                   value={patientForm.CNE}
                   onChange={(e) => handleFieldChange('CNE', e.target.value.toUpperCase())}
                   error={!!errors.CNE}
                   helperText={errors.CNE}
-                  variant="outlined"
+                  sx={{ mb: 2 }}
                 />
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Confirmer CNE *"
+                  required
+                  label="Confirmer CIN *"
                   value={patientForm.CNE_confirm}
                   onChange={(e) => handleFieldChange('CNE_confirm', e.target.value.toUpperCase())}
                   error={!!errors.CNE_confirm}
                   helperText={errors.CNE_confirm}
-                  variant="outlined"
                 />
               </Grid>
 

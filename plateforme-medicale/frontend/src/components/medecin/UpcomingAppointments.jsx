@@ -19,7 +19,11 @@ import {
   IconButton,
   Tooltip,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
   AccessTime as TimeIcon,
@@ -27,12 +31,23 @@ import {
   Place as PlaceIcon,
   Today as TodayIcon,
   MedicalServices as MedicalIcon,
-  Assignment as AssignmentIcon,
   Edit as EditIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  PersonOff as PersonOffIcon
 } from '@mui/icons-material';
 
-const UpcomingAppointments = () => {  const [appointments, setAppointments] = useState([]);  const [filteredAppointments, setFilteredAppointments] = useState([]);  const [loading, setLoading] = useState(true);  const [error, setError] = useState(null);  const [page, setPage] = useState(1);  const [totalPages, setTotalPages] = useState(1);  const [searchTerm, setSearchTerm] = useState('');  const rowsPerPage = 10;
+const UpcomingAppointments = () => {
+  const [appointments, setAppointments] = useState([]);
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, appointmentId: null, action: null });
+  const rowsPerPage = 10;
 
   // Status colors
   const statusColors = {
@@ -52,9 +67,21 @@ const UpcomingAppointments = () => {  const [appointments, setAppointments] = us
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-            const response = await axios.get(`http://localhost:5000/api/medecin/appointments`, {        headers: { Authorization: `Bearer ${token}` },        params: {          limit: rowsPerPage,          offset: (page - 1) * rowsPerPage        }      });
+      const response = await axios.get(`http://localhost:5000/api/medecin/appointments`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          limit: rowsPerPage,
+          offset: (page - 1) * rowsPerPage
+        }
+      });
       
-            setAppointments(response.data.appointments);      setFilteredAppointments(response.data.appointments);      setTotalPages(Math.ceil(response.data.total / rowsPerPage));
+      console.log('=== APPOINTMENTS FETCHED ===');
+      console.log('Total appointments:', response.data.appointments.length);
+      console.log('Appointments data:', response.data.appointments);
+      console.log('============================');
+      setAppointments(response.data.appointments);
+      setFilteredAppointments(response.data.appointments);
+      setTotalPages(Math.ceil(response.data.total / rowsPerPage));
     } catch (err) {
       console.error('Error fetching appointments:', err);
       setError('Impossible de récupérer les rendez-vous. Veuillez réessayer plus tard.');
@@ -63,7 +90,90 @@ const UpcomingAppointments = () => {  const [appointments, setAppointments] = us
     }
   };
 
-    const handlePageChange = (event, value) => {    setPage(value);  };  const handleSearch = (event) => {    const term = event.target.value.toLowerCase();    setSearchTerm(term);        if (!term) {      setFilteredAppointments(appointments);    } else {      const filtered = appointments.filter(appointment =>         appointment.patient_prenom.toLowerCase().includes(term) ||        appointment.patient_nom.toLowerCase().includes(term) ||        (appointment.patient_prenom + ' ' + appointment.patient_nom).toLowerCase().includes(term)      );      setFilteredAppointments(filtered);    }  };
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
+
+  const handleSearch = (event) => {
+    const term = event.target.value.toLowerCase();
+    setSearchTerm(term);
+    
+    if (!term) {
+      setFilteredAppointments(appointments);
+    } else {
+      const filtered = appointments.filter(appointment =>
+        appointment.patient_prenom.toLowerCase().includes(term) ||
+        appointment.patient_nom.toLowerCase().includes(term) ||
+        (appointment.patient_prenom + ' ' + appointment.patient_nom).toLowerCase().includes(term)
+      );
+      setFilteredAppointments(filtered);
+    }
+  };
+
+  const handleAttendanceAction = (appointmentId, action) => {
+    setConfirmDialog({ 
+      open: true, 
+      appointmentId, 
+      action,
+      title: action === 'present' ? 'Confirmer la présence' : 'Marquer comme absent',
+      message: action === 'present' 
+        ? 'Confirmer que le patient s\'est présenté au rendez-vous ?' 
+        : 'Marquer le patient comme absent ?'
+    });
+  };
+
+  const handleConfirmAttendance = async () => {
+    try {
+      const { appointmentId, action } = confirmDialog;
+      const token = localStorage.getItem('token');
+      
+      const newStatus = action === 'present' ? 'en cours' : 'patient absent';
+      
+      await axios.put(
+        `http://localhost:5000/api/medecin/appointments/${appointmentId}/status`,
+        { statut: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update local state
+      const updatedAppointments = appointments.map(appointment =>
+        appointment.id === appointmentId
+          ? { ...appointment, statut: newStatus }
+          : appointment
+      );
+      setAppointments(updatedAppointments);
+      setFilteredAppointments(updatedAppointments);
+      
+      setConfirmDialog({ open: false, appointmentId: null, action: null });
+    } catch (err) {
+      console.error('Error updating appointment status:', err);
+      setError('Erreur lors de la mise à jour du statut du rendez-vous');
+      setConfirmDialog({ open: false, appointmentId: null, action: null });
+    }
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialog({ open: false, appointmentId: null, action: null });
+  };
+
+  // Check if appointment is today or in the past (for attendance tracking)
+  const canTrackAttendance = (appointmentDate) => {
+    const today = new Date();
+    const appointment = new Date(appointmentDate);
+    
+    // Set both dates to start of day for comparison
+    today.setHours(0, 0, 0, 0);
+    appointment.setHours(0, 0, 0, 0);
+    
+    const canTrack = appointment <= today;
+    console.log('=== ATTENDANCE CHECK ===');
+    console.log('Appointment date:', appointmentDate);
+    console.log('Today:', today.toISOString());
+    console.log('Appointment (normalized):', appointment.toISOString());
+    console.log('Can track attendance:', canTrack);
+    console.log('========================');
+    return canTrack;
+  };
 
   if (loading) {
     return (
@@ -100,6 +210,22 @@ const UpcomingAppointments = () => {  const [appointments, setAppointments] = us
         <TodayIcon sx={{ mr: 1 }} /> Rendez-vous à venir
       </Typography>
       
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          placeholder="Rechercher un patient..."
+          value={searchTerm}
+          onChange={handleSearch}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ width: 300 }}
+        />
+      </Box>
+      
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="appointments table">
           <TableHead>
@@ -114,7 +240,21 @@ const UpcomingAppointments = () => {  const [appointments, setAppointments] = us
             </TableRow>
           </TableHead>
           <TableBody>
-            {appointments.map((appointment) => (
+            {filteredAppointments.map((appointment) => {
+              const showAttendanceButtons = canTrackAttendance(appointment.date_heure_debut) && 
+                                          appointment.statut !== 'patient absent' && 
+                                          appointment.statut !== 'en cours' && 
+                                          appointment.statut !== 'terminé';
+              
+              console.log('=== BUTTON VISIBILITY CHECK ===');
+              console.log('Appointment ID:', appointment.id);
+              console.log('Appointment Date:', appointment.date_heure_debut);
+              console.log('Appointment Status:', appointment.statut);
+              console.log('Can track attendance:', canTrackAttendance(appointment.date_heure_debut));
+              console.log('Show attendance buttons:', showAttendanceButtons);
+              console.log('===============================');
+              
+              return (
               <TableRow key={appointment.id} hover>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -154,33 +294,52 @@ const UpcomingAppointments = () => {  const [appointments, setAppointments] = us
                   />
                 </TableCell>
                 <TableCell>
-                  <Box sx={{ display: 'flex' }}>
-                    <Tooltip title="Détails du rendez-vous">
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {/* Attendance tracking buttons - only show for today's appointments or past ones */}
+                      {showAttendanceButtons && (
+                        <>
+                          <Tooltip title="Patient présent">
+                            <IconButton 
+                              onClick={() => handleAttendanceAction(appointment.id, 'present')}
+                              size="small"
+                              color="success"
+                              sx={{ minWidth: 'auto' }}
+                            >
+                              <CheckCircleIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Patient absent">
                       <IconButton 
-                        component={Link} 
-                        to={`/medecin/appointments/${appointment.id}`}
+                              onClick={() => handleAttendanceAction(appointment.id, 'absent')}
                         size="small"
-                        color="primary"
+                              color="error"
+                              sx={{ minWidth: 'auto' }}
                       >
-                        <AssignmentIcon fontSize="small" />
+                              <PersonOffIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
+                        </>
+                      )}
+                      
+                      {/* Regular action buttons */}
                     <Tooltip title="Dossier médical">
                       <IconButton 
                         component={Link} 
                         to={`/medecin/patients/${appointment.patient_id}/dossier`}
                         size="small"
                         color="secondary"
+                          sx={{ minWidth: 'auto' }}
                       >
                         <MedicalIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Ajouter consultation">
+                      <Tooltip title="Consultation">
                       <IconButton 
                         component={Link} 
-                        to={`/medecin/appointments/${appointment.id}/consultation`}
+                          to={`/medecin/patients/${appointment.patient_id}/dossier`}
                         size="small"
-                        color="success"
+                          color="info"
+                          sx={{ minWidth: 'auto' }}
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
@@ -188,7 +347,8 @@ const UpcomingAppointments = () => {  const [appointments, setAppointments] = us
                   </Box>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -203,6 +363,26 @@ const UpcomingAppointments = () => {  const [appointments, setAppointments] = us
           />
         </Box>
       )}
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmDialog.open} onClose={handleCloseConfirmDialog}>
+        <DialogTitle>{confirmDialog.title}</DialogTitle>
+        <DialogContent>
+          <Typography>{confirmDialog.message}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDialog} color="inherit">
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleConfirmAttendance} 
+            color={confirmDialog.action === 'present' ? 'success' : 'error'}
+            variant="contained"
+          >
+            Confirmer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

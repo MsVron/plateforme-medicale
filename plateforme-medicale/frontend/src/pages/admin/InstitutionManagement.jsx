@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from '../../services/axiosConfig';
 import {
     Card,
     CardContent,
@@ -60,21 +61,25 @@ const InstitutionManagement = () => {
         adresse: '',
         ville: '',
         code_postal: '',
-        pays: 'France',
+        pays: 'Maroc',
         telephone: '',
         email_contact: '',
-        site_web: '',
         description: '',
         type: 'hôpital'
     });
 
+    // Institution types according to system specification
+    // hôpital, clinique, centre médical -> hospital role (same functionality)
+    // laboratoire -> laboratory role
+    // pharmacie -> pharmacy role  
+    // cabinet privé -> institution role
     const institutionTypes = [
         'hôpital',
-        'clinique',
-        'cabinet privé',
+        'clinique', 
         'centre médical',
+        'cabinet privé',
         'laboratoire',
-        'autre'
+        'pharmacie'
     ];
 
     useEffect(() => {
@@ -84,19 +89,8 @@ const InstitutionManagement = () => {
 
     const fetchInstitutions = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/admin/institutions', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setInstitutions(data);
-            } else {
-                setError('Erreur lors de la récupération des institutions');
-            }
+            const response = await axios.get('/admin/institutions');
+            setInstitutions(response.data);
         } catch (error) {
             console.error('Error fetching institutions:', error);
             setError('Erreur lors de la récupération des institutions');
@@ -107,17 +101,8 @@ const InstitutionManagement = () => {
 
     const fetchDoctors = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/admin/doctors', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setDoctors(data);
-            }
+            const response = await axios.get('/admin/doctors');
+            setDoctors(response.data);
         } catch (error) {
             console.error('Error fetching doctors:', error);
         }
@@ -129,10 +114,9 @@ const InstitutionManagement = () => {
             adresse: '',
             ville: '',
             code_postal: '',
-            pays: 'France',
+            pays: 'Maroc',
             telephone: '',
             email_contact: '',
-            site_web: '',
             description: '',
             type: 'hôpital'
         });
@@ -145,10 +129,9 @@ const InstitutionManagement = () => {
             adresse: institution.adresse || '',
             ville: institution.ville || '',
             code_postal: institution.code_postal || '',
-            pays: institution.pays || 'France',
+            pays: institution.pays || 'Maroc',
             telephone: institution.telephone || '',
             email_contact: institution.email_contact || '',
-            site_web: institution.site_web || '',
             description: institution.description || '',
             type: institution.type || 'hôpital'
         });
@@ -157,109 +140,60 @@ const InstitutionManagement = () => {
 
     const handleSaveInstitution = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const url = institutionDialog.mode === 'add' 
-                ? '/api/admin/institutions'
-                : `/api/admin/institutions/${institutionDialog.data.id}`;
-            
-            const method = institutionDialog.mode === 'add' ? 'POST' : 'PUT';
-            
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(institutionForm)
-            });
-
-            if (response.ok) {
-                setSuccess(`Institution ${institutionDialog.mode === 'add' ? 'ajoutée' : 'modifiée'} avec succès`);
-                setInstitutionDialog({ open: false, mode: 'add', data: null });
-                fetchInstitutions();
-                setTimeout(() => setSuccess(''), 3000);
+            if (institutionDialog.mode === 'add') {
+                await axios.post('/admin/institutions', institutionForm);
+                setSuccess('Institution ajoutée avec succès');
             } else {
-                const errorData = await response.json();
-                setError(errorData.message || 'Erreur lors de la sauvegarde');
+                await axios.put(`/admin/institutions/${institutionDialog.data.id}`, institutionForm);
+                setSuccess('Institution modifiée avec succès');
             }
+            
+            setInstitutionDialog({ open: false, mode: 'add', data: null });
+            fetchInstitutions();
+            setTimeout(() => setSuccess(''), 3000);
         } catch (error) {
             console.error('Error saving institution:', error);
-            setError('Erreur lors de la sauvegarde de l\'institution');
+            setError(error.response?.data?.message || 'Erreur lors de la sauvegarde de l\'institution');
         }
     };
 
     const handleDeleteInstitution = async (institutionId) => {
         if (window.confirm('Êtes-vous sûr de vouloir supprimer cette institution ?')) {
             try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`/api/admin/institutions/${institutionId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    setSuccess('Institution supprimée avec succès');
-                    fetchInstitutions();
-                    setTimeout(() => setSuccess(''), 3000);
-                } else {
-                    setError('Erreur lors de la suppression');
-                }
+                await axios.delete(`/admin/institutions/${institutionId}`);
+                setSuccess('Institution supprimée avec succès');
+                fetchInstitutions();
+                setTimeout(() => setSuccess(''), 3000);
             } catch (error) {
                 console.error('Error deleting institution:', error);
-                setError('Erreur lors de la suppression de l\'institution');
+                setError(error.response?.data?.message || 'Erreur lors de la suppression de l\'institution');
             }
         }
     };
 
     const handleAssignDoctor = async (institutionId, doctorId) => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`/api/admin/institutions/${institutionId}/doctors`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ doctorId })
-            });
-
-            if (response.ok) {
-                setSuccess('Médecin assigné avec succès');
-                fetchInstitutions();
-                setDoctorDialog({ open: false, institutionId: null });
-                setTimeout(() => setSuccess(''), 3000);
-            } else {
-                setError('Erreur lors de l\'assignation');
-            }
+            await axios.post(`/admin/institutions/${institutionId}/doctors`, { doctorId });
+            setSuccess('Médecin assigné avec succès');
+            fetchInstitutions();
+            setDoctorDialog({ open: false, institutionId: null });
+            setTimeout(() => setSuccess(''), 3000);
         } catch (error) {
             console.error('Error assigning doctor:', error);
-            setError('Erreur lors de l\'assignation du médecin');
+            setError(error.response?.data?.message || 'Erreur lors de l\'assignation du médecin');
         }
     };
 
     const handleRemoveDoctor = async (institutionId, doctorId) => {
         if (window.confirm('Êtes-vous sûr de vouloir retirer ce médecin de cette institution ?')) {
             try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`/api/admin/institutions/${institutionId}/doctors/${doctorId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    setSuccess('Médecin retiré avec succès');
-                    fetchInstitutions();
-                    setTimeout(() => setSuccess(''), 3000);
-                } else {
-                    setError('Erreur lors du retrait');
-                }
+                await axios.delete(`/admin/institutions/${institutionId}/doctors/${doctorId}`);
+                setSuccess('Médecin retiré avec succès');
+                fetchInstitutions();
+                setTimeout(() => setSuccess(''), 3000);
             } catch (error) {
                 console.error('Error removing doctor:', error);
-                setError('Erreur lors du retrait du médecin');
+                setError(error.response?.data?.message || 'Erreur lors du retrait du médecin');
             }
         }
     };
@@ -553,14 +487,6 @@ const InstitutionManagement = () => {
                                 value={institutionForm.email_contact}
                                 onChange={(e) => setInstitutionForm({...institutionForm, email_contact: e.target.value})}
                                 required
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Site web"
-                                value={institutionForm.site_web}
-                                onChange={(e) => setInstitutionForm({...institutionForm, site_web: e.target.value})}
                             />
                         </Grid>
                         <Grid item xs={12}>

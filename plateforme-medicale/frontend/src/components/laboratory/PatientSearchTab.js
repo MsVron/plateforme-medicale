@@ -161,10 +161,11 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="CNE"
+                label="CIN"
                 value={searchForm.cne}
                 onChange={(e) => handleSearchChange('cne', e.target.value)}
                 variant="outlined"
+                sx={{ mb: 2 }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -219,7 +220,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
                     </Box>
                     
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      <strong>CNE:</strong> {patient.CNE}
+                      <strong>CIN:</strong> {patient.CNE}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                       <strong>Date de naissance:</strong> {new Date(patient.date_naissance).toLocaleDateString()}

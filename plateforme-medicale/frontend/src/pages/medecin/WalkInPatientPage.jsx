@@ -153,12 +153,12 @@ const WalkInPatientPage = () => {
         break;
         
       case 'CNE':
-        // CNE is mandatory for patients directs
+        // CIN is mandatory for patients directs
         const cneValidation = validateCNERequired(value);
         if (!cneValidation.isValid) {
           error = cneValidation.errorMessage;
         }
-        // Also validate CNE confirmation if it exists
+        // Also validate CIN confirmation if it exists
         if (formData.CNE_confirm) {
           const confirmValidation = validateCNEConfirmation(value, formData.CNE_confirm);
           if (!confirmValidation.isValid) {
@@ -416,7 +416,7 @@ const WalkInPatientPage = () => {
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
                 <strong>Important :</strong> Communiquez ces identifiants au patient. 
-                Le mot de passe correspond à son CNE et peut être modifié après la première connexion.
+                Le mot de passe correspond à son CIN et peut être modifié après la première connexion.
               </Typography>
             </Alert>
           </CardContent>
@@ -546,7 +546,7 @@ const WalkInPatientPage = () => {
             required
             fullWidth
             id="CNE"
-            label="CNE"
+            label="CIN"
             name="CNE"
             value={formData.CNE}
             onChange={handleChange}
@@ -556,19 +556,19 @@ const WalkInPatientPage = () => {
             sx={{ mb: 3, ...getCNEFieldColor('CNE') }}
           />
           
-          {/* CNE Confirmation */}
+          {/* CIN Confirmation */}
           <TextField
             required
             fullWidth
             id="CNE_confirm"
-            label="Confirmer le CNE"
+            label="Confirmer le CIN"
             name="CNE_confirm"
             value={formData.CNE_confirm}
             onChange={handleChange}
             onBlur={handleBlur}
             onPaste={handleCNEConfirmPaste}
             error={shouldShowError('CNE_confirm')}
-            helperText={shouldShowError('CNE_confirm') ? errors.CNE_confirm : "Saisissez à nouveau le CNE pour confirmation (copier-coller désactivé)"}
+            helperText={shouldShowError('CNE_confirm') ? errors.CNE_confirm : "Saisissez à nouveau le CIN pour confirmation (copier-coller désactivé)"}
             sx={{ mb: 3, ...getCNEFieldColor('CNE_confirm') }}
           />
           

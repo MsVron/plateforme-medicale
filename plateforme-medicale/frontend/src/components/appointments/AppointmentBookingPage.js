@@ -311,12 +311,12 @@ const AppointmentBookingPage = () => {
       });
       
       // Show success message
-      setMessage('Rendez-vous pris avec succès');
+      setMessage('Rendez-vous pris avec succès ! Un email de confirmation vous a été envoyé avec les détails et les liens pour confirmer ou annuler votre rendez-vous.');
       
       // Return to appointments page
       setTimeout(() => {
         navigate('/patient/appointments');
-      }, 2000);
+      }, 3000);
       
     } catch (error) {
       if (error.response?.status === 401) {

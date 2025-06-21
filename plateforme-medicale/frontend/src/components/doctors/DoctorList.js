@@ -78,14 +78,10 @@ const DoctorList = ({
       <Table>
         <TableHead sx={{ bgcolor: '#f8fafc' }}>
           <TableRow>
-            <TableCell sx={{ fontWeight: 'bold' }}>Prénom</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Nom</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>Nom complet</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Spécialité</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Numéro d'ordre</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>INPE</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Institution</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Ville</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Statut</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
           </TableRow>
@@ -93,7 +89,7 @@ const DoctorList = ({
         <TableBody>
           {filteredDoctors.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+              <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                 <Typography variant="body1" color="text.secondary">
                   Aucun médecin trouvé
                 </Typography>
@@ -109,14 +105,19 @@ const DoctorList = ({
                   transition: 'background-color 0.2s'
                 }}
               >
-                <TableCell>{doctor.prenom}</TableCell>
-                <TableCell>{doctor.nom}</TableCell>
+                <TableCell>
+                  <Box>
+                    <Typography variant="body2" fontWeight="medium">
+                      {doctor.prenom} {doctor.nom}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {doctor.institution_nom || "Aucune institution"} • {doctor.ville || "Ville non spécifiée"}
+                    </Typography>
+                  </Box>
+                </TableCell>
                 <TableCell>{doctor.specialite_nom}</TableCell>
                 <TableCell>{doctor.numero_ordre}</TableCell>
                 <TableCell>{doctor.email}</TableCell>
-                <TableCell>{doctor.institution_nom || "Aucune"}</TableCell>
-                <TableCell>{doctor.institution_type || "-"}</TableCell>
-                <TableCell>{doctor.ville || "-"}</TableCell>
                 <TableCell>
                   <Chip 
                     label={doctor.est_actif ? "Actif" : "Inactif"}

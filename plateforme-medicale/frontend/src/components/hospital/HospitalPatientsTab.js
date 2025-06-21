@@ -152,7 +152,7 @@ const HospitalPatientsTab = ({ onSuccess, onError, onRefresh }) => {
             <TableHead sx={{ backgroundColor: 'primary.main' }}>
               <TableRow>
                 <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Patient</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>CNE</TableCell>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>CIN</TableCell>
                 <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Médecin</TableCell>
                 <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Lit</TableCell>
                 <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Admission</TableCell>

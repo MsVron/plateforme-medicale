@@ -21,4 +21,21 @@ CREATE TABLE rendez_vous (
   FOREIGN KEY (medecin_id) REFERENCES medecins(id),
   FOREIGN KEY (institution_id) REFERENCES institutions(id),
   FOREIGN KEY (createur_id) REFERENCES utilisateurs(id)
+);
+
+-- Table des tokens pour les actions par email sur les rendez-vous
+CREATE TABLE appointment_email_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  appointment_id INT NOT NULL,
+  confirmation_token VARCHAR(255) UNIQUE NOT NULL,
+  cancellation_token VARCHAR(255) UNIQUE NOT NULL,
+  date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  date_expiration DATETIME NULL,
+  is_used BOOLEAN DEFAULT FALSE,
+  action_type ENUM('confirmation', 'cancellation') NULL,
+  date_utilisation TIMESTAMP NULL,
+  FOREIGN KEY (appointment_id) REFERENCES rendez_vous(id) ON DELETE CASCADE,
+  INDEX idx_confirmation_token (confirmation_token),
+  INDEX idx_cancellation_token (cancellation_token),
+  INDEX idx_appointment_id (appointment_id)
 ); 

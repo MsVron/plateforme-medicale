@@ -88,7 +88,7 @@ const WalkInPatientRegistration = ({ open, onClose, onSuccess }) => {
         }
         break;
         
-            case 'CNE':        // CNE is mandatory for patients directs        const cneValidation = validateCNERequired(value);        if (!cneValidation.isValid) {          error = cneValidation.errorMessage;        }        // Also validate CNE confirmation if it exists        if (formData.CNE_confirm) {          const confirmValidation = validateCNEConfirmation(value, formData.CNE_confirm);          if (!confirmValidation.isValid) {            setErrors(prevErrors => ({              ...prevErrors,              CNE_confirm: confirmValidation.errorMessage            }));          } else {            setErrors(prevErrors => ({              ...prevErrors,              CNE_confirm: ''            }));          }        }        break;              case 'CNE_confirm':        const cneConfirmValidation = validateCNEConfirmation(formData.CNE, value);        error = cneConfirmValidation.errorMessage;        break;
+            case 'CNE':        // CIN is mandatory for patients directs        const cneValidation = validateCNERequired(value);        if (!cneValidation.isValid) {          error = cneValidation.errorMessage;        }        // Also validate CIN confirmation if it exists        if (formData.CNE_confirm) {          const confirmValidation = validateCNEConfirmation(value, formData.CNE_confirm);          if (!confirmValidation.isValid) {            setErrors(prevErrors => ({              ...prevErrors,              CNE_confirm: confirmValidation.errorMessage            }));          } else {            setErrors(prevErrors => ({              ...prevErrors,              CNE_confirm: ''            }));          }        }        break;              case 'CNE_confirm':        const cneConfirmValidation = validateCNEConfirmation(formData.CNE, value);        error = cneConfirmValidation.errorMessage;        break;
         
       case 'date_naissance':
         if (!value) {
@@ -299,7 +299,7 @@ const WalkInPatientRegistration = ({ open, onClose, onSuccess }) => {
               <Alert severity="info" sx={{ mt: 2 }}>
                 <Typography variant="body2">
                   <strong>Important :</strong> Communiquez ces identifiants au patient. 
-                  Le mot de passe correspond à son CNE et peut être modifié après la première connexion.
+                  Le mot de passe correspond à son CIN et peut être modifié après la première connexion.
                 </Typography>
               </Alert>
             </CardContent>
@@ -410,7 +410,7 @@ const WalkInPatientRegistration = ({ open, onClose, onSuccess }) => {
             </FormControl>
           </Box>
           
-                    <TextField            required            fullWidth            id="CNE"            label="CNE"            name="CNE"            value={formData.CNE}            onChange={handleChange}            onBlur={handleBlur}            error={shouldShowError('CNE')}            helperText={shouldShowError('CNE') ? errors.CNE : "Format: 1 ou 2 lettres suivies d'au moins 6 caractères (ex: AB123456)"}            sx={{ mb: 3, ...getCNEFieldColor('CNE') }}          />                    {/* CNE Confirmation */}          <TextField            required            fullWidth            id="CNE_confirm"            label="Confirmer le CNE"            name="CNE_confirm"            value={formData.CNE_confirm}            onChange={handleChange}            onBlur={handleBlur}            onPaste={handleCNEConfirmPaste}            error={shouldShowError('CNE_confirm')}            helperText={shouldShowError('CNE_confirm') ? errors.CNE_confirm : "Saisissez à nouveau le CNE pour confirmation (copier-coller désactivé)"}            sx={{ mb: 3, ...getCNEFieldColor('CNE_confirm') }}          />
+                    <TextField            required            fullWidth            id="CNE"            label="CIN"            name="CNE"            value={formData.CNE}            onChange={handleChange}            onBlur={handleBlur}            error={shouldShowError('CNE')}            helperText={shouldShowError('CNE') ? errors.CNE : "Format: 1 ou 2 lettres suivies d'au moins 6 caractères (ex: AB123456)"}            sx={{ mb: 3, ...getCNEFieldColor('CNE') }}          />                    {/* CIN Confirmation */}          <TextField            required            fullWidth            id="CNE_confirm"            label="Confirmer le CIN"            name="CNE_confirm"            value={formData.CNE_confirm}            onChange={handleChange}            onBlur={handleBlur}            onPaste={handleCNEConfirmPaste}            error={shouldShowError('CNE_confirm')}            helperText={shouldShowError('CNE_confirm') ? errors.CNE_confirm : "Saisissez à nouveau le CIN pour confirmation (copier-coller désactivé)"}            sx={{ mb: 3, ...getCNEFieldColor('CNE_confirm') }}          />
           
           {/* Informations de contact */}
           <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>

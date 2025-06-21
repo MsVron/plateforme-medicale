@@ -236,7 +236,7 @@ const MedicalRecord = () => {
                     <DateIcon color="primary" />
                     <Typography variant="subtitle2">Informations générales</Typography>
                   </Stack>
-                  <Typography variant="body2">CNE: {patient.CNE || 'Non renseigné'}</Typography>
+                  <Typography variant="body2">CIN: {patient.CNE || 'Non renseigné'}</Typography>
                   <Typography variant="body2">
                     Né(e) le: {formatDate(patient.date_naissance)}
                   </Typography>
@@ -420,11 +420,14 @@ const MedicalRecord = () => {
                     <TableRow key={index}>
                       <TableCell>{analyse.nom_analyse}</TableCell>
                       <TableCell>
-                        {analyse.valeur_numerique || analyse.valeur_texte || 'Non disponible'}
+                        {analyse.valeur_numerique || analyse.valeur_texte || 
+                         (analyse.request_status === 'requested' ? 'Demandée' :
+                          analyse.request_status === 'in_progress' ? 'En cours au laboratoire' :
+                          'Non disponible')}
                       </TableCell>
                       <TableCell>{analyse.unite || '-'}</TableCell>
                       <TableCell>{getAnalysisStatus(analyse)}</TableCell>
-                      <TableCell>{formatDate(analyse.date_realisation)}</TableCell>
+                      <TableCell>{formatDate(analyse.date_realisation || analyse.date_prescription)}</TableCell>
                       <TableCell>Dr. {analyse.medecin_nom}</TableCell>
                     </TableRow>
                   ))}

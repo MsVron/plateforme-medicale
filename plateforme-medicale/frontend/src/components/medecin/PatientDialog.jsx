@@ -121,7 +121,7 @@ const PatientDialog = ({
                         <Grid item xs={12} sm={6}>
                             <TextField
                                 margin="dense"
-                                label="CNE"
+                                label="CIN"
                                 fullWidth
                                 value={patientForm.CNE}
                                 onChange={(e) =>
@@ -135,7 +135,7 @@ const PatientDialog = ({
                         <Grid item xs={12} sm={6}>
                             <TextField
                                 margin="dense"
-                                label="Confirmer le CNE"
+                                label="Confirmer le CIN"
                                 fullWidth
                                 value={patientForm.CNE_confirm}
                                 onChange={(e) =>
@@ -145,7 +145,7 @@ const PatientDialog = ({
                                     })
                                 }
                                 onPaste={(e) => e.preventDefault()}
-                                helperText="Saisissez à nouveau le CNE (copier-coller désactivé)"
+                                helperText="Saisissez à nouveau le CIN (copier-coller désactivé)"
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>

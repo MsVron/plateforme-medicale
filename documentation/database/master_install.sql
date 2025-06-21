@@ -26,6 +26,7 @@ SOURCE sql_structure/04_medical_analysis/01_analysis_categories.sql;
 SOURCE sql_structure/04_medical_analysis/02_analysis_results.sql;
 SOURCE sql_structure/04_medical_analysis/03_imaging.sql;
 SOURCE sql_structure/04_medical_analysis/04_laboratory_enhancements.sql;
+SOURCE sql_structure/04_medical_analysis/05_analysis_workflow_fix.sql;
 
 -- 5. SYSTEM MANAGEMENT
 SOURCE sql_structure/05_system_management/01_notifications.sql;

@@ -15,4 +15,7 @@ router.get('/check-patient-appointments', verifyToken, appointmentController.che
 // Create a new appointment (requires patient authentication)
 router.post('/', verifyToken, appointmentController.createAppointment);
 
+// Email-based appointment confirmation (no auth required - uses token)
+router.get('/confirm', appointmentController.confirmAppointmentByEmail);
+
 module.exports = router; 

@@ -140,7 +140,7 @@ const PrescriptionsTab = ({ onSuccess, onError, onRefresh }) => {
         <CardContent>
           <TextField
             fullWidth
-            placeholder="Rechercher par nom de patient, CNE ou médecin..."
+            placeholder="Rechercher par nom de patient, CIN ou médecin..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
@@ -183,7 +183,7 @@ const PrescriptionsTab = ({ onSuccess, onError, onRefresh }) => {
                           {prescription.patient_name}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          CNE: {prescription.patient_cne}
+                          CIN: {prescription.patient_cne}
                         </Typography>
                       </Box>
                     </Box>
