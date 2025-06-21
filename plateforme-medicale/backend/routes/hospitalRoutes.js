@@ -3,6 +3,11 @@ const router = express.Router();
 const { verifyToken, isHospital } = require('../middlewares/auth');
 const hospitalController = require('../controllers/hospital/hospitalController');
 
+// DEBUG ROUTE - Test if hospital routes are working
+router.get('/debug/test', (req, res) => {
+  res.json({ message: 'Hospital routes are working!', timestamp: new Date().toISOString() });
+});
+
 // Patient search routes
 router.get('/patients/search', verifyToken, isHospital, hospitalController.searchPatients);
 router.get('/patients', verifyToken, isHospital, hospitalController.getHospitalPatients);
@@ -15,6 +20,8 @@ router.put('/assignments/:assignmentId/discharge', verifyToken, isHospital, hosp
 router.post('/patients/walk-in', verifyToken, isHospital, hospitalController.addWalkInPatient);
 
 // Hospital doctors routes
+// IMPORTANT: /doctors/search must come BEFORE /doctors to avoid route conflicts
+router.get('/doctors/search', verifyToken, isHospital, hospitalController.searchDoctors);
 router.get('/doctors', verifyToken, isHospital, hospitalController.getHospitalDoctors);
 
 // Bed management routes
@@ -33,8 +40,7 @@ router.post('/surgeries', verifyToken, isHospital, hospitalController.createSurg
 router.put('/surgeries/:surgeryId', verifyToken, isHospital, hospitalController.updateSurgery);
 router.get('/operating-rooms', verifyToken, isHospital, hospitalController.getOperatingRooms);
 
-// Doctor management routes
-router.get('/doctors/search', verifyToken, isHospital, hospitalController.searchDoctors);
+// Doctor management routes  
 router.post('/doctors/:doctorId/assign', verifyToken, isHospital, hospitalController.addDoctorToHospital);
 router.delete('/doctors/:doctorId/remove', verifyToken, isHospital, hospitalController.removeDoctorFromHospital);
 

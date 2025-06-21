@@ -27,7 +27,7 @@ import {
   Tooltip,
   CircularProgress,
   Avatar,
-  Autocomplete,
+
   Tabs,
   Tab
 } from '@mui/material';
@@ -52,7 +52,6 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
   const [tabValue, setTabValue] = useState(0);
   const [hospitalDoctors, setHospitalDoctors] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
-  const [specialties, setSpecialties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [addDialog, setAddDialog] = useState({ open: false, doctor: null });
@@ -60,7 +59,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
   const [searchForm, setSearchForm] = useState({
     prenom: '',
     nom: '',
-    specialite: ''
+    numero_ordre: ''
   });
 
   const [addForm, setAddForm] = useState({
@@ -82,14 +81,8 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      // Fetch both hospital doctors and specialties in parallel
-      const [doctorsResponse, specialtiesResponse] = await Promise.all([
-        hospitalService.getHospitalDoctors(),
-        hospitalService.getSpecialties()
-      ]);
-      
-      setHospitalDoctors(doctorsResponse.doctors || []);
-      setSpecialties(specialtiesResponse.data || []);
+      const response = await hospitalService.getHospitalDoctors();
+      setHospitalDoctors(response.doctors || []);
     } catch (error) {
       console.error('Error fetching initial data:', error);
       handleError('Erreur lors du chargement des données');
@@ -135,14 +128,25 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
 
   const handleSaveAdd = async () => {
     try {
-      await hospitalService.addDoctorToHospital(addDialog.doctor.id, addForm);
+      console.log('Attempting to add doctor:', addDialog.doctor.id, addForm);
+      
+      // Validation
+      if (!addForm.department) {
+        handleError('Veuillez sélectionner un département');
+        return;
+      }
+      
+      const response = await hospitalService.addDoctorToHospital(addDialog.doctor.id, addForm);
+      console.log('Add doctor response:', response);
+      
       handleSuccess('Médecin ajouté à l\'hôpital avec succès');
       setAddDialog({ open: false, doctor: null });
       fetchHospitalDoctors();
       handleSearch(); // Refresh search results
       handleRefresh();
     } catch (error) {
-      handleError(error.message || 'Erreur lors de l\'ajout');
+      console.error('Error adding doctor:', error);
+      handleError(error.response?.data?.message || error.message || 'Erreur lors de l\'ajout');
     }
   };
 
@@ -160,7 +164,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
   };
 
   const clearSearch = () => {
-    setSearchForm({ prenom: '', nom: '', specialite: '' });
+    setSearchForm({ prenom: '', nom: '', numero_ordre: '' });
     setSearchResults([]);
   };
 
@@ -278,6 +282,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                   <TableHead sx={{ backgroundColor: 'primary.main' }}>
                     <TableRow>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Médecin</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>INPE</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Spécialité</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Contact</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Statut</TableCell>
@@ -300,6 +305,11 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                           </Box>
                         </TableCell>
                         <TableCell>
+                          <Typography variant="body2" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
+                            {doctor.numero_ordre || 'N/A'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
                           <Chip 
                             label={doctor.specialite} 
                             size="small" 
@@ -315,10 +325,10 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                                 <Typography variant="caption">{doctor.telephone}</Typography>
                               </Box>
                             )}
-                            {doctor.email && (
+                            {doctor.email_professionnel && (
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Email sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                                <Typography variant="caption">{doctor.email}</Typography>
+                                <Typography variant="caption">{doctor.email_professionnel}</Typography>
                               </Box>
                             )}
                           </Box>
@@ -361,7 +371,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                 Rechercher des Médecins
               </Typography>
               <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={3}>
+                <Grid item xs={12} sm={4} md={4}>
                   <TextField
                     label="Prénom"
                     value={searchForm.prenom}
@@ -370,7 +380,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                     size="small"
                   />
                 </Grid>
-                <Grid item xs={12} sm={3}>
+                <Grid item xs={12} sm={4} md={4}>
                   <TextField
                     label="Nom"
                     value={searchForm.nom}
@@ -379,26 +389,17 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                     size="small"
                   />
                 </Grid>
-                <Grid item xs={12} sm={3}>
-                  <Autocomplete
-                    options={specialties}
-                    getOptionLabel={(option) => typeof option === 'string' ? option : option.nom}
-                    value={searchForm.specialite}
-                    onChange={(event, newValue) => {
-                      const value = typeof newValue === 'string' ? newValue : (newValue ? newValue.nom : '');
-                      setSearchForm(prev => ({ ...prev, specialite: value }));
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Spécialité"
-                        size="small"
-                        fullWidth
-                      />
-                    )}
+                <Grid item xs={12} sm={4} md={4}>
+                  <TextField
+                    label="INPE (Numéro d'ordre)"
+                    value={searchForm.numero_ordre}
+                    onChange={(e) => setSearchForm(prev => ({ ...prev, numero_ordre: e.target.value }))}
+                    fullWidth
+                    size="small"
+                    placeholder="Ex: 123456"
                   />
                 </Grid>
-                <Grid item xs={12} sm={3}>
+                <Grid item xs={12} sm={12} md={12}>
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <Button
                       variant="contained"
@@ -434,6 +435,7 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                     <TableHead sx={{ backgroundColor: 'secondary.main' }}>
                       <TableRow>
                         <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Médecin</TableCell>
+                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>INPE</TableCell>
                         <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Spécialité</TableCell>
                         <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Contact</TableCell>
                         <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Statut</TableCell>
@@ -456,6 +458,11 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                             </Box>
                           </TableCell>
                           <TableCell>
+                            <Typography variant="body2" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
+                              {doctor.numero_ordre || 'N/A'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
                             <Chip 
                               label={doctor.specialite} 
                               size="small" 
@@ -471,10 +478,10 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
                                   <Typography variant="caption">{doctor.telephone}</Typography>
                                 </Box>
                               )}
-                              {doctor.email && (
+                              {doctor.email_professionnel && (
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                   <Email sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                                  <Typography variant="caption">{doctor.email}</Typography>
+                                  <Typography variant="caption">{doctor.email_professionnel}</Typography>
                                 </Box>
                               )}
                             </Box>
@@ -531,21 +538,20 @@ const HospitalDoctorsTab = ({ onSuccess, onError, onRefresh }) => {
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
-              <Autocomplete
-                options={departments}
-                value={addForm.department}
-                onChange={(event, newValue) => {
-                  setAddForm(prev => ({ ...prev, department: newValue || '' }));
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Département"
-                    required
-                    fullWidth
-                  />
-                )}
-              />
+              <FormControl fullWidth required>
+                <InputLabel>Département</InputLabel>
+                <Select
+                  value={addForm.department}
+                  onChange={(e) => setAddForm(prev => ({ ...prev, department: e.target.value }))}
+                  label="Département"
+                >
+                  {departments.map((dept) => (
+                    <MenuItem key={dept} value={dept}>
+                      {dept}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12}>
               <TextField

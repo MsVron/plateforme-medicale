@@ -305,9 +305,10 @@ exports.getHospitalDoctors = async (req, res) => {
         m.id, 
         m.prenom, 
         m.nom, 
+        m.numero_ordre,
         s.nom as specialite,
         m.telephone,
-        m.email,
+        m.email_professionnel,
         m.est_actif
       FROM medecins m
       JOIN specialites s ON m.specialite_id = s.id
@@ -840,18 +841,26 @@ exports.transferPatient = async (req, res) => {
 
 // Doctor Management Methods
 exports.searchDoctors = async (req, res) => {
+  console.log('🔍 searchDoctors method called!');
+  console.log('Query params:', req.query);
+  console.log('User:', req.user?.id, req.user?.role);
+  
   try {
     const hospitalId = req.user.id_specifique_role;
-    const { prenom, nom, specialite } = req.query;
+    const { prenom, nom, numero_ordre } = req.query;
+    
+    console.log('Hospital ID:', hospitalId);
+    console.log('Search criteria:', { prenom, nom, numero_ordre });
 
     let query = `
       SELECT 
         m.id, 
         m.prenom, 
         m.nom, 
+        m.numero_ordre,
         s.nom as specialite,
         m.telephone,
-        m.email,
+        m.email_professionnel,
         m.est_actif,
         CASE WHEN mi.medecin_id IS NOT NULL THEN TRUE ELSE FALSE END as is_assigned
       FROM medecins m
@@ -871,10 +880,10 @@ exports.searchDoctors = async (req, res) => {
       query += ' AND m.nom LIKE ?';
       params.push(`%${nom}%`);
     }
-    
-    if (specialite) {
-      query += ' AND s.nom LIKE ?';
-      params.push(`%${specialite}%`);
+
+    if (numero_ordre) {
+      query += ' AND m.numero_ordre LIKE ?';
+      params.push(`%${numero_ordre}%`);
     }
 
     query += ' ORDER BY m.nom, m.prenom';

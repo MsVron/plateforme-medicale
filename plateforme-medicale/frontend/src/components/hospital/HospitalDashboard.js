@@ -5,7 +5,9 @@ import {
   Typography,
   Paper,
   Tabs,
-  Tab
+  Tab,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   LocalHospital as HospitalIcon
@@ -18,6 +20,7 @@ const HospitalDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Map routes to tab indices
   const routeToTabMap = {
@@ -47,6 +50,18 @@ const HospitalDashboard = () => {
     if (route) {
       navigate(route);
     }
+  };
+
+  const handleSuccess = (message) => {
+    setSnackbar({ open: true, message, severity: 'success' });
+  };
+
+  const handleError = (message) => {
+    setSnackbar({ open: true, message, severity: 'error' });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
 
@@ -100,11 +115,29 @@ const HospitalDashboard = () => {
         </Tabs>
 
         <Box sx={{ p: 3 }}>
-          {activeTab === 0 && <HospitalDoctorsTab />}
+          {activeTab === 0 && (
+            <HospitalDoctorsTab 
+              onSuccess={handleSuccess}
+              onError={handleError}
+              onRefresh={() => {}}
+            />
+          )}
           {activeTab === 1 && <WalkInPatientTab />}
           {activeTab === 2 && <HospitalAdmissionsTab />}
         </Box>
       </Paper>
+
+      {/* Snackbar for messages */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
