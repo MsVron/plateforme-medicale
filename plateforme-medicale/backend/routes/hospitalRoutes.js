@@ -12,9 +12,9 @@ router.get('/debug/test', (req, res) => {
 router.get('/patients/search', verifyToken, isHospital, hospitalController.searchPatients);
 router.get('/patients', verifyToken, isHospital, hospitalController.getHospitalPatients);
 
-// Patient admission routes
-router.post('/patients/:patientId/admit', verifyToken, isHospital, hospitalController.admitPatient);
-router.put('/assignments/:assignmentId/discharge', verifyToken, isHospital, hospitalController.dischargePatient);
+// Patient assignment routes
+router.post('/patients/:patientId/assign-doctors', verifyToken, isHospital, hospitalController.assignPatientToDoctors);
+router.put('/patients/:patientId/discharge', verifyToken, isHospital, hospitalController.dischargePatient);
 
 // Walk-in patient routes
 router.post('/patients/walk-in', verifyToken, isHospital, hospitalController.addWalkInPatient);
@@ -46,8 +46,6 @@ router.delete('/doctors/:doctorId/remove', verifyToken, isHospital, hospitalCont
 
 // Hospital admissions routes
 router.get('/admissions', verifyToken, isHospital, hospitalController.getHospitalAdmissions);
-router.post('/patients/:patientId/admit', verifyToken, isHospital, hospitalController.admitPatient);
-router.put('/assignments/:assignmentId/discharge', verifyToken, isHospital, hospitalController.dischargePatient);
 
 // Statistics routes
 router.get('/stats/doctors', verifyToken, isHospital, hospitalController.getDoctorStats);

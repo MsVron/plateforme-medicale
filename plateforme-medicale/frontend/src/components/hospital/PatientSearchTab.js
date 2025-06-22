@@ -266,11 +266,27 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
     }
   };
 
+  // Process assigned doctors from the backend response
+  const processAssignedDoctors = (patient) => {
+    if (!patient.assigned_doctors) return [];
+    
+    if (typeof patient.assigned_doctors === 'string' && patient.assigned_doctors.trim()) {
+      // Format: "Dr. Name1:Specialty1;Dr. Name2:Specialty2"
+      return patient.assigned_doctors.split(';').map(doctorInfo => {
+        const [name, specialty] = doctorInfo.split(':');
+        return { name: name.trim(), specialty: specialty?.trim() || '' };
+      });
+    }
+    
+    return Array.isArray(patient.assigned_doctors) ? patient.assigned_doctors : [];
+  };
+
   const getAssignmentStatusChip = (patient) => {
-    if (patient.assigned_doctors && patient.assigned_doctors.length > 0) {
+    const assignedDoctors = processAssignedDoctors(patient);
+    if (assignedDoctors.length > 0) {
       return (
         <Chip 
-          label={`Assigné à ${patient.assigned_doctors.length} médecin(s)`}
+          label={`Assigné à ${assignedDoctors.length} médecin(s)`}
           color="success" 
           size="small"
           icon={<MedicalServices />}
@@ -379,21 +395,24 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
                       <strong>Téléphone:</strong> {patient.telephone || 'Non renseigné'}
                     </Typography>
 
-                    {patient.assigned_doctors && patient.assigned_doctors.length > 0 && (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                          Médecins assignés:
-                        </Typography>
-                        {patient.assigned_doctors.map((doctor, index) => (
-                          <Chip 
-                            key={index}
-                            label={`Dr. ${doctor.prenom} ${doctor.nom}`}
-                            size="small"
-                            sx={{ mr: 1, mb: 1 }}
-                          />
-                        ))}
-                      </Box>
-                    )}
+                    {(() => {
+                      const assignedDoctors = processAssignedDoctors(patient);
+                      return assignedDoctors.length > 0 && (
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                            Médecins assignés:
+                          </Typography>
+                          {assignedDoctors.map((doctor, index) => (
+                            <Chip 
+                              key={index}
+                              label={`${doctor.name}${doctor.specialty ? ` (${doctor.specialty})` : ''}`}
+                              size="small"
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ))}
+                        </Box>
+                      );
+                    })()}
 
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       <Button
@@ -416,7 +435,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
                         Assigner médecin
                       </Button>
                       
-                      {patient.assigned_doctors && patient.assigned_doctors.length > 0 && (
+                      {processAssignedDoctors(patient).length > 0 && (
                         <Button
                           variant="contained"
                           color="error"

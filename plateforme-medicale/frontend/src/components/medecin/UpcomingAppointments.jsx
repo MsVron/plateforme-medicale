@@ -206,8 +206,8 @@ const UpcomingAppointments = () => {
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Typography variant="h5" gutterBottom sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-        <TodayIcon sx={{ mr: 1 }} /> Rendez-vous à venir
+      <Typography variant="h5" gutterBottom sx={{ mb: 2, display: 'flex', alignItems: 'center', color: 'white' }}>
+        <TodayIcon sx={{ mr: 1, color: 'white' }} /> Rendez-vous à venir
       </Typography>
       
       <Box sx={{ mb: 2 }}>
@@ -218,11 +218,31 @@ const UpcomingAppointments = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <SearchIcon sx={{ color: 'white' }} />
               </InputAdornment>
             ),
           }}
-          sx={{ width: 300 }}
+          sx={{ 
+            width: 300,
+            '& .MuiInputBase-input': {
+              color: 'white',
+            },
+            '& .MuiInputBase-input::placeholder': {
+              color: 'rgba(255, 255, 255, 0.7)',
+              opacity: 1,
+            },
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: 'rgba(255, 255, 255, 0.5)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(255, 255, 255, 0.8)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: 'white',
+              },
+            },
+          }}
         />
       </Box>
       
@@ -359,7 +379,24 @@ const UpcomingAppointments = () => {
             count={totalPages} 
             page={page} 
             onChange={handlePageChange} 
-            color="primary" 
+            sx={{
+              '& .MuiPaginationItem-root': {
+                color: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.5)',
+              },
+              '& .MuiPaginationItem-root:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderColor: 'white',
+              },
+              '& .Mui-selected': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                borderColor: 'white',
+              },
+              '& .Mui-selected:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              },
+            }}
           />
         </Box>
       )}

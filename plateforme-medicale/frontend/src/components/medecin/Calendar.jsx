@@ -44,6 +44,16 @@ const Calendar = () => {
         
         console.log('=== CALENDAR DATA ===');
         console.log('Appointments:', appointmentsRes.data);
+        console.log('Total appointments fetched:', appointmentsRes.data.appointments?.length || 0);
+        
+        // Debug: Show appointment dates
+        if (appointmentsRes.data.appointments) {
+          console.log('Appointment dates:');
+          appointmentsRes.data.appointments.forEach(apt => {
+            console.log(`  ${apt.date_heure_debut} - ${apt.patient_prenom} ${apt.patient_nom} - ${apt.statut}`);
+          });
+        }
+        
         console.log('Availabilities:', availabilitiesRes.data);
         console.log('Absences:', absencesRes.data);
         console.log('=====================');
@@ -84,16 +94,27 @@ const Calendar = () => {
 
   const getAppointmentsForDay = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return appointments.filter(appointment => {
+    console.log(`Getting appointments for ${dateStr}`);
+    
+    const filteredAppointments = appointments.filter(appointment => {
       try {
         if (!appointment.date_heure_debut) return false;
         const appointmentDate = format(parseISO(appointment.date_heure_debut), 'yyyy-MM-dd');
-        return appointmentDate === dateStr;
+        const matches = appointmentDate === dateStr;
+        
+        if (matches) {
+          console.log(`Found appointment for ${dateStr}:`, appointment);
+        }
+        
+        return matches;
       } catch (error) {
         console.error('Error parsing appointment date:', appointment.date_heure_debut, error);
         return false;
       }
     });
+    
+    console.log(`Total appointments for ${dateStr}:`, filteredAppointments.length);
+    return filteredAppointments;
   };
 
   const isAbsent = (date) => {
