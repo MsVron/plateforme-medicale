@@ -16,6 +16,9 @@ router.get('/patients', verifyToken, isHospital, hospitalController.getHospitalP
 router.post('/patients/:patientId/assign-doctors', verifyToken, isHospital, hospitalController.assignPatientToDoctors);
 router.put('/patients/:patientId/discharge', verifyToken, isHospital, hospitalController.dischargePatient);
 
+// New route for assigning doctors to existing admissions
+router.post('/admissions/:admissionId/assign-doctor', verifyToken, isHospital, hospitalController.assignDoctorToAdmission);
+
 // Walk-in patient routes
 router.post('/patients/walk-in', verifyToken, isHospital, hospitalController.addWalkInPatient);
 
@@ -46,6 +49,8 @@ router.delete('/doctors/:doctorId/remove', verifyToken, isHospital, hospitalCont
 
 // Hospital admissions routes
 router.get('/admissions', verifyToken, isHospital, hospitalController.getHospitalAdmissions);
+router.post('/patients/:patient_id/admit', verifyToken, isHospital, hospitalController.admitPatient);
+router.put('/admissions/:admissionId/discharge', verifyToken, isHospital, hospitalController.dischargePatient);
 
 // Statistics routes
 router.get('/stats/doctors', verifyToken, isHospital, hospitalController.getDoctorStats);

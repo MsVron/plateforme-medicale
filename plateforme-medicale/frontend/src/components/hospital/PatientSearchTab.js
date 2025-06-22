@@ -304,7 +304,12 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
+      <Typography variant="h6" sx={{ 
+        mb: 3, 
+        fontWeight: 'bold', 
+        color: 'white !important',
+        textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+      }}>
         Rechercher un Patient
       </Typography>
 

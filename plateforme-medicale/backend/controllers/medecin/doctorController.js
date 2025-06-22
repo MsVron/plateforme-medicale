@@ -301,17 +301,72 @@ exports.getCurrentMedecin = async (req, res) => {
     const [medecins] = await db.execute(
       `SELECT
         m.id, m.prenom, m.nom, m.specialite_id, s.nom AS specialite_nom,
-        m.institution_id, i.nom AS institution_nom, m.tarif_consultation
+        m.institution_id, i.nom AS institution_nom, m.tarif_consultation,
+        i.type AS institution_type, i.type_institution
       FROM medecins m
       LEFT JOIN specialites s ON m.specialite_id = s.id
       LEFT JOIN institutions i ON m.institution_id = i.id
       WHERE m.id = ? AND m.est_actif = true`,
       [req.user.id_specifique_role]
     );
+    
     if (medecins.length === 0) {
       return res.status(404).json({ message: "Médecin non trouvé" });
     }
-    return res.status(200).json({ medecin: medecins[0] });
+
+    const medecin = medecins[0];
+
+    // Get all institutions this doctor is affiliated with
+    const [affiliations] = await db.execute(
+      `SELECT 
+        i.id, i.nom, i.type, i.type_institution, 
+        mi.est_principal, mi.departement, mi.date_debut, mi.date_affectation
+      FROM medecin_institution mi
+      JOIN institutions i ON mi.institution_id = i.id
+      WHERE mi.medecin_id = ? AND (mi.date_fin IS NULL OR mi.date_fin > CURDATE())
+      ORDER BY mi.est_principal DESC, mi.date_debut ASC`,
+      [req.user.id_specifique_role]
+    );
+
+    // Determine doctor type based on affiliations
+    let doctorType = 'private'; // default
+    let primaryInstitution = null;
+
+    if (affiliations.length > 0) {
+      // Check if doctor is primarily affiliated with a hospital
+      const hospitalAffiliation = affiliations.find(aff => 
+        aff.type_institution === 'hospital' || 
+        ['hôpital', 'clinique', 'centre médical'].includes(aff.type)
+      );
+      
+      if (hospitalAffiliation) {
+        doctorType = 'hospital';
+        primaryInstitution = hospitalAffiliation;
+      } else {
+        // Check for private cabinet
+        const privateAffiliation = affiliations.find(aff => aff.type === 'cabinet privé');
+        if (privateAffiliation) {
+          doctorType = 'private';
+          primaryInstitution = privateAffiliation;
+        }
+      }
+    } else if (medecin.institution_type === 'cabinet privé') {
+      doctorType = 'private';
+      primaryInstitution = {
+        id: medecin.institution_id,
+        nom: medecin.institution_nom,
+        type: medecin.institution_type
+      };
+    }
+
+    return res.status(200).json({ 
+      medecin: {
+        ...medecin,
+        doctorType,
+        primaryInstitution,
+        affiliations
+      }
+    });
   } catch (error) {
     console.error('Erreur lors de la récupération du médecin:', error);
     return res.status(500).json({ message: "Erreur serveur", error: error.message });

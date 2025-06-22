@@ -58,6 +58,7 @@ import {
 import HospitalDashboard from './components/hospital/HospitalDashboard';
 import HospitalHome from './pages/hospital/HospitalHome';
 import PatientSearchTab from './components/hospital/PatientSearchTab';
+import PatientAdmission from './pages/hospital/PatientAdmission';
 
 // Import pharmacy components
 import PharmacyDashboard from './components/pharmacy/PharmacyDashboard';
@@ -424,6 +425,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['hospital']}>
                   <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital/patient-admission"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <PatientAdmission />
                 </ProtectedRoute>
               }
             />

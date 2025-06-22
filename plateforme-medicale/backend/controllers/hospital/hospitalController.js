@@ -13,23 +13,7 @@ exports.searchPatients = async (req, res) => {
       cne,
       userId: req.user.id,
       institutionId: hospitalId,
-      institutionType: 'hospital',
-      additionalFields: `,
-        ha.id as current_assignment_id,
-        ha.status as assignment_status,
-        ha.admission_date,
-        GROUP_CONCAT(DISTINCT CONCAT(m.prenom, ' ', m.nom, ':', s.nom) SEPARATOR ';') as assigned_doctors,
-        CASE 
-          WHEN ha.id IS NOT NULL AND ha.status = 'active' THEN TRUE 
-          ELSE FALSE 
-        END as currently_assigned`,
-      additionalJoins: `
-        LEFT JOIN hospital_assignments ha ON p.id = ha.patient_id 
-          AND ha.hospital_id = ${hospitalId}
-          AND ha.status = 'active'
-        LEFT JOIN medecins m ON ha.medecin_id = m.id
-        LEFT JOIN specialites s ON m.specialite_id = s.id`,
-      additionalConditions: `GROUP BY p.id`
+      institutionType: 'hospital'
     });
 
     return res.status(200).json(result);
@@ -111,12 +95,14 @@ exports.assignPatientToDoctors = async (req, res) => {
         // Add to medical record
         await connection.execute(
           `INSERT INTO notes_patient 
-           (patient_id, medecin_id, note_type, content, created_at) 
-           VALUES (?, ?, 'assignment', ?, NOW())`,
+           (patient_id, medecin_id, contenu, est_important, categorie, date_creation) 
+           VALUES (?, ?, ?, ?, ?, NOW())`,
           [
             patientId, 
             doctorId, 
-            `Assignation hospitalière: ${assignment_reason}${notes ? ` - Notes: ${notes}` : ''}`
+            `Assignation hospitalière: ${assignment_reason}${notes ? ` - Notes: ${notes}` : ''}`,
+            true,
+            'assignment'
           ]
         );
       }
@@ -173,12 +159,14 @@ exports.dischargePatient = async (req, res) => {
     // Add to medical record
     await db.execute(
       `INSERT INTO notes_patient 
-       (patient_id, medecin_id, note_type, content, created_at) 
-       VALUES (?, ?, 'discharge', ?, NOW())`,
+       (patient_id, medecin_id, contenu, est_important, categorie, date_creation) 
+       VALUES (?, ?, ?, ?, ?, NOW())`,
       [
         patientId, 
         req.user.id, 
-        `Sortie hospitalière - ${discharge_reason}${discharge_notes ? ` - Notes: ${discharge_notes}` : ''}${follow_up_required ? ` - Suivi requis le ${follow_up_date}` : ''}`
+        `Sortie hospitalière - ${discharge_reason}${discharge_notes ? ` - Notes: ${discharge_notes}` : ''}${follow_up_required ? ` - Suivi requis le ${follow_up_date}` : ''}`,
+        true,
+        'discharge'
       ]
     );
 
@@ -1001,10 +989,190 @@ exports.removeDoctorFromHospital = async (req, res) => {
   }
 };
 
+// Admit patient to hospital
+exports.admitPatient = async (req, res) => {
+  try {
+    const hospitalId = req.user.institution_id || req.user.id_specifique_role;
+    const { patient_id } = req.params;
+    const { 
+      admission_date, 
+      reason, 
+      reason_type, 
+      department, 
+      notes,
+      medecin_id 
+    } = req.body;
+
+    // Check if patient exists
+    const [patients] = await db.execute(
+      'SELECT id, prenom, nom FROM patients WHERE id = ?',
+      [patient_id]
+    );
+
+    if (patients.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient non trouvé'
+      });
+    }
+
+    // Check if patient is already admitted to this hospital
+    const [existingAdmissions] = await db.execute(
+      `SELECT ha.id, ha.admission_date, ha.admission_reason, ha.ward_name,
+              CONCAT(m.prenom, ' ', m.nom) as medecin_nom
+       FROM hospital_assignments ha
+       LEFT JOIN medecins m ON ha.medecin_id = m.id
+       WHERE ha.patient_id = ? AND ha.hospital_id = ? AND ha.status = "active"`,
+      [patient_id, hospitalId]
+    );
+
+    if (existingAdmissions.length > 0) {
+      const admission = existingAdmissions[0];
+      return res.status(400).json({
+        success: false,
+        message: 'Patient déjà admis dans cet hôpital',
+        existingAdmission: {
+          id: admission.id,
+          admission_date: admission.admission_date,
+          reason: admission.admission_reason,
+          ward: admission.ward_name,
+          doctor: admission.medecin_nom
+        }
+      });
+    }
+
+    // If no specific doctor is provided, try to find a default one for the hospital
+    let doctorId = medecin_id;
+    if (!doctorId) {
+      const [doctors] = await db.execute(
+        'SELECT m.id FROM medecins m JOIN medecin_institution mi ON m.id = mi.medecin_id WHERE mi.institution_id = ? AND (mi.date_fin IS NULL OR mi.date_fin > CURDATE()) LIMIT 1',
+        [hospitalId]
+      );
+      if (doctors.length > 0) {
+        doctorId = doctors[0].id;
+      }
+    }
+
+    if (!doctorId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Aucun médecin disponible pour cette admission'
+      });
+    }
+
+    // Create hospital assignment
+    const [result] = await db.execute(
+      `INSERT INTO hospital_assignments 
+       (patient_id, medecin_id, hospital_id, admission_date, admission_reason, assigned_by_user_id, ward_name) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        patient_id,
+        doctorId,
+        hospitalId,
+        admission_date,
+        `${reason_type ? reason_type.toUpperCase() + ': ' : ''}${reason}`,
+        req.user.id,
+        department || null
+      ]
+    );
+
+    // Add admission note to medical record
+    await db.execute(
+      `INSERT INTO notes_patient 
+       (patient_id, medecin_id, contenu, est_important, categorie, date_creation) 
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [
+        patient_id,
+        doctorId,
+        `Admission hospitalière - ${reason_type ? reason_type.toUpperCase() + ': ' : ''}${reason}${notes ? ` - Notes: ${notes}` : ''}${department ? ` - Département: ${department}` : ''}`,
+        true,
+        'admission'
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: 'Patient admis avec succès',
+      data: {
+        admission_id: result.insertId,
+        patient: patients[0]
+      }
+    });
+  } catch (error) {
+    console.error('Error admitting patient:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'admission du patient'
+    });
+  }
+};
+
+// Discharge patient from hospital
+exports.dischargePatient = async (req, res) => {
+  try {
+    const hospitalId = req.user.institution_id || req.user.id_specifique_role;
+    const { admissionId } = req.params;
+    const { 
+      discharge_date, 
+      discharge_reason, 
+      discharge_notes, 
+      follow_up_required 
+    } = req.body;
+
+    // Check if admission exists and belongs to this hospital
+    const [admissions] = await db.execute(
+      'SELECT id, patient_id, medecin_id FROM hospital_assignments WHERE id = ? AND hospital_id = ? AND status = "active"',
+      [admissionId, hospitalId]
+    );
+
+    if (admissions.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admission non trouvée ou déjà terminée'
+      });
+    }
+
+    const admission = admissions[0];
+
+    // Update admission record
+    await db.execute(
+      `UPDATE hospital_assignments 
+       SET status = 'discharged', discharge_date = ?, discharge_reason = ?, date_modified = NOW()
+       WHERE id = ?`,
+      [discharge_date, discharge_reason, admissionId]
+    );
+
+    // Add discharge note to medical record
+    await db.execute(
+      `INSERT INTO notes_patient 
+       (patient_id, medecin_id, contenu, est_important, categorie, date_creation) 
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [
+        admission.patient_id,
+        admission.medecin_id,
+        `Sortie hospitalière - ${discharge_reason}${discharge_notes ? ` - Notes: ${discharge_notes}` : ''}${follow_up_required ? ' - Suivi requis' : ''}`,
+        true,
+        'discharge'
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: 'Patient sorti avec succès'
+    });
+  } catch (error) {
+    console.error('Error discharging patient:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la sortie du patient'
+    });
+  }
+};
+
 // Get hospital admissions
 exports.getHospitalAdmissions = async (req, res) => {
   try {
-    const hospitalId = req.user.institution_id || req.user.id;
+    const hospitalId = req.user.institution_id || req.user.id_specifique_role;
 
     const query = `
       SELECT 
@@ -1012,9 +1180,13 @@ exports.getHospitalAdmissions = async (req, res) => {
         p.prenom as patient_prenom,
         p.nom as patient_nom,
         p.CNE as patient_cne,
-        p.telephone as patient_telephone
+        p.telephone as patient_telephone,
+        CONCAT(m.prenom, ' ', m.nom) as medecin_nom,
+        s.nom as medecin_specialite
       FROM hospital_assignments ha
       JOIN patients p ON ha.patient_id = p.id
+      LEFT JOIN medecins m ON ha.medecin_id = m.id
+      LEFT JOIN specialites s ON m.specialite_id = s.id
       WHERE ha.hospital_id = ?
       ORDER BY ha.admission_date DESC
     `;
@@ -1042,9 +1214,9 @@ exports.getDoctorStats = async (req, res) => {
     const [stats] = await db.execute(`
       SELECT 
         COUNT(*) as totalDoctors,
-        COUNT(CASE WHEN hd.status = 'active' THEN 1 END) as activeDoctors
-      FROM hospital_doctors hd
-      WHERE hd.hospital_id = ?
+        COUNT(CASE WHEN (mi.date_fin IS NULL OR mi.date_fin > CURDATE()) THEN 1 END) as activeDoctors
+      FROM medecin_institution mi
+      WHERE mi.institution_id = ?
     `, [hospitalId]);
 
     res.json({
@@ -1166,14 +1338,14 @@ exports.getPatientMedicalRecord = async (req, res) => {
     // Get recent medical notes
     const [medicalNotes] = await db.execute(`
       SELECT 
-        mn.content as notes,
-        mn.created_at,
-        mn.note_type,
+        mn.contenu as notes,
+        mn.date_creation as created_at,
+        mn.categorie as note_type,
         CONCAT(m.prenom, ' ', m.nom) as doctor_name
       FROM notes_patient mn
       LEFT JOIN medecins m ON mn.medecin_id = m.id
       WHERE mn.patient_id = ?
-      ORDER BY mn.created_at DESC
+      ORDER BY mn.date_creation DESC
       LIMIT 10
     `, [patientId]);
 
@@ -1279,9 +1451,9 @@ exports.updatePatientMedicalRecord = async (req, res) => {
       if (notes && notes.trim()) {
         await connection.execute(`
           INSERT INTO notes_patient (
-            patient_id, medecin_id, content, note_type, created_at
-          ) VALUES (?, ?, ?, 'hospital_update', NOW())
-        `, [patientId, req.user.id, notes.trim()]);
+            patient_id, medecin_id, contenu, est_important, categorie, date_creation
+          ) VALUES (?, ?, ?, ?, ?, NOW())
+        `, [patientId, req.user.id, notes.trim(), false, 'hospital_update']);
       }
 
       await connection.commit();
@@ -1301,6 +1473,91 @@ exports.updatePatientMedicalRecord = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la mise à jour du dossier médical'
+    });
+  }
+};
+
+// Assign doctor to existing admission
+exports.assignDoctorToAdmission = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { admissionId } = req.params;
+    const { medecin_id, assignment_reason, notes } = req.body;
+
+    // Check if admission exists and belongs to this hospital
+    const [admissions] = await db.execute(
+      `SELECT ha.*, p.prenom, p.nom, p.CNE 
+       FROM hospital_assignments ha 
+       JOIN patients p ON ha.patient_id = p.id
+       WHERE ha.id = ? AND ha.hospital_id = ? AND ha.status = 'active'`,
+      [admissionId, hospitalId]
+    );
+
+    if (admissions.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admission non trouvée ou patient déjà sorti'
+      });
+    }
+
+    const admission = admissions[0];
+
+    // Check if doctor exists and works at this hospital
+    const [doctors] = await db.execute(
+      `SELECT m.id, m.prenom, m.nom, s.nom as specialite
+       FROM medecins m
+       JOIN specialites s ON m.specialite_id = s.id
+       JOIN medecin_institution mi ON m.id = mi.medecin_id
+       WHERE m.id = ? AND mi.institution_id = ? AND m.est_actif = TRUE`,
+      [medecin_id, hospitalId]
+    );
+
+    if (doctors.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Médecin non trouvé ou ne travaille pas dans cet hôpital'
+      });
+    }
+
+    const doctor = doctors[0];
+
+    // Update the admission with new doctor
+    await db.execute(
+      `UPDATE hospital_assignments 
+       SET medecin_id = ?, date_modified = NOW()
+       WHERE id = ?`,
+      [medecin_id, admissionId]
+    );
+
+    // Add assignment note to medical record
+    await db.execute(
+      `INSERT INTO notes_patient 
+       (patient_id, medecin_id, contenu, est_important, categorie, date_creation) 
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [
+        admission.patient_id,
+        medecin_id,
+        `Assignation médecin hospitalier - Dr. ${doctor.prenom} ${doctor.nom} (${doctor.specialite})${assignment_reason ? ` - Motif: ${assignment_reason}` : ''}${notes ? ` - Notes: ${notes}` : ''}`,
+        true,
+        'doctor_assignment'
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: `Patient assigné au Dr. ${doctor.prenom} ${doctor.nom} avec succès`,
+      data: {
+        admission_id: admissionId,
+        patient_name: `${admission.prenom} ${admission.nom}`,
+        doctor_name: `Dr. ${doctor.prenom} ${doctor.nom}`,
+        specialty: doctor.specialite
+      }
+    });
+  } catch (error) {
+    console.error('Error assigning doctor to admission:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'assignation du médecin'
     });
   }
 };

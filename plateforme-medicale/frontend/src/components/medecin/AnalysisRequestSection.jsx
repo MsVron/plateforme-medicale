@@ -252,6 +252,11 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
   };
 
   const getStatusIcon = (request) => {
+    // Only show status icon if we have results or if it's explicitly requested
+    if (!request.request_status && !request.date_realisation) {
+      return null;
+    }
+    
     switch (request.request_status) {
       case 'requested':
         return <ScheduleIcon color="warning" />;
@@ -260,25 +265,49 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
       case 'completed':
         return <CheckCircleIcon color="success" />;
       default:
-        return <ScheduleIcon color="info" />;
+        // If we have results but no status, assume completed
+        if (request.date_realisation || request.valeur_numerique || request.valeur_texte || request.interpretation) {
+          return <CheckCircleIcon color="success" />;
+        }
+        return null;
     }
   };
 
   const getStatusColor = (request) => {
+    // Only show status if we have results or if it's explicitly requested
+    if (!request.request_status && !request.date_realisation) {
+      return null;
+    }
+    
     switch (request.request_status) {
       case 'requested': return 'warning';
       case 'in_progress': return 'info';
       case 'completed': return 'success';
-      default: return 'default';
+      default:
+        // If we have results but no status, assume completed
+        if (request.date_realisation || request.valeur_numerique || request.valeur_texte || request.interpretation) {
+          return 'success';
+        }
+        return null;
     }
   };
 
   const getStatusLabel = (request) => {
+    // Only show status label if we have results or if it's explicitly requested
+    if (!request.request_status && !request.date_realisation) {
+      return null;
+    }
+    
     switch (request.request_status) {
       case 'requested': return 'Demandée';
       case 'in_progress': return 'En cours';
       case 'completed': return 'Terminée';
-      default: return request.request_status;
+      default:
+        // If we have results but no status, assume completed
+        if (request.date_realisation || request.valeur_numerique || request.valeur_texte || request.interpretation) {
+          return 'Terminée';
+        }
+        return null;
     }
   };
 
@@ -478,14 +507,16 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
                       </Typography>
                       
                       <Stack spacing={1}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {getStatusIcon(analysis)}
-                          <Chip 
-                            label={getStatusLabel(analysis)}
-                            size="small"
-                            color={getStatusColor(analysis)}
-                          />
-                        </Box>
+                        {getStatusIcon(analysis) && getStatusLabel(analysis) && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {getStatusIcon(analysis)}
+                            <Chip 
+                              label={getStatusLabel(analysis)}
+                              size="small"
+                              color={getStatusColor(analysis)}
+                            />
+                          </Box>
+                        )}
                         
                         <Typography variant="caption" color="text.secondary">
                           Demandée le: {formatDate(analysis.date_prescription)}
@@ -571,12 +602,16 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
                           
                           <Stack spacing={1}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {getStatusIcon(imaging)}
-                              <Chip 
-                                label={getStatusLabel(imaging)}
-                                size="small"
-                                color={getStatusColor(imaging)}
-                              />
+                              {getStatusIcon(imaging) && getStatusLabel(imaging) && (
+                                <>
+                                  {getStatusIcon(imaging)}
+                                  <Chip 
+                                    label={getStatusLabel(imaging)}
+                                    size="small"
+                                    color={getStatusColor(imaging)}
+                                  />
+                                </>
+                              )}
                               {imaging.notes && imaging.notes.length > 0 && (
                                 <Chip 
                                   label={`${imaging.notes.length} note(s)`}

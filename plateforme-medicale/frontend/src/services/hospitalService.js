@@ -1,10 +1,10 @@
 import axios from './axiosConfig';
 
 export const hospitalService = {
-  // Search patients with hospital context
+  // Search patients with hospital context (reusing medecin search)
   searchPatients: async (searchCriteria) => {
     try {
-      const response = await axios.get('/hospital/patients/search', {
+      const response = await axios.get('/medecin/patients/search', {
         params: searchCriteria
       });
       return response.data;
@@ -42,9 +42,9 @@ export const hospitalService = {
     }
   },
 
-  dischargePatient: async (patientId, dischargeData) => {
+  dischargePatient: async (admissionId, dischargeData) => {
     try {
-      const response = await axios.put(`/hospital/patients/${patientId}/discharge`, dischargeData);
+      const response = await axios.put(`/hospital/admissions/${admissionId}/discharge`, dischargeData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -142,6 +142,16 @@ export const hospitalService = {
   assignPatientToDoctors: async (patientId, assignmentData) => {
     try {
       const response = await axios.post(`/hospital/patients/${patientId}/assign-doctors`, assignmentData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Assign doctor to existing admission
+  assignDoctorToAdmission: async (admissionId, assignmentData) => {
+    try {
+      const response = await axios.post(`/hospital/admissions/${admissionId}/assign-doctor`, assignmentData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

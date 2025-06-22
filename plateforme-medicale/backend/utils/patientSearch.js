@@ -64,21 +64,29 @@ const buildSearchConditions = (prenom, nom, cne) => {
   };
 };
 
-// Log search activity for audit compliance
+// Log search activity for audit compliance (optional - table may not exist)
 const logSearchActivity = async (userId, institutionId, searchCriteria, resultsCount, searchReason) => {
   try {
-    await db.execute(`
-      INSERT INTO patient_search_audit (
-        searching_user_id, searching_institution_id, search_criteria, 
-        search_results_count, search_reason
-      ) VALUES (?, ?, ?, ?, ?)
-    `, [
-      userId,
-      institutionId,
-      JSON.stringify(searchCriteria),
-      resultsCount,
-      searchReason
-    ]);
+    // Check if audit table exists first
+    const [tableExists] = await db.execute(`
+      SELECT COUNT(*) as count FROM information_schema.tables 
+      WHERE table_schema = DATABASE() AND table_name = 'patient_search_audit'
+    `);
+    
+    if (tableExists[0].count > 0) {
+      await db.execute(`
+        INSERT INTO patient_search_audit (
+          searching_user_id, searching_institution_id, search_criteria, 
+          search_results_count, search_reason
+        ) VALUES (?, ?, ?, ?, ?)
+      `, [
+        userId,
+        institutionId,
+        JSON.stringify(searchCriteria),
+        resultsCount,
+        searchReason
+      ]);
+    }
   } catch (error) {
     console.error('Error logging search activity:', error);
     // Don't throw error as this shouldn't break the search functionality
@@ -152,8 +160,8 @@ exports.searchPatients = async (searchParams) => {
   try {
     const [patients] = await db.execute(query, finalParams);
 
-    // Log search activity for audit
-    await logSearchActivity(
+    // Log search activity for audit (optional)
+    logSearchActivity(
       userId,
       institutionId,
       {
@@ -163,7 +171,9 @@ exports.searchPatients = async (searchParams) => {
       },
       patients.length,
       `${institutionType} patient search`
-    );
+    ).catch(err => {
+      console.warn('Audit logging failed:', err.message);
+    });
 
     return {
       patients,

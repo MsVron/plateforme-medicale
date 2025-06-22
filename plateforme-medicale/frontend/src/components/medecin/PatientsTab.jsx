@@ -31,7 +31,9 @@ import {
     Phone as PhoneIcon,
     Email as EmailIcon,
     ViewList as ViewListIcon,
-    ViewModule as ViewModuleIcon
+    ViewModule as ViewModuleIcon,
+    LocalHospital as HospitalIcon,
+    Home as HomeIcon
 } from "@mui/icons-material";
 import { formatDate, formatDateTime } from "../../utils/dateUtils";
 import axios from "axios";
@@ -121,6 +123,39 @@ const PatientsTab = ({ patients: initialPatients }) => {
         return age;
     };
 
+    // Get patient type chip
+    const getPatientTypeChip = (patient) => {
+        if (patient.patient_type === 'Hospitalisé') {
+            return (
+                <Chip 
+                    icon={<HospitalIcon />}
+                    label="Hospitalisé"
+                    color="error"
+                    size="small"
+                    sx={{ fontWeight: 'bold' }}
+                />
+            );
+        } else if (patient.patient_type === 'Ancien patient hospitalisé') {
+            return (
+                <Chip 
+                    icon={<HospitalIcon />}
+                    label="Ex-hospitalisé"
+                    color="warning"
+                    size="small"
+                />
+            );
+        } else {
+            return (
+                <Chip 
+                    icon={<HomeIcon />}
+                    label="Ambulatoire"
+                    color="info"
+                    size="small"
+                />
+            );
+        }
+    };
+
     // Load patients on component mount
     useEffect(() => {
         if (!initialPatients || initialPatients.length === 0) {
@@ -148,13 +183,17 @@ const PatientsTab = ({ patients: initialPatients }) => {
                                 >
                                     <CardContent sx={{ position: "relative", pb: 2 }}>
                                         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
-                            <Box>
+                            <Box sx={{ flex: 1 }}>
                                             <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
                                                 {patient.prenom} {patient.nom}
                                             </Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                                     {calculateAge(patient.date_naissance)} ans • {patient.sexe === 'M' ? 'Homme' : 'Femme'}
                                 </Typography>
+                                {/* Patient Type Chip */}
+                                <Box sx={{ mb: 1 }}>
+                                    {getPatientTypeChip(patient)}
+                                </Box>
                             </Box>
                                             <Tooltip title="Voir le dossier médical">
                                                 <IconButton 
@@ -168,6 +207,30 @@ const PatientsTab = ({ patients: initialPatients }) => {
                                                 </IconButton>
                                             </Tooltip>
                                         </Box>
+
+                        {/* Hospital Information */}
+                        {patient.hospital_name && (
+                            <Box sx={{ mb: 2, p: 1.5, backgroundColor: 'rgba(76, 161, 175, 0.1)', borderRadius: 1 }}>
+                                <Typography variant="caption" color="primary.main" sx={{ fontWeight: 'bold', display: 'block' }}>
+                                    🏥 {patient.hospital_name}
+                                </Typography>
+                                {patient.admission_date && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                        Admission: {formatDate(patient.admission_date)}
+                                    </Typography>
+                                )}
+                                {patient.admission_reason && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                        Motif: {patient.admission_reason}
+                                    </Typography>
+                                )}
+                                {patient.ward_name && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                        Service: {patient.ward_name}
+                                    </Typography>
+                                )}
+                            </Box>
+                        )}
                                         
                         {/* Contact Info */}
                         <Box sx={{ mb: 2 }}>
@@ -219,6 +282,7 @@ const PatientsTab = ({ patients: initialPatients }) => {
                                  <TableHead>
                      <TableRow>
                          <TableCell>Patient</TableCell>
+                         <TableCell>Type</TableCell>
                          <TableCell>Contact</TableCell>
                          <TableCell>Dernière consultation</TableCell>
                          <TableCell>Actions</TableCell>
@@ -235,6 +299,16 @@ const PatientsTab = ({ patients: initialPatients }) => {
                                     <Typography variant="caption" color="text.secondary">
                                         {calculateAge(patient.date_naissance)} ans • {patient.sexe === 'M' ? 'Homme' : 'Femme'}
                                     </Typography>
+                                </Box>
+                            </TableCell>
+                            <TableCell>
+                                <Box>
+                                    {getPatientTypeChip(patient)}
+                                    {patient.hospital_name && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                            🏥 {patient.hospital_name}
+                                        </Typography>
+                                    )}
                                 </Box>
                             </TableCell>
                             <TableCell>
@@ -284,7 +358,7 @@ const PatientsTab = ({ patients: initialPatients }) => {
                         Mes Patients
                     </Typography>
                     <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                        Patients ayant eu des rendez-vous avec vous
+                        Patients avec rendez-vous ou assignations hospitalières
                     </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
