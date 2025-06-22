@@ -100,10 +100,7 @@ const DashboardLayoutContainer = () => {
       { text: 'Patient direct', path: '/hospital/patient-direct', icon: <PersonAdd /> }
     ],
     pharmacy: [
-      { text: 'Tableau de bord', path: '/pharmacy/dashboard', icon: <Dashboard /> },
-      { text: 'Rechercher patient', path: '/pharmacy/patients/search', icon: <Search /> },
-      { text: 'Prescriptions', path: '/pharmacy/prescriptions', icon: <LocalPharmacy /> },
-      { text: 'Historique', path: '/pharmacy/history', icon: <Assignment /> }
+      { text: 'Tableau de bord', path: '/pharmacy/dashboard', icon: <Dashboard /> }
     ],
     laboratory: [
       { text: 'Tableau de bord', path: '/laboratory/dashboard', icon: <Dashboard /> },

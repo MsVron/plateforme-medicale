@@ -48,6 +48,26 @@ import {
 } from '@mui/icons-material';
 import moroccanCities from '../../utils/moroccanCities';
 
+// Optimized username preview component to prevent expensive re-renders
+const UsernamePreview = React.memo(({ type, nom, debouncedName, getCleanType, cleanTextForUsername }) => {
+    const previewText = useMemo(() => {
+        if (debouncedName) {
+            return `${getCleanType(type)}.${cleanTextForUsername(debouncedName)}`;
+        } else if (nom) {
+            return `${getCleanType(type)}.${cleanTextForUsername(nom)} (sera généré 2s après arrêt de saisie)`;
+        } else {
+            return `${getCleanType(type)}.nomdelinstitution`;
+        }
+    }, [type, nom, debouncedName, getCleanType, cleanTextForUsername]);
+
+    return (
+        <>
+            Des identifiants de connexion seront automatiquement générés pour cette institution.<br/>
+            <strong>Nom d'utilisateur prévu:</strong> {previewText}
+        </>
+    );
+});
+
 const InstitutionManagement = () => {
     const [institutions, setInstitutions] = useState([]);
     const [filteredInstitutions, setFilteredInstitutions] = useState([]);
@@ -57,8 +77,9 @@ const InstitutionManagement = () => {
     const [success, setSuccess] = useState('');
     const [activeTab, setActiveTab] = useState(0);
 
-    // Function to clean text for username generation (same as backend)
+    // Function to clean text for username generation (same as backend) - memoized for performance
     const cleanTextForUsername = useCallback((text) => {
+        if (!text) return '';
         return text.toLowerCase()
             // French accented characters
             .replace(/[àáâãäåæ]/g, 'a')
@@ -76,8 +97,9 @@ const InstitutionManagement = () => {
             .replace(/[^a-z0-9]/g, '');
     }, []);
 
-    // Special handling for institution types
+    // Special handling for institution types - memoized for performance
     const getCleanType = useCallback((type) => {
+        if (!type) return '';
         const lowerType = type.toLowerCase();
         if (lowerType === 'centre médical' || lowerType === 'centre medical') {
             return 'centre';
@@ -93,6 +115,27 @@ const InstitutionManagement = () => {
     // Debounced search term for performance
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const searchTimeoutRef = useRef(null);
+    const previousUsernameRef = useRef('');
+    
+    // Debounced institution name for username generation
+    const [debouncedInstitutionName, setDebouncedInstitutionName] = useState('');
+    const usernameGenerationTimeoutRef = useRef(null);
+    
+    // Form field debouncing refs for better performance
+    const formUpdateTimeouts = useRef({});
+    
+    // Utility function to clean up all timeouts
+    const cleanupTimeouts = useCallback(() => {
+        // Clear username generation timeout
+        if (usernameGenerationTimeoutRef.current) {
+            clearTimeout(usernameGenerationTimeoutRef.current);
+        }
+        // Clear form field timeouts
+        Object.values(formUpdateTimeouts.current).forEach(timeout => {
+            if (timeout) clearTimeout(timeout);
+        });
+        formUpdateTimeouts.current = {};
+    }, []);
     
     // Dialog states
     const [institutionDialog, setInstitutionDialog] = useState({ open: false, mode: 'add', data: null });
@@ -135,9 +178,24 @@ const InstitutionManagement = () => {
         return [...new Set(locations)].sort();
     }, [institutions]);
 
-    // Optimized form update function
+    // Memoized filter functions for Autocomplete to prevent recreation on every render
+    const moroccanCitiesFilter = useCallback((options, { inputValue }) =>
+        options.filter(option =>
+            option.toLowerCase().includes(inputValue.toLowerCase())
+        ), []);
+
+    const uniqueLocationsFilter = useCallback((options, { inputValue }) =>
+        options.filter(option =>
+            option.toLowerCase().includes(inputValue.toLowerCase())
+        ), []);
+
+    // Optimized form update function with change detection
     const updateInstitutionForm = useCallback((updates) => {
-        setInstitutionForm(prev => ({ ...prev, ...updates }));
+        setInstitutionForm(prev => {
+            // Only update if there are actual changes
+            const hasChanges = Object.keys(updates).some(key => prev[key] !== updates[key]);
+            return hasChanges ? { ...prev, ...updates } : prev;
+        });
     }, []);
 
     // Debounce search term updates
@@ -157,15 +215,40 @@ const InstitutionManagement = () => {
         };
     }, [searchTerm]);
 
-    // Auto-generate username when name or type changes (only for add mode)
+    // Debounce institution name for username generation (2 seconds after user stops typing)
     useEffect(() => {
-        if (institutionDialog.mode === 'add' && institutionForm.nom && institutionForm.type !== 'cabinet privé') {
-            const generatedUsername = `${getCleanType(institutionForm.type)}.${cleanTextForUsername(institutionForm.nom)}`;
-            if (institutionForm.username !== generatedUsername) {
+        if (usernameGenerationTimeoutRef.current) {
+            clearTimeout(usernameGenerationTimeoutRef.current);
+        }
+        
+        usernameGenerationTimeoutRef.current = setTimeout(() => {
+            setDebouncedInstitutionName(institutionForm.nom);
+        }, 2000);
+
+        return () => {
+            if (usernameGenerationTimeoutRef.current) {
+                clearTimeout(usernameGenerationTimeoutRef.current);
+            }
+        };
+    }, [institutionForm.nom]);
+
+    // Auto-generate username when debounced name or type changes (only for add mode)
+    useEffect(() => {
+        if (institutionDialog.mode === 'add' && debouncedInstitutionName && institutionForm.type !== 'cabinet privé') {
+            const generatedUsername = `${getCleanType(institutionForm.type)}.${cleanTextForUsername(debouncedInstitutionName)}`;
+            // Only update if the generated username is different from both current and previous
+            if (generatedUsername !== previousUsernameRef.current && generatedUsername !== institutionForm.username) {
+                previousUsernameRef.current = generatedUsername;
                 updateInstitutionForm({ username: generatedUsername });
             }
+        } else if (institutionDialog.mode === 'add' && institutionForm.type === 'cabinet privé') {
+            // Clear username for cabinet privé
+            if (institutionForm.username) {
+                previousUsernameRef.current = '';
+                updateInstitutionForm({ username: '' });
+            }
         }
-    }, [institutionForm.nom, institutionForm.type, institutionDialog.mode, getCleanType, cleanTextForUsername, updateInstitutionForm, institutionForm.username]);
+    }, [debouncedInstitutionName, institutionForm.type, institutionDialog.mode, getCleanType, cleanTextForUsername, updateInstitutionForm, institutionForm.username]);
 
     // Memoized filtered institutions to prevent unnecessary recalculations
     const filteredInstitutionsResult = useMemo(() => {
@@ -241,8 +324,11 @@ const InstitutionManagement = () => {
             password: ''
         });
         setShowPassword(false);
+        previousUsernameRef.current = ''; // Reset username ref
+        setDebouncedInstitutionName(''); // Reset debounced name
+        cleanupTimeouts(); // Clean up all timeouts
         setInstitutionDialog({ open: true, mode: 'add', data: null });
-    }, []);
+    }, [cleanupTimeouts]);
 
     const handleEditInstitution = useCallback((institution) => {
         setInstitutionForm({
@@ -259,8 +345,11 @@ const InstitutionManagement = () => {
             password: ''
         });
         setShowPassword(false);
+        previousUsernameRef.current = institution.username || ''; // Set initial username ref
+        setDebouncedInstitutionName(institution.nom || ''); // Set debounced name for edit mode
+        cleanupTimeouts(); // Clean up all timeouts
         setInstitutionDialog({ open: true, mode: 'edit', data: institution });
-    }, []);
+    }, [cleanupTimeouts]);
 
     const handleSaveInstitution = async () => {
         try {
@@ -307,6 +396,9 @@ const InstitutionManagement = () => {
             }
             
             setInstitutionDialog({ open: false, mode: 'add', data: null });
+            previousUsernameRef.current = ''; // Reset username ref when dialog closes
+            setDebouncedInstitutionName(''); // Reset debounced name
+            cleanupTimeouts(); // Clean up all timeouts
             fetchInstitutions();
             setTimeout(() => setSuccess(''), 5000);
         } catch (error) {
@@ -368,14 +460,38 @@ const InstitutionManagement = () => {
         setSelectedLocation('');
     }, []);
 
-    // Memoized form field handlers
-    const handleFormFieldChange = useCallback((field) => (e) => {
-        const value = e.target.value;
-        updateInstitutionForm({ [field]: value });
+    // Optimized form field change handler with debouncing for non-critical fields
+    const handleFormFieldChange = useCallback((field, value, shouldDebounce = false) => {
+        if (shouldDebounce) {
+            // Clear existing timeout for this field
+            if (formUpdateTimeouts.current[field]) {
+                clearTimeout(formUpdateTimeouts.current[field]);
+            }
+            
+            // Set new timeout
+            formUpdateTimeouts.current[field] = setTimeout(() => {
+                updateInstitutionForm({ [field]: value });
+            }, 150); // 150ms debounce for better responsiveness
+        } else {
+            updateInstitutionForm({ [field]: value });
+        }
     }, [updateInstitutionForm]);
+
+    // Memoized individual field handlers with appropriate debouncing
+    const handleNomChange = useCallback((e) => handleFormFieldChange('nom', e.target.value), [handleFormFieldChange]); // No debounce for username generation
+    const handleAdresseChange = useCallback((e) => handleFormFieldChange('adresse', e.target.value, true), [handleFormFieldChange]); // Debounced
+    const handleCodePostalChange = useCallback((e) => handleFormFieldChange('code_postal', e.target.value, true), [handleFormFieldChange]); // Debounced
+    const handlePaysChange = useCallback((e) => handleFormFieldChange('pays', e.target.value, true), [handleFormFieldChange]); // Debounced
+    const handleTelephoneChange = useCallback((e) => handleFormFieldChange('telephone', e.target.value, true), [handleFormFieldChange]); // Debounced
+    const handleEmailChange = useCallback((e) => handleFormFieldChange('email_contact', e.target.value, true), [handleFormFieldChange]); // Debounced
+    const handleUsernameChange = useCallback((e) => handleFormFieldChange('username', e.target.value), [handleFormFieldChange]); // No debounce for important field
+    const handlePasswordChange = useCallback((e) => handleFormFieldChange('password', e.target.value), [handleFormFieldChange]); // No debounce for security field
+    const handleDescriptionChange = useCallback((e) => handleFormFieldChange('description', e.target.value, true), [handleFormFieldChange]); // Debounced
 
     const handleTypeChange = useCallback((e) => {
         const newType = e.target.value;
+        // Reset username ref when type changes to prevent stale values
+        previousUsernameRef.current = '';
         updateInstitutionForm({ type: newType });
     }, [updateInstitutionForm]);
 
@@ -491,11 +607,7 @@ const InstitutionManagement = () => {
                                         )}
                                         freeSolo
                                         autoSelect
-                                        filterOptions={(options, { inputValue }) =>
-                                            options.filter(option =>
-                                                option.toLowerCase().includes(inputValue.toLowerCase())
-                                            )
-                                        }
+                                        filterOptions={uniqueLocationsFilter}
                                     />
                                 </Grid>
                                 <Grid item xs={12} md={2}>
@@ -730,7 +842,12 @@ const InstitutionManagement = () => {
             {/* Institution Dialog */}
             <Dialog 
                 open={institutionDialog.open} 
-                onClose={() => setInstitutionDialog({ open: false, mode: 'add', data: null })}
+                onClose={() => {
+                    previousUsernameRef.current = ''; // Reset username ref when dialog closes
+                    setDebouncedInstitutionName(''); // Reset debounced name
+                    cleanupTimeouts(); // Clean up all timeouts
+                    setInstitutionDialog({ open: false, mode: 'add', data: null });
+                }}
                 maxWidth="md"
                 fullWidth
             >
@@ -750,12 +867,13 @@ const InstitutionManagement = () => {
                             {institutionForm.type === 'cabinet privé' ? (
                                 'Les cabinets privés ne reçoivent pas d\'identifiants de connexion automatiques.'
                             ) : (
-                                <>
-                                    Des identifiants de connexion seront automatiquement générés pour cette institution.<br/>
-                                    <strong>Nom d'utilisateur prévu:</strong> {institutionForm.nom ? 
-                                        `${getCleanType(institutionForm.type)}.${cleanTextForUsername(institutionForm.nom)}` 
-                                        : `${getCleanType(institutionForm.type)}.nomdelinstitution`}
-                                </>
+                                <UsernamePreview 
+                                    type={institutionForm.type}
+                                    nom={institutionForm.nom}
+                                    debouncedName={debouncedInstitutionName}
+                                    getCleanType={getCleanType}
+                                    cleanTextForUsername={cleanTextForUsername}
+                                />
                             )}
                         </Alert>
                     )}
@@ -766,7 +884,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Nom de l'institution"
                                 value={institutionForm.nom}
-                                onChange={handleFormFieldChange('nom')}
+                                onChange={handleNomChange}
                                 required
                             />
                         </Grid>
@@ -789,7 +907,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Adresse"
                                 value={institutionForm.adresse}
-                                onChange={handleFormFieldChange('adresse')}
+                                onChange={handleAdresseChange}
                                 required
                             />
                         </Grid>
@@ -809,11 +927,7 @@ const InstitutionManagement = () => {
                                 )}
                                 freeSolo
                                 autoSelect
-                                filterOptions={(options, { inputValue }) =>
-                                    options.filter(option =>
-                                        option.toLowerCase().includes(inputValue.toLowerCase())
-                                    )
-                                }
+                                filterOptions={moroccanCitiesFilter}
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
@@ -821,7 +935,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Code postal"
                                 value={institutionForm.code_postal}
-                                onChange={handleFormFieldChange('code_postal')}
+                                onChange={handleCodePostalChange}
                                 required
                             />
                         </Grid>
@@ -830,7 +944,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Pays"
                                 value={institutionForm.pays}
-                                onChange={handleFormFieldChange('pays')}
+                                onChange={handlePaysChange}
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
@@ -838,7 +952,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Téléphone"
                                 value={institutionForm.telephone}
-                                onChange={handleFormFieldChange('telephone')}
+                                onChange={handleTelephoneChange}
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
@@ -847,7 +961,7 @@ const InstitutionManagement = () => {
                                 label="Email de contact"
                                 type="email"
                                 value={institutionForm.email_contact}
-                                onChange={handleFormFieldChange('email_contact')}
+                                onChange={handleEmailChange}
                                 required
                             />
                         </Grid>
@@ -869,7 +983,7 @@ const InstitutionManagement = () => {
                                         fullWidth
                                         label="Nom d'utilisateur"
                                         value={institutionForm.username}
-                                        onChange={handleFormFieldChange('username')}
+                                        onChange={handleUsernameChange}
                                         InputProps={{
                                             readOnly: institutionDialog.mode === 'add',
                                         }}
@@ -889,7 +1003,7 @@ const InstitutionManagement = () => {
                                         label="Mot de passe"
                                         type={showPassword ? 'text' : 'password'}
                                         value={institutionForm.password}
-                                        onChange={handleFormFieldChange('password')}
+                                        onChange={handlePasswordChange}
                                         required={institutionDialog.mode === 'add'}
                                         InputProps={{
                                             endAdornment: (
@@ -918,13 +1032,18 @@ const InstitutionManagement = () => {
                                 multiline
                                 rows={3}
                                 value={institutionForm.description}
-                                onChange={handleFormFieldChange('description')}
+                                onChange={handleDescriptionChange}
                             />
                         </Grid>
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setInstitutionDialog({ open: false, mode: 'add', data: null })}>
+                    <Button onClick={() => {
+                        previousUsernameRef.current = ''; // Reset username ref when dialog is cancelled
+                        setDebouncedInstitutionName(''); // Reset debounced name
+                        cleanupTimeouts(); // Clean up all timeouts
+                        setInstitutionDialog({ open: false, mode: 'add', data: null });
+                    }}>
                         Annuler
                     </Button>
                     <Button onClick={handleSaveInstitution} variant="contained">
