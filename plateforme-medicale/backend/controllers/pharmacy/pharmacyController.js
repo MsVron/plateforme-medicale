@@ -44,7 +44,7 @@ exports.getPatientPrescriptions = async (req, res) => {
 
     // Verify patient exists
     const [patients] = await db.execute(
-      'SELECT id, prenom, nom FROM patients WHERE id = ?', 
+      'SELECT id, prenom, nom, CNE FROM patients WHERE id = ?', 
       [patientId]
     );
     
@@ -52,58 +52,63 @@ exports.getPatientPrescriptions = async (req, res) => {
       return res.status(404).json({ message: 'Patient non trouvé' });
     }
 
-    // Get patient prescriptions with medication details
+    // Get patient prescriptions with simplified dispensing status
     const [prescriptions] = await db.execute(`
       SELECT 
         t.id as prescription_id,
         t.date_prescription,
-        t.duree_traitement,
-        t.instructions_speciales,
-        t.statut,
+        t.posologie,
+        t.date_debut,
+        t.date_fin,
+        t.est_permanent,
+        t.instructions,
+        t.status as prescription_status,
         CONCAT(m.prenom, ' ', m.nom) as medecin_nom,
         s.nom as medecin_specialite,
-        tm.medicament_id,
-        med.nom as medicament_nom,
+        med.id as medicament_id,
+        med.nom_commercial as medicament_nom,
         med.forme as medicament_forme,
         med.dosage as medicament_dosage,
-        tm.posologie,
-        tm.quantite,
-        tm.duree_jours,
-        tm.instructions,
-        COALESCE(SUM(md.quantity_dispensed), 0) as total_dispensed,
-        tm.quantite - COALESCE(SUM(md.quantity_dispensed), 0) as remaining_quantity,
+        med.nom_molecule,
+        -- Simplified dispensing status
         CASE 
-          WHEN tm.quantite <= COALESCE(SUM(md.quantity_dispensed), 0) THEN 'completed'
-          WHEN COALESCE(SUM(md.quantity_dispensed), 0) > 0 THEN 'partial'
-          ELSE 'pending'
-        END as dispensing_status
+          WHEN pd.id IS NULL THEN 'not_dispensed'
+          WHEN t.est_permanent = 1 AND pd.last_purchase_date IS NOT NULL THEN 'ongoing_permanent'
+          WHEN pd.is_fulfilled = 1 THEN 'completed'
+          ELSE 'in_progress'
+        END as dispensing_status,
+        pd.last_purchase_date,
+        pd.dispensing_date as last_dispensing_date,
+        pd.dispensing_notes,
+        pd.is_fulfilled,
+        pd.is_permanent_medication
       FROM traitements t
-      JOIN traitement_medicaments tm ON t.id = tm.traitement_id
-      JOIN medicaments med ON tm.medicament_id = med.id
-      JOIN medecins m ON t.medecin_id = m.id
-      JOIN specialites s ON m.specialite_id = s.id
-      LEFT JOIN medication_dispensing md ON tm.id = md.prescription_medication_id
-      WHERE t.patient_id = ? AND t.statut = 'actif'
-      GROUP BY t.id, tm.id
-      ORDER BY t.date_prescription DESC, med.nom
+      JOIN medicaments med ON t.medicament_id = med.id
+      JOIN medecins m ON t.medecin_prescripteur_id = m.id
+      LEFT JOIN specialites s ON m.specialite_id = s.id
+      LEFT JOIN prescription_dispensing pd ON t.id = pd.prescription_id
+      WHERE t.patient_id = ? AND t.status IN ('prescribed', 'partially_dispensed', 'fully_dispensed')
+      ORDER BY t.date_prescription DESC, med.nom_commercial
     `, [patientId]);
 
     // Get medication history across all pharmacies
     const [medicationHistory] = await db.execute(`
       SELECT 
-        md.id,
-        md.quantity_dispensed,
-        md.dispensing_date,
-        md.notes,
+        pd.id,
+        pd.dispensing_date,
+        pd.dispensing_notes,
+        pd.is_fulfilled,
+        pd.is_permanent_medication,
+        pd.last_purchase_date,
         i.nom as pharmacy_name,
-        med.nom as medicament_nom,
+        med.nom_commercial as medicament_nom,
         CONCAT(u.prenom, ' ', u.nom) as dispensed_by
-      FROM medication_dispensing md
-      JOIN institutions i ON md.pharmacy_id = i.id
-      JOIN medicaments med ON md.medicament_id = med.id
-      JOIN utilisateurs u ON md.dispensed_by_user_id = u.id
-      WHERE md.patient_id = ?
-      ORDER BY md.dispensing_date DESC
+      FROM prescription_dispensing pd
+      JOIN institutions i ON pd.pharmacy_id = i.id
+      JOIN medicaments med ON pd.medicament_id = med.id
+      JOIN utilisateurs u ON pd.dispensed_by_user_id = u.id
+      WHERE pd.patient_id = ?
+      ORDER BY pd.dispensing_date DESC
       LIMIT 50
     `, [patientId]);
 
@@ -121,89 +126,121 @@ exports.getPatientPrescriptions = async (req, res) => {
   }
 };
 
-// Dispense medication
+// Dispense medication - simplified version without inventory
 exports.dispenseMedication = async (req, res) => {
   try {
     const pharmacyId = req.user.id_specifique_role;
-    const { prescriptionMedicationId } = req.params;
-    const { quantity_dispensed, notes } = req.body;
+    const { prescriptionId } = req.params;
+    const { notes, unit_price, total_price, patient_copay } = req.body;
 
-    // Validate required fields
-    if (!quantity_dispensed || quantity_dispensed <= 0) {
-      return res.status(400).json({ 
-        message: 'Quantité dispensée requise et doit être positive' 
-      });
-    }
-
-    // Get prescription medication details
-    const [prescriptionMeds] = await db.execute(`
+    // Get prescription details
+    const [prescriptions] = await db.execute(`
       SELECT 
-        tm.*,
-        t.patient_id,
-        med.nom as medicament_nom,
-        COALESCE(SUM(md.quantity_dispensed), 0) as already_dispensed
-      FROM traitement_medicaments tm
-      JOIN traitements t ON tm.traitement_id = t.id
-      JOIN medicaments med ON tm.medicament_id = med.id
-      LEFT JOIN medication_dispensing md ON tm.id = md.prescription_medication_id
-      WHERE tm.id = ? AND t.statut = 'actif'
-      GROUP BY tm.id
-    `, [prescriptionMedicationId]);
+        t.*,
+        med.nom_commercial as medicament_nom,
+        p.prenom as patient_prenom,
+        p.nom as patient_nom
+      FROM traitements t
+      JOIN medicaments med ON t.medicament_id = med.id
+      JOIN patients p ON t.patient_id = p.id
+      WHERE t.id = ? AND t.status IN ('prescribed', 'partially_dispensed')
+    `, [prescriptionId]);
 
-    if (prescriptionMeds.length === 0) {
+    if (prescriptions.length === 0) {
       return res.status(404).json({ 
-        message: 'Prescription non trouvée ou inactive' 
+        message: 'Prescription non trouvée ou déjà complètement dispensée' 
       });
     }
 
-    const prescriptionMed = prescriptionMeds[0];
-    const remainingQuantity = prescriptionMed.quantite - prescriptionMed.already_dispensed;
-
-    // Validate quantity doesn't exceed remaining
-    if (quantity_dispensed > remainingQuantity) {
-      return res.status(400).json({ 
-        message: `Quantité demandée (${quantity_dispensed}) dépasse la quantité restante (${remainingQuantity})` 
-      });
-    }
-
-    // Check pharmacy inventory
-    const [inventory] = await db.execute(`
-      SELECT quantity_in_stock 
-      FROM pharmacy_inventory 
-      WHERE pharmacy_id = ? AND medicament_id = ? AND quantity_in_stock >= ?
-    `, [pharmacyId, prescriptionMed.medicament_id, quantity_dispensed]);
-
-    if (inventory.length === 0) {
-      return res.status(400).json({ 
-        message: 'Stock insuffisant en pharmacie' 
-      });
-    }
+    const prescription = prescriptions[0];
+    
+    // Check if already dispensed by this pharmacy
+    const [existingDispensing] = await db.execute(`
+      SELECT id, is_fulfilled, last_purchase_date 
+      FROM prescription_dispensing 
+      WHERE prescription_id = ? AND pharmacy_id = ?
+    `, [prescriptionId, pharmacyId]);
 
     // Start transaction
     const conn = await db.getConnection();
     await conn.beginTransaction();
 
     try {
-      // Record medication dispensing
-      const [result] = await conn.execute(`
-        INSERT INTO medication_dispensing (
-          patient_id, prescription_medication_id, medicament_id, pharmacy_id,
-          quantity_dispensed, dispensing_date, dispensed_by_user_id, notes
-        ) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)
-      `, [
-        prescriptionMed.patient_id, prescriptionMedicationId, prescriptionMed.medicament_id,
-        pharmacyId, quantity_dispensed, req.user.id, notes
-      ]);
+      let dispensingResult;
 
-      // Update pharmacy inventory
-      await conn.execute(`
-        UPDATE pharmacy_inventory 
-        SET quantity_in_stock = quantity_in_stock - ?,
-            last_updated = NOW()
-        WHERE pharmacy_id = ? AND medicament_id = ?
-      `, [quantity_dispensed, pharmacyId, prescriptionMed.medicament_id]);
+      if (existingDispensing.length > 0) {
+        // Update existing dispensing record
+        if (prescription.est_permanent) {
+          // For permanent medication, update last purchase date
+          await conn.execute(`
+            UPDATE prescription_dispensing 
+            SET last_purchase_date = NOW(),
+                dispensing_notes = ?,
+                unit_price = ?,
+                total_price = ?,
+                patient_copay = ?
+            WHERE id = ?
+          `, [notes, unit_price, total_price, patient_copay, existingDispensing[0].id]);
+          
+          dispensingResult = { insertId: existingDispensing[0].id };
+        } else {
+          // For one-time medication, mark as fulfilled if not already
+          if (!existingDispensing[0].is_fulfilled) {
+            await conn.execute(`
+              UPDATE prescription_dispensing 
+              SET is_fulfilled = TRUE,
+                  dispensing_date = NOW(),
+                  dispensing_notes = ?,
+                  unit_price = ?,
+                  total_price = ?,
+                  patient_copay = ?
+              WHERE id = ?
+            `, [notes, unit_price, total_price, patient_copay, existingDispensing[0].id]);
+            
+            // Update prescription status to fully dispensed
+            await conn.execute(`
+              UPDATE traitements 
+              SET status = 'fully_dispensed' 
+              WHERE id = ?
+            `, [prescriptionId]);
+          }
+          dispensingResult = { insertId: existingDispensing[0].id };
+        }
+      } else {
+        // Create new dispensing record
+        const [result] = await conn.execute(`
+          INSERT INTO prescription_dispensing (
+            prescription_id, patient_id, pharmacy_id, dispensed_by_user_id, medicament_id,
+            dispensing_date, dispensing_notes, is_permanent_medication, 
+            last_purchase_date, is_fulfilled, unit_price, total_price, patient_copay
+          ) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          prescriptionId, 
+          prescription.patient_id, 
+          pharmacyId, 
+          req.user.id, 
+          prescription.medicament_id,
+          notes,
+          prescription.est_permanent,
+          prescription.est_permanent ? new Date() : null, // Set last_purchase_date for permanent meds
+          !prescription.est_permanent, // Set is_fulfilled for one-time meds
+          unit_price,
+          total_price,
+          patient_copay
+        ]);
 
-      // Log the dispensing
+        dispensingResult = result;
+
+        // Update prescription status
+        const newStatus = prescription.est_permanent ? 'partially_dispensed' : 'fully_dispensed';
+        await conn.execute(`
+          UPDATE traitements 
+          SET status = ? 
+          WHERE id = ?
+        `, [newStatus, prescriptionId]);
+      }
+
+      // Log the dispensing action
       await conn.execute(`
         INSERT INTO historique_actions (
           utilisateur_id, action_type, table_concernee, 
@@ -212,18 +249,23 @@ exports.dispenseMedication = async (req, res) => {
       `, [
         req.user.id, 
         'MEDICATION_DISPENSED', 
-        'medication_dispensing', 
-        result.insertId, 
-        `Dispensation de ${prescriptionMed.medicament_nom} (${quantity_dispensed})`
+        'prescription_dispensing', 
+        dispensingResult.insertId, 
+        `Dispensation de ${prescription.medicament_nom} pour ${prescription.patient_prenom} ${prescription.patient_nom}`
       ]);
 
       // Commit transaction
       await conn.commit();
 
+      const responseMessage = prescription.est_permanent 
+        ? 'Médicament permanent dispensé - Date d\'achat mise à jour'
+        : 'Médicament dispensé et marqué comme terminé';
+
       return res.status(201).json({ 
-        message: 'Médicament dispensé avec succès',
-        dispensingId: result.insertId,
-        remainingQuantity: remainingQuantity - quantity_dispensed
+        message: responseMessage,
+        dispensingId: dispensingResult.insertId,
+        isPermanent: prescription.est_permanent,
+        isCompleted: !prescription.est_permanent
       });
     } catch (error) {
       await conn.rollback();
@@ -278,8 +320,8 @@ exports.checkMedicationInteractions = async (req, res) => {
     const [interactions] = await db.execute(`
       SELECT 
         mi.*,
-        m1.nom as medicament_1_nom,
-        m2.nom as medicament_2_nom
+        m1.nom_commercial as medicament_1_nom,
+        m2.nom_commercial as medicament_2_nom
       FROM medication_interactions mi
       JOIN medicaments m1 ON mi.medicament_1_id = m1.id
       JOIN medicaments m2 ON mi.medicament_2_id = m2.id
@@ -302,146 +344,7 @@ exports.checkMedicationInteractions = async (req, res) => {
   }
 };
 
-// Dispense medication
-exports.dispenseMedication = async (req, res) => {
-  try {
-    const pharmacyId = req.user.id_specifique_role;
-    const { prescriptionMedicationId } = req.params;
-    const { quantity_dispensed, notes } = req.body;
 
-    // Validate required fields
-    if (!quantity_dispensed || quantity_dispensed <= 0) {
-      return res.status(400).json({ 
-        message: 'Quantité dispensée requise et doit être positive' 
-      });
-    }
-
-    // Get prescription medication details
-    const [prescriptionMeds] = await db.execute(`
-      SELECT 
-        tm.*,
-        t.patient_id,
-        med.nom as medicament_nom,
-        COALESCE(SUM(md.quantity_dispensed), 0) as already_dispensed
-      FROM traitement_medicaments tm
-      JOIN traitements t ON tm.traitement_id = t.id
-      JOIN medicaments med ON tm.medicament_id = med.id
-      LEFT JOIN medication_dispensing md ON tm.id = md.prescription_medication_id
-      WHERE tm.id = ? AND t.statut = 'actif'
-      GROUP BY tm.id
-    `, [prescriptionMedicationId]);
-
-    if (prescriptionMeds.length === 0) {
-      return res.status(404).json({ 
-        message: 'Prescription non trouvée ou inactive' 
-      });
-    }
-
-    const prescriptionMed = prescriptionMeds[0];
-    const remainingQuantity = prescriptionMed.quantite - prescriptionMed.already_dispensed;
-
-    // Validate quantity doesn't exceed remaining
-    if (quantity_dispensed > remainingQuantity) {
-      return res.status(400).json({ 
-        message: `Quantité demandée (${quantity_dispensed}) dépasse la quantité restante (${remainingQuantity})` 
-      });
-    }
-
-    // Check pharmacy inventory
-    const [inventory] = await db.execute(`
-      SELECT quantity_in_stock 
-      FROM pharmacy_inventory 
-      WHERE pharmacy_id = ? AND medicament_id = ? AND quantity_in_stock >= ?
-    `, [pharmacyId, prescriptionMed.medicament_id, quantity_dispensed]);
-
-    if (inventory.length === 0) {
-      return res.status(400).json({ 
-        message: 'Stock insuffisant en pharmacie' 
-      });
-    }
-
-    // Start transaction
-    const conn = await db.getConnection();
-    await conn.beginTransaction();
-
-    try {
-      // Record medication dispensing
-      const [result] = await conn.execute(`
-        INSERT INTO medication_dispensing (
-          patient_id, prescription_medication_id, medicament_id, pharmacy_id,
-          quantity_dispensed, dispensing_date, dispensed_by_user_id, notes
-        ) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)
-      `, [
-        prescriptionMed.patient_id, prescriptionMedicationId, prescriptionMed.medicament_id,
-        pharmacyId, quantity_dispensed, req.user.id, notes
-      ]);
-
-      // Update pharmacy inventory
-      await conn.execute(`
-        UPDATE pharmacy_inventory 
-        SET quantity_in_stock = quantity_in_stock - ?,
-            last_updated = NOW()
-        WHERE pharmacy_id = ? AND medicament_id = ?
-      `, [quantity_dispensed, pharmacyId, prescriptionMed.medicament_id]);
-
-      // Log the dispensing
-      await conn.execute(`
-        INSERT INTO historique_actions (
-          utilisateur_id, action_type, table_concernee, 
-          enregistrement_id, description
-        ) VALUES (?, ?, ?, ?, ?)
-      `, [
-        req.user.id, 
-        'MEDICATION_DISPENSED', 
-        'medication_dispensing', 
-        result.insertId, 
-        `Dispensation de ${prescriptionMed.medicament_nom} (${quantity_dispensed})`
-      ]);
-
-      // Commit transaction
-      await conn.commit();
-
-      return res.status(201).json({ 
-        message: 'Médicament dispensé avec succès',
-        dispensingId: result.insertId,
-        remainingQuantity: remainingQuantity - quantity_dispensed
-      });
-    } catch (error) {
-      await conn.rollback();
-      throw error;
-    } finally {
-      conn.release();
-    }
-  } catch (error) {
-    console.error('Erreur lors de la dispensation:', error);
-    return res.status(500).json({ 
-      message: 'Erreur serveur', 
-      error: error.message 
-    });
-  }
-};
-
-// Get pharmacy medication view for a patient
-exports.getPharmacyPatientMedications = async (req, res) => {
-  try {
-    const pharmacyId = req.user.id_specifique_role;
-    const { patientId } = req.params;
-
-    const [medications] = await db.execute(`
-      SELECT * FROM pharmacy_patient_medications 
-      WHERE patient_id = ?
-      ORDER BY prescription_date DESC
-    `, [patientId]);
-
-    return res.status(200).json({ medications });
-  } catch (error) {
-    console.error('Erreur lors de la récupération des médicaments:', error);
-    return res.status(500).json({ 
-      message: 'Erreur serveur', 
-      error: error.message 
-    });
-  }
-};
 
 // Check medication interactions
 exports.checkMedicationInteractions = async (req, res) => {

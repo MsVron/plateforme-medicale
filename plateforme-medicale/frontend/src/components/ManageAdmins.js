@@ -42,7 +42,7 @@ const ManageAdmins = () => {
 
   const fetchAdmins = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/admins', {
+      const response = await axios.get('http://localhost:5000/api/admin/admins', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setAdmins(response.data.admins);
@@ -108,13 +108,13 @@ const ManageAdmins = () => {
 
       if (editId) {
         console.log('Sending PUT request to update admin:', editId);
-        await axios.put(`http://localhost:5000/api/admins/${editId}`, formData, {
+        await axios.put(`http://localhost:5000/api/admin/admins/${editId}`, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess('Administrateur modifié avec succès');
       } else {
         console.log('Sending POST request to add admin');
-        await axios.post('http://localhost:5000/api/admins', formData, {
+        await axios.post('http://localhost:5000/api/admin/admins', formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess('Administrateur ajouté avec succès');
@@ -129,7 +129,7 @@ const ManageAdmins = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/admins/${id}`, {
+      await axios.delete(`http://localhost:5000/api/admin/admins/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setSuccess('Administrateur supprimé avec succès');

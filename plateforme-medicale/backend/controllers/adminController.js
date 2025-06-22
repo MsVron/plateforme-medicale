@@ -103,12 +103,29 @@ exports.getAdmins = async (req, res) => {
       return res.status(401).json({ message: "Utilisateur non authentifié ou informations insuffisantes" });
     }
 
-    const [admins] = await db.execute(`
-      SELECT a.id, a.prenom, a.nom, a.telephone, a.date_creation, u.email, u.est_actif
-      FROM admins a
-      JOIN utilisateurs u ON u.id_specifique_role = a.id AND u.role = 'admin'
-      WHERE a.cree_par = ?
-    `, [req.user.id_specifique_role]);
+    let query, params;
+
+    // Super admins can see all admins, regular admins can only see admins they created
+    if (req.user.role === 'super_admin') {
+      query = `
+        SELECT a.id, a.prenom, a.nom, a.telephone, a.date_creation, u.email, u.est_actif
+        FROM admins a
+        JOIN utilisateurs u ON u.id_specifique_role = a.id AND u.role = 'admin'
+        ORDER BY a.date_creation DESC
+      `;
+      params = [];
+    } else {
+      query = `
+        SELECT a.id, a.prenom, a.nom, a.telephone, a.date_creation, u.email, u.est_actif
+        FROM admins a
+        JOIN utilisateurs u ON u.id_specifique_role = a.id AND u.role = 'admin'
+        WHERE a.cree_par = ?
+        ORDER BY a.date_creation DESC
+      `;
+      params = [req.user.id_specifique_role];
+    }
+
+    const [admins] = await db.execute(query, params);
 
     return res.status(200).json({ admins });
   } catch (error) {

@@ -27,7 +27,8 @@ import {
   Checkbox,
   Stack,
   Tabs,
-  Tab
+  Tab,
+  Autocomplete
 } from '@mui/material';
 import {
   Science as ScienceIcon,
@@ -132,19 +133,22 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
 
   const fetchImagingTypes = async () => {
     try {
+      console.log('Fetching imaging types...');
       const token = localStorage.getItem('token');
       const response = await axios.get('/medecin/imaging-types', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('Imaging types response:', response.data);
       setImagingTypes(response.data);
     } catch (err) {
       console.error('Error fetching imaging types:', err);
+      console.error('Error response:', err.response?.data);
       setError('Impossible de charger les types d\'imagerie');
     }
   };
 
   const handleRequestAnalysis = () => {
-    setAnalysisForm({
+    const newForm = {
       type_analyse_id: '',
       categorie_id: '',
       priority: 'normal',
@@ -152,7 +156,8 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
       sample_type: '',
       special_instructions: '',
       preferred_laboratory_id: ''
-    });
+    };
+    setAnalysisForm(newForm);
     setRequestDialog({ open: true, type: 'analysis', mode: 'add', data: null });
   };
 
@@ -168,6 +173,8 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
       preferred_laboratory_id: ''
     });
     setRequestDialog({ open: true, type: 'imaging', mode: 'add', data: null });
+    // Fetch imaging types when dialog opens
+    fetchImagingTypes();
   };
 
   const handleSaveRequest = async () => {
@@ -249,7 +256,6 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
   };
 
   const currentForm = requestDialog.type === 'analysis' ? analysisForm : imagingForm;
-  const setCurrentForm = requestDialog.type === 'analysis' ? setAnalysisForm : setImagingForm;
 
   return (
     <Box>
@@ -511,20 +517,56 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
               <>
                 {/* Imaging Type Selection */}
                 <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Type d'imagerie *</InputLabel>
-                    <Select
-                      value={imagingForm.type_imagerie_id}
-                      onChange={(e) => setImagingForm(prev => ({ ...prev, type_imagerie_id: e.target.value }))}
-                      label="Type d'imagerie *"
-                    >
-                      {imagingTypes.map((type) => (
-                        <MenuItem key={type.id} value={type.id}>
-                          {type.nom}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <Autocomplete
+                    options={imagingTypes}
+                    getOptionLabel={(option) => option.nom}
+                    value={imagingTypes.find(type => type.id === imagingForm.type_imagerie_id) || null}
+                    onChange={(event, newValue) => {
+                      setImagingForm(prev => ({ 
+                        ...prev, 
+                        type_imagerie_id: newValue ? newValue.id : '' 
+                      }));
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Type d'imagerie *"
+                        required
+                        placeholder="Rechercher un type d'imagerie..."
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props}>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                            {option.nom}
+                          </Typography>
+                          {option.description && (
+                            <Typography variant="caption" color="text.secondary">
+                              {option.description}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    )}
+                    filterOptions={(options, { inputValue }) => {
+                      if (!inputValue) return options;
+                      
+                      const filtered = options.filter(option =>
+                        option.nom.toLowerCase().includes(inputValue.toLowerCase()) ||
+                        (option.description && option.description.toLowerCase().includes(inputValue.toLowerCase()))
+                      );
+                      
+                      return filtered;
+                    }}
+                    noOptionsText="Aucun type d'imagerie trouvé"
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    sx={{
+                      '& .MuiAutocomplete-option': {
+                        padding: '12px 16px',
+                      }
+                    }}
+                  />
                 </Grid>
 
                 {/* Contrast Required */}
@@ -544,28 +586,48 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
 
             {/* Priority */}
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Priorité</InputLabel>
-                <Select
-                  value={currentForm.priority}
-                  onChange={(e) => setCurrentForm(prev => ({ ...prev, priority: e.target.value }))}
-                  label="Priorité"
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                  Priorité
+                </Typography>
+                <select 
+                  value={requestDialog.type === 'analysis' ? analysisForm.priority : imagingForm.priority}
+                  onChange={(e) => {
+                    if (requestDialog.type === 'analysis') {
+                      setAnalysisForm(prev => ({ ...prev, priority: e.target.value }));
+                    } else {
+                      setImagingForm(prev => ({ ...prev, priority: e.target.value }));
+                    }
+                  }}
+                  style={{ 
+                    width: '100%', 
+                    padding: '16.5px 14px',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '4px',
+                    fontSize: '16px',
+                    backgroundColor: 'white',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#1976d2'}
+                  onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
                 >
                   {requestDialog.type === 'analysis' ? (
                     <>
-                      <MenuItem value="normal">Normal</MenuItem>
-                      <MenuItem value="urgent">Urgent</MenuItem>
+                      <option value="normal">Normal</option>
+                      <option value="urgent">Urgent</option>
                     </>
                   ) : (
                     <>
-                      <MenuItem value="routine">Routine</MenuItem>
-                      <MenuItem value="urgent">Urgent</MenuItem>
-                      <MenuItem value="stat">STAT</MenuItem>
-                      <MenuItem value="emergency">Urgence</MenuItem>
+                      <option value="routine">Routine</option>
+                      <option value="urgent">Urgent</option>
+                      <option value="stat">STAT</option>
+                      <option value="emergency">Urgence</option>
                     </>
                   )}
-                </Select>
-              </FormControl>
+                </select>
+              </Box>
             </Grid>
 
             {/* Clinical Indication */}
@@ -573,7 +635,13 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
               <TextField
                 label="Indication clinique *"
                 value={currentForm.clinical_indication}
-                onChange={(e) => setCurrentForm(prev => ({ ...prev, clinical_indication: e.target.value }))}
+                onChange={(e) => {
+                  if (requestDialog.type === 'analysis') {
+                    setAnalysisForm(prev => ({ ...prev, clinical_indication: e.target.value }));
+                  } else {
+                    setImagingForm(prev => ({ ...prev, clinical_indication: e.target.value }));
+                  }
+                }}
                 fullWidth
                 required
                 multiline
@@ -587,7 +655,13 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
               <TextField
                 label="Instructions spéciales"
                 value={currentForm.special_instructions}
-                onChange={(e) => setCurrentForm(prev => ({ ...prev, special_instructions: e.target.value }))}
+                onChange={(e) => {
+                  if (requestDialog.type === 'analysis') {
+                    setAnalysisForm(prev => ({ ...prev, special_instructions: e.target.value }));
+                  } else {
+                    setImagingForm(prev => ({ ...prev, special_instructions: e.target.value }));
+                  }
+                }}
                 fullWidth
                 multiline
                 rows={2}

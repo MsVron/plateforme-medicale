@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axios from '../../services/axiosConfig';
 import {
     Card,
@@ -58,7 +58,7 @@ const InstitutionManagement = () => {
     const [activeTab, setActiveTab] = useState(0);
 
     // Function to clean text for username generation (same as backend)
-    const cleanTextForUsername = (text) => {
+    const cleanTextForUsername = useCallback((text) => {
         return text.toLowerCase()
             // French accented characters
             .replace(/[àáâãäåæ]/g, 'a')
@@ -74,21 +74,25 @@ const InstitutionManagement = () => {
             .replace(/[ß]/g, 'ss')
             // Remove all non-alphanumeric characters INCLUDING SPACES
             .replace(/[^a-z0-9]/g, '');
-    };
+    }, []);
 
     // Special handling for institution types
-    const getCleanType = (type) => {
+    const getCleanType = useCallback((type) => {
         const lowerType = type.toLowerCase();
         if (lowerType === 'centre médical' || lowerType === 'centre medical') {
             return 'centre';
         }
         return cleanTextForUsername(type);
-    };
+    }, [cleanTextForUsername]);
     
     // Filter and search states
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedType, setSelectedType] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('');
+    
+    // Debounced search term for performance
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+    const searchTimeoutRef = useRef(null);
     
     // Dialog states
     const [institutionDialog, setInstitutionDialog] = useState({ open: false, mode: 'add', data: null });
@@ -116,36 +120,62 @@ const InstitutionManagement = () => {
     // laboratoire -> laboratory role
     // pharmacie -> pharmacy role  
     // cabinet privé -> institution role
-    const institutionTypes = [
+    const institutionTypes = useMemo(() => [
         'hôpital',
         'clinique', 
         'centre médical',
         'cabinet privé',
         'laboratoire',
         'pharmacie'
-    ];
+    ], []);
 
-    useEffect(() => {
-        fetchInstitutions();
-        fetchDoctors();
+    // Memoize the unique locations to prevent recalculation on every render
+    const uniqueLocations = useMemo(() => {
+        const locations = institutions.map(institution => institution.ville);
+        return [...new Set(locations)].sort();
+    }, [institutions]);
+
+    // Optimized form update function
+    const updateInstitutionForm = useCallback((updates) => {
+        setInstitutionForm(prev => ({ ...prev, ...updates }));
     }, []);
+
+    // Debounce search term updates
+    useEffect(() => {
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+        
+        searchTimeoutRef.current = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300);
+
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, [searchTerm]);
 
     // Auto-generate username when name or type changes (only for add mode)
     useEffect(() => {
         if (institutionDialog.mode === 'add' && institutionForm.nom && institutionForm.type !== 'cabinet privé') {
             const generatedUsername = `${getCleanType(institutionForm.type)}.${cleanTextForUsername(institutionForm.nom)}`;
-            setInstitutionForm(prev => ({ ...prev, username: generatedUsername }));
+            if (institutionForm.username !== generatedUsername) {
+                updateInstitutionForm({ username: generatedUsername });
+            }
         }
-    }, [institutionForm.nom, institutionForm.type, institutionDialog.mode]);
+    }, [institutionForm.nom, institutionForm.type, institutionDialog.mode, getCleanType, cleanTextForUsername, updateInstitutionForm, institutionForm.username]);
 
-    // Filter institutions based on search term, type, and location
-    useEffect(() => {
+    // Memoized filtered institutions to prevent unnecessary recalculations
+    const filteredInstitutionsResult = useMemo(() => {
         let filtered = institutions;
 
-        // Filter by search term (name)
-        if (searchTerm) {
+        // Filter by search term (name) - using debounced search term
+        if (debouncedSearchTerm) {
+            const searchLower = debouncedSearchTerm.toLowerCase();
             filtered = filtered.filter(institution =>
-                institution.nom.toLowerCase().includes(searchTerm.toLowerCase())
+                institution.nom.toLowerCase().includes(searchLower)
             );
         }
 
@@ -156,37 +186,47 @@ const InstitutionManagement = () => {
 
         // Filter by location (ville)
         if (selectedLocation) {
+            const locationLower = selectedLocation.toLowerCase();
             filtered = filtered.filter(institution =>
-                institution.ville.toLowerCase().includes(selectedLocation.toLowerCase())
+                institution.ville.toLowerCase().includes(locationLower)
             );
         }
 
-        setFilteredInstitutions(filtered);
-    }, [institutions, searchTerm, selectedType, selectedLocation]);
+        return filtered;
+    }, [institutions, debouncedSearchTerm, selectedType, selectedLocation]);
 
-    const fetchInstitutions = async () => {
+    // Update filtered institutions when the memoized result changes
+    useEffect(() => {
+        setFilteredInstitutions(filteredInstitutionsResult);
+    }, [filteredInstitutionsResult]);
+
+    const fetchInstitutions = useCallback(async () => {
         try {
             const response = await axios.get('/admin/institutions');
             setInstitutions(response.data);
-            setFilteredInstitutions(response.data);
         } catch (error) {
             console.error('Error fetching institutions:', error);
             setError('Erreur lors de la récupération des institutions');
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const fetchDoctors = async () => {
+    const fetchDoctors = useCallback(async () => {
         try {
             const response = await axios.get('/admin/doctors');
             setDoctors(response.data);
         } catch (error) {
             console.error('Error fetching doctors:', error);
         }
-    };
+    }, []);
 
-    const handleAddInstitution = () => {
+    useEffect(() => {
+        fetchInstitutions();
+        fetchDoctors();
+    }, [fetchInstitutions, fetchDoctors]);
+
+    const handleAddInstitution = useCallback(() => {
         setInstitutionForm({
             nom: '',
             adresse: '',
@@ -202,9 +242,9 @@ const InstitutionManagement = () => {
         });
         setShowPassword(false);
         setInstitutionDialog({ open: true, mode: 'add', data: null });
-    };
+    }, []);
 
-    const handleEditInstitution = (institution) => {
+    const handleEditInstitution = useCallback((institution) => {
         setInstitutionForm({
             nom: institution.nom || '',
             adresse: institution.adresse || '',
@@ -215,28 +255,34 @@ const InstitutionManagement = () => {
             email_contact: institution.email_contact || '',
             description: institution.description || '',
             type: institution.type || 'hôpital',
-            username: institution.username || '', // Pre-fill existing username
-            password: '' // Always empty for security
+            username: institution.username || '',
+            password: ''
         });
         setShowPassword(false);
         setInstitutionDialog({ open: true, mode: 'edit', data: institution });
-    };
+    }, []);
 
     const handleSaveInstitution = async () => {
         try {
-            // Validate credentials for non-cabinet privé institutions
-            if (institutionForm.type !== 'cabinet privé') {
-                // Password is required for add mode
-                if (institutionDialog.mode === 'add' && !institutionForm.password) {
-                    setError('Le mot de passe est requis');
-                    return;
-                }
-                // Validate password length if provided
-                if (institutionForm.password && institutionForm.password.length < 6) {
-                    setError('Le mot de passe doit contenir au moins 6 caractères');
-                    return;
-                }
+            // Basic validation
+            if (!institutionForm.nom || !institutionForm.adresse || !institutionForm.ville || !institutionForm.code_postal || !institutionForm.email_contact) {
+                setError('Veuillez remplir tous les champs obligatoires');
+                return;
             }
+
+            // Validate password for new non-cabinet privé institutions
+            if (institutionDialog.mode === 'add' && institutionForm.type !== 'cabinet privé' && institutionForm.password.length < 6) {
+                setError('Le mot de passe doit contenir au moins 6 caractères');
+                return;
+            }
+
+            // Validate password for edit mode only if it's being changed
+            if (institutionDialog.mode === 'edit' && institutionForm.password && institutionForm.password.length < 6) {
+                setError('Le mot de passe doit contenir au moins 6 caractères');
+                return;
+            }
+
+            setError(''); // Clear any previous errors
 
             if (institutionDialog.mode === 'add') {
                 const response = await axios.post('/admin/institutions', institutionForm);
@@ -278,7 +324,7 @@ const InstitutionManagement = () => {
                 setTimeout(() => setSuccess(''), 3000);
             } catch (error) {
                 console.error('Error deleting institution:', error);
-                setError(error.response?.data?.message || 'Erreur lors de la suppression de l\'institution');
+                setError('Erreur lors de la suppression de l\'institution');
             }
         }
     };
@@ -287,17 +333,17 @@ const InstitutionManagement = () => {
         try {
             await axios.post(`/admin/institutions/${institutionId}/doctors`, { doctorId });
             setSuccess('Médecin assigné avec succès');
-            fetchInstitutions();
             setDoctorDialog({ open: false, institutionId: null });
+            fetchInstitutions();
             setTimeout(() => setSuccess(''), 3000);
         } catch (error) {
             console.error('Error assigning doctor:', error);
-            setError(error.response?.data?.message || 'Erreur lors de l\'assignation du médecin');
+            setError('Erreur lors de l\'assignation du médecin');
         }
     };
 
     const handleRemoveDoctor = async (institutionId, doctorId) => {
-        if (window.confirm('Êtes-vous sûr de vouloir retirer ce médecin de cette institution ?')) {
+        if (window.confirm('Êtes-vous sûr de vouloir retirer ce médecin de l\'institution ?')) {
             try {
                 await axios.delete(`/admin/institutions/${institutionId}/doctors/${doctorId}`);
                 setSuccess('Médecin retiré avec succès');
@@ -305,27 +351,48 @@ const InstitutionManagement = () => {
                 setTimeout(() => setSuccess(''), 3000);
             } catch (error) {
                 console.error('Error removing doctor:', error);
-                setError(error.response?.data?.message || 'Erreur lors du retrait du médecin');
+                setError('Erreur lors du retrait du médecin');
             }
         }
     };
 
-    const handleTabChange = (event, newValue) => {
+    const handleTabChange = useCallback((event, newValue) => {
         setActiveTab(newValue);
-    };
+    }, []);
 
     // Clear all filters
-    const handleClearFilters = () => {
+    const handleClearFilters = useCallback(() => {
         setSearchTerm('');
+        setDebouncedSearchTerm('');
         setSelectedType('');
         setSelectedLocation('');
-    };
+    }, []);
 
-    // Get unique locations for filter dropdown
-    const getUniqueLocations = () => {
-        const locations = institutions.map(institution => institution.ville);
-        return [...new Set(locations)].sort();
-    };
+    // Memoized form field handlers
+    const handleFormFieldChange = useCallback((field) => (e) => {
+        const value = e.target.value;
+        updateInstitutionForm({ [field]: value });
+    }, [updateInstitutionForm]);
+
+    const handleTypeChange = useCallback((e) => {
+        const newType = e.target.value;
+        updateInstitutionForm({ type: newType });
+    }, [updateInstitutionForm]);
+
+    const handleVilleChange = useCallback((event, newValue) => {
+        updateInstitutionForm({ ville: newValue || "" });
+    }, [updateInstitutionForm]);
+
+    // Memoized statistics calculations
+    const institutionStats = useMemo(() => {
+        const totalDoctors = filteredInstitutions.reduce((total, inst) => total + (inst.doctors?.length || 0), 0);
+        const typeStats = institutionTypes.map(type => {
+            const count = filteredInstitutions.filter(inst => inst.type === type).length;
+            return { type, count };
+        }).filter(stat => stat.count > 0);
+        
+        return { totalDoctors, typeStats };
+    }, [filteredInstitutions, institutionTypes]);
 
     if (loading) {
         return (
@@ -384,8 +451,8 @@ const InstitutionManagement = () => {
                                     <TextField
                                         fullWidth
                                         label="Rechercher par nom"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                                                                 value={searchTerm}
+                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         InputProps={{
                                             startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
                                         }}
@@ -396,9 +463,9 @@ const InstitutionManagement = () => {
                                     <FormControl fullWidth>
                                         <InputLabel>Type d'institution</InputLabel>
                                         <Select
-                                            value={selectedType}
-                                            label="Type d'institution"
-                                            onChange={(e) => setSelectedType(e.target.value)}
+                                                                                         value={selectedType}
+                                             label="Type d'institution"
+                                             onChange={(e) => setSelectedType(e.target.value)}
                                         >
                                             <MenuItem value="">Tous les types</MenuItem>
                                             {institutionTypes.map(type => (
@@ -409,11 +476,11 @@ const InstitutionManagement = () => {
                                 </Grid>
                                 <Grid item xs={12} md={3}>
                                     <Autocomplete
-                                        options={getUniqueLocations()}
-                                        value={selectedLocation || null}
-                                        onChange={(event, newValue) => {
-                                            setSelectedLocation(newValue || "");
-                                        }}
+                                        options={uniqueLocations}
+                                                                                 value={selectedLocation || null}
+                                         onChange={(event, newValue) => {
+                                             setSelectedLocation(newValue || "");
+                                         }}
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
@@ -436,7 +503,7 @@ const InstitutionManagement = () => {
                                         fullWidth
                                         variant="outlined"
                                         onClick={handleClearFilters}
-                                        disabled={!searchTerm && !selectedType && !selectedLocation}
+                                        disabled={!debouncedSearchTerm && !selectedType && !selectedLocation}
                                     >
                                         Effacer
                                     </Button>
@@ -451,13 +518,16 @@ const InstitutionManagement = () => {
                                         ` sur ${institutions.length} au total`
                                     }
                                 </Typography>
-                                {(searchTerm || selectedType || selectedLocation) && (
+                                {(debouncedSearchTerm || selectedType || selectedLocation) && (
                                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                        {searchTerm && (
+                                        {debouncedSearchTerm && (
                                             <Chip 
-                                                label={`Nom: "${searchTerm}"`} 
+                                                label={`Nom: "${debouncedSearchTerm}"`} 
                                                 size="small" 
-                                                onDelete={() => setSearchTerm('')}
+                                                onDelete={() => {
+                                                    setSearchTerm('');
+                                                    setDebouncedSearchTerm('');
+                                                }}
                                             />
                                         )}
                                         {selectedType && (
@@ -491,7 +561,7 @@ const InstitutionManagement = () => {
                                         : "Essayez de modifier vos critères de recherche."
                                     }
                                 </Typography>
-                                {(searchTerm || selectedType || selectedLocation) && (
+                                {(debouncedSearchTerm || selectedType || selectedLocation) && (
                                     <Button 
                                         variant="outlined" 
                                         onClick={handleClearFilters}
@@ -627,7 +697,7 @@ const InstitutionManagement = () => {
                                             Médecins Assignés
                                         </Typography>
                                         <Typography variant="h3" color="success.main">
-                                            {filteredInstitutions.reduce((total, inst) => total + (inst.doctors?.length || 0), 0)}
+                                            {institutionStats.totalDoctors}
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -640,17 +710,14 @@ const InstitutionManagement = () => {
                                             Types d'Institutions
                                         </Typography>
                                         <Box sx={{ mt: 1 }}>
-                                            {institutionTypes.map(type => {
-                                                const count = filteredInstitutions.filter(inst => inst.type === type).length;
-                                                return count > 0 ? (
-                                                    <Chip 
-                                                        key={type}
-                                                        label={`${type}: ${count}`}
-                                                        size="small"
-                                                        sx={{ mr: 1, mb: 1 }}
-                                                    />
-                                                ) : null;
-                                            })}
+                                            {institutionStats.typeStats.map(({ type, count }) => (
+                                                <Chip 
+                                                    key={type}
+                                                    label={`${type}: ${count}`}
+                                                    size="small"
+                                                    sx={{ mr: 1, mb: 1 }}
+                                                />
+                                            ))}
                                         </Box>
                                     </CardContent>
                                 </Card>
@@ -699,7 +766,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Nom de l'institution"
                                 value={institutionForm.nom}
-                                onChange={(e) => setInstitutionForm({...institutionForm, nom: e.target.value})}
+                                onChange={handleFormFieldChange('nom')}
                                 required
                             />
                         </Grid>
@@ -709,7 +776,7 @@ const InstitutionManagement = () => {
                                 <Select
                                     value={institutionForm.type}
                                     label="Type d'institution"
-                                    onChange={(e) => setInstitutionForm({...institutionForm, type: e.target.value})}
+                                    onChange={handleTypeChange}
                                 >
                                     {institutionTypes.map(type => (
                                         <MenuItem key={type} value={type}>{type}</MenuItem>
@@ -722,7 +789,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Adresse"
                                 value={institutionForm.adresse}
-                                onChange={(e) => setInstitutionForm({...institutionForm, adresse: e.target.value})}
+                                onChange={handleFormFieldChange('adresse')}
                                 required
                             />
                         </Grid>
@@ -730,9 +797,7 @@ const InstitutionManagement = () => {
                             <Autocomplete
                                 options={moroccanCities}
                                 value={institutionForm.ville || null}
-                                onChange={(event, newValue) => {
-                                    setInstitutionForm({...institutionForm, ville: newValue || ""});
-                                }}
+                                                                  onChange={handleVilleChange}
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
@@ -756,7 +821,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Code postal"
                                 value={institutionForm.code_postal}
-                                onChange={(e) => setInstitutionForm({...institutionForm, code_postal: e.target.value})}
+                                onChange={handleFormFieldChange('code_postal')}
                                 required
                             />
                         </Grid>
@@ -765,7 +830,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Pays"
                                 value={institutionForm.pays}
-                                onChange={(e) => setInstitutionForm({...institutionForm, pays: e.target.value})}
+                                onChange={handleFormFieldChange('pays')}
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
@@ -773,7 +838,7 @@ const InstitutionManagement = () => {
                                 fullWidth
                                 label="Téléphone"
                                 value={institutionForm.telephone}
-                                onChange={(e) => setInstitutionForm({...institutionForm, telephone: e.target.value})}
+                                onChange={handleFormFieldChange('telephone')}
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
@@ -782,7 +847,7 @@ const InstitutionManagement = () => {
                                 label="Email de contact"
                                 type="email"
                                 value={institutionForm.email_contact}
-                                onChange={(e) => setInstitutionForm({...institutionForm, email_contact: e.target.value})}
+                                onChange={handleFormFieldChange('email_contact')}
                                 required
                             />
                         </Grid>
@@ -804,7 +869,7 @@ const InstitutionManagement = () => {
                                         fullWidth
                                         label="Nom d'utilisateur"
                                         value={institutionForm.username}
-                                        onChange={(e) => setInstitutionForm({...institutionForm, username: e.target.value})}
+                                        onChange={handleFormFieldChange('username')}
                                         InputProps={{
                                             readOnly: institutionDialog.mode === 'add',
                                         }}
@@ -824,7 +889,7 @@ const InstitutionManagement = () => {
                                         label="Mot de passe"
                                         type={showPassword ? 'text' : 'password'}
                                         value={institutionForm.password}
-                                        onChange={(e) => setInstitutionForm({...institutionForm, password: e.target.value})}
+                                        onChange={handleFormFieldChange('password')}
                                         required={institutionDialog.mode === 'add'}
                                         InputProps={{
                                             endAdornment: (
@@ -853,7 +918,7 @@ const InstitutionManagement = () => {
                                 multiline
                                 rows={3}
                                 value={institutionForm.description}
-                                onChange={(e) => setInstitutionForm({...institutionForm, description: e.target.value})}
+                                onChange={handleFormFieldChange('description')}
                             />
                         </Grid>
                     </Grid>

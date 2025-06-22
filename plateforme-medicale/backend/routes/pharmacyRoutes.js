@@ -8,10 +8,9 @@ router.get('/patients/search', verifyToken, isPharmacy, pharmacyController.searc
 
 // Prescription and medication routes
 router.get('/patients/:patientId/prescriptions', verifyToken, isPharmacy, pharmacyController.getPatientPrescriptions);
-router.get('/patients/:patientId/medications', verifyToken, isPharmacy, pharmacyController.getPharmacyPatientMedications);
 
-// Medication dispensing routes
-router.post('/prescriptions/:prescriptionMedicationId/dispense', verifyToken, isPharmacy, pharmacyController.dispenseMedication);
+// Simplified medication dispensing routes
+router.post('/prescriptions/:prescriptionId/dispense', verifyToken, isPharmacy, pharmacyController.dispenseMedication);
 
 // Medication interaction checking
 router.post('/medications/check-interactions', verifyToken, isPharmacy, pharmacyController.checkMedicationInteractions);

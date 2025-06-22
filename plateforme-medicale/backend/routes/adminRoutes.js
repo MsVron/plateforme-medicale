@@ -3,10 +3,10 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const { verifyToken, isSuperAdmin, isAdmin } = require('../middlewares/auth');
 
-router.post('/admins', verifyToken, isSuperAdmin, adminController.addAdmin);
-router.put('/admins/:id', verifyToken, isSuperAdmin, adminController.editAdmin);
-router.delete('/admins/:id', verifyToken, isSuperAdmin, adminController.deleteAdmin);
-router.get('/admins', verifyToken, isSuperAdmin, adminController.getAdmins);
+router.post('/admins', verifyToken, isAdmin, adminController.addAdmin);
+router.put('/admins/:id', verifyToken, isAdmin, adminController.editAdmin);
+router.delete('/admins/:id', verifyToken, isAdmin, adminController.deleteAdmin);
+router.get('/admins', verifyToken, isAdmin, adminController.getAdmins);
 
 // Get all doctors for admin use
 router.get('/doctors', verifyToken, isAdmin, async (req, res) => {
