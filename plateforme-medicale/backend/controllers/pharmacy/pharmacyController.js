@@ -102,11 +102,11 @@ exports.getPatientPrescriptions = async (req, res) => {
         pd.last_purchase_date,
         i.nom as pharmacy_name,
         med.nom_commercial as medicament_nom,
-        CONCAT(u.prenom, ' ', u.nom) as dispensed_by
+        COALESCE(u.nom_utilisateur, 'Utilisateur inconnu') as dispensed_by
       FROM prescription_dispensing pd
       JOIN institutions i ON pd.pharmacy_id = i.id
       JOIN medicaments med ON pd.medicament_id = med.id
-      JOIN utilisateurs u ON pd.dispensed_by_user_id = u.id
+      LEFT JOIN utilisateurs u ON pd.dispensed_by_user_id = u.id
       WHERE pd.patient_id = ?
       ORDER BY pd.dispensing_date DESC
       LIMIT 50
@@ -240,19 +240,24 @@ exports.dispenseMedication = async (req, res) => {
         `, [newStatus, prescriptionId]);
       }
 
-      // Log the dispensing action
-      await conn.execute(`
-        INSERT INTO historique_actions (
-          utilisateur_id, action_type, table_concernee, 
-          enregistrement_id, description
-        ) VALUES (?, ?, ?, ?, ?)
-      `, [
-        req.user.id, 
-        'MEDICATION_DISPENSED', 
-        'prescription_dispensing', 
-        dispensingResult.insertId, 
-        `Dispensation de ${prescription.medicament_nom} pour ${prescription.patient_prenom} ${prescription.patient_nom}`
-      ]);
+      // Log the dispensing action (optional - don't fail if logging fails)
+      try {
+        await conn.execute(`
+          INSERT INTO historique_actions (
+            utilisateur_id, action_type, table_concernee, 
+            enregistrement_id, description
+          ) VALUES (?, ?, ?, ?, ?)
+        `, [
+          req.user.id, 
+          'MEDICATION_DISPENSED', 
+          'prescription_dispensing', 
+          dispensingResult.insertId, 
+          `Dispensation de ${prescription.medicament_nom} pour ${prescription.patient_prenom} ${prescription.patient_nom}`
+        ]);
+      } catch (logError) {
+        console.warn('Warning: Failed to log dispensing action:', logError.message);
+        // Continue with the operation even if logging fails
+      }
 
       // Commit transaction
       await conn.commit();
@@ -288,10 +293,47 @@ exports.getPharmacyPatientMedications = async (req, res) => {
     const pharmacyId = req.user.id_specifique_role;
     const { patientId } = req.params;
 
+    // Use direct query instead of view to avoid column issues
     const [medications] = await db.execute(`
-      SELECT * FROM pharmacy_patient_medications 
-      WHERE patient_id = ?
-      ORDER BY prescription_date DESC
+      SELECT 
+        p.id as patient_id,
+        p.prenom,
+        p.nom,
+        p.CNE,
+        p.date_naissance,
+        p.telephone,
+        t.id as prescription_id,
+        t.posologie,
+        t.date_debut,
+        t.date_fin,
+        t.est_permanent,
+        t.date_prescription,
+        t.instructions,
+        t.status as prescription_status,
+        m.nom_commercial,
+        m.nom_molecule,
+        m.dosage,
+        m.forme,
+        med.prenom as prescribing_doctor_first_name,
+        med.nom as prescribing_doctor_last_name,
+        i.nom as prescribing_institution,
+        pd.dispensing_date,
+        pd.pharmacy_id as dispensed_pharmacy_id,
+        disp_inst.nom as dispensing_pharmacy_name,
+        pd.is_fulfilled,
+        pd.is_permanent_medication,
+        pd.last_purchase_date,
+        pd.status as dispensing_status,
+        pd.dispensing_notes
+      FROM patients p
+      JOIN traitements t ON p.id = t.patient_id
+      JOIN medicaments m ON t.medicament_id = m.id
+      JOIN medecins med ON t.medecin_prescripteur_id = med.id
+      LEFT JOIN institutions i ON med.institution_id = i.id
+      LEFT JOIN prescription_dispensing pd ON t.id = pd.prescription_id
+      LEFT JOIN institutions disp_inst ON pd.pharmacy_id = disp_inst.id
+      WHERE p.id = ? AND t.status IN ('prescribed', 'partially_dispensed', 'fully_dispensed')
+      ORDER BY t.date_prescription DESC
     `, [patientId]);
 
     return res.status(200).json({ medications });
@@ -344,44 +386,4 @@ exports.checkMedicationInteractions = async (req, res) => {
   }
 };
 
-
-
-// Check medication interactions
-exports.checkMedicationInteractions = async (req, res) => {
-  try {
-    const { medicament_ids } = req.body;
-
-    if (!medicament_ids || !Array.isArray(medicament_ids) || medicament_ids.length < 2) {
-      return res.status(400).json({ 
-        message: 'Au moins 2 médicaments requis pour vérifier les interactions' 
-      });
-    }
-
-    // Get all possible interactions between the medications
-    const placeholders = medicament_ids.map(() => '?').join(',');
-    const [interactions] = await db.execute(`
-      SELECT 
-        mi.*,
-        m1.nom as medicament_1_nom,
-        m2.nom as medicament_2_nom
-      FROM medication_interactions mi
-      JOIN medicaments m1 ON mi.medicament_1_id = m1.id
-      JOIN medicaments m2 ON mi.medicament_2_id = m2.id
-      WHERE mi.is_active = TRUE
-        AND ((mi.medicament_1_id IN (${placeholders}) AND mi.medicament_2_id IN (${placeholders}))
-             OR (mi.medicament_2_id IN (${placeholders}) AND mi.medicament_1_id IN (${placeholders})))
-        AND mi.medicament_1_id != mi.medicament_2_id
-    `, [...medicament_ids, ...medicament_ids]);
-
-    return res.status(200).json({ 
-      interactions,
-      hasInteractions: interactions.length > 0
-    });
-  } catch (error) {
-    console.error('Erreur lors de la vérification des interactions:', error);
-    return res.status(500).json({ 
-      message: 'Erreur serveur', 
-      error: error.message 
-    });
-  }
-}; 
+ 

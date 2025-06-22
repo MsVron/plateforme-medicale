@@ -71,6 +71,7 @@ import PatientSearchTab from './components/hospital/PatientSearchTab';
 // Import pharmacy components
 import PharmacyDashboard from './components/pharmacy/PharmacyDashboard';
 import PharmacyHome from './pages/pharmacy/PharmacyHome';
+import PatientPrescriptions from './pages/pharmacy/PatientPrescriptions';
 
 // Import laboratory components
 import LaboratoryDashboard from './components/laboratory/LaboratoryDashboard';
@@ -535,6 +536,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['pharmacy']}>
                   <PharmacyDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pharmacy/patients/:patientId/prescriptions"
+              element={
+                <ProtectedRoute allowedRoles={['pharmacy']}>
+                  <PatientPrescriptions />
                 </ProtectedRoute>
               }
             />
