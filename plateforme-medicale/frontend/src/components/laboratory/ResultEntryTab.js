@@ -38,7 +38,9 @@ import {
   Visibility,
   Assignment,
   Save,
-  Cancel
+  Cancel,
+  CloudUpload,
+  MedicalServices
 } from '@mui/icons-material';
 import laboratoryService from '../../services/laboratoryService';
 import axios from '../../services/axiosConfig';
@@ -73,7 +75,8 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
     // Common fields
     technician_notes: '',
     quality_control_passed: true,
-    validation_required: false
+    validation_required: false,
+    imageFiles: []
   });
 
   useEffect(() => {
@@ -84,10 +87,32 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
     try {
       setLoading(true);
       const response = await laboratoryService.getPendingWork();
-      // Filter for tests that are in progress and ready for results
-      const testsReadyForResults = (response.pendingWork || []).filter(
-        test => test.request_status === 'in_progress' || test.status === 'in_progress'
+      
+      // Combine both analysis and imaging requests
+      const analysisRequests = (response.pendingTests || []).map(test => ({
+        ...test,
+        request_type: 'analysis',
+        test_name: test.test_name || test.nom,
+        doctor_name: test.medecin_demandeur,
+        patient_cne: test.CNE
+      }));
+      
+      const imagingRequests = (response.pendingImaging || []).map(imaging => ({
+        ...imaging,
+        request_type: 'imaging',
+        test_name: imaging.imaging_type || imaging.nom,
+        doctor_name: imaging.medecin_demandeur,
+        patient_cne: imaging.CNE
+      }));
+      
+      // Filter for requests that are ready for results (in_progress or scheduled)
+      const allRequests = [...analysisRequests, ...imagingRequests];
+      const testsReadyForResults = allRequests.filter(
+        test => test.request_status === 'in_progress' || 
+                test.request_status === 'scheduled' || 
+                test.status === 'in_progress'
       );
+      
       setPendingTests(testsReadyForResults);
     } catch (error) {
       console.error('Error fetching pending tests:', error);
@@ -117,7 +142,8 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
       contrast_type: '',
       technician_notes: '',
       quality_control_passed: true,
-      validation_required: false
+      validation_required: false,
+      imageFiles: []
     });
     
     setResultDialog({ open: true, testRequest });
@@ -130,14 +156,28 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
       const testRequest = resultDialog.testRequest;
       
       // Validate required fields
-      const isAnalysis = testRequest.request_type === 'analysis' || !testRequest.request_type;
+      const isAnalysis = testRequest.request_type === 'analysis';
       if (isAnalysis) {
         if (!resultForm.valeur_numerique && !resultForm.valeur_texte) {
           throw new Error('Veuillez saisir au moins une valeur de résultat');
         }
       } else {
-        if (!resultForm.findings && !resultForm.impression) {
-          throw new Error('Veuillez saisir au moins les observations ou l\'impression');
+        // For imaging, either findings/impression OR image files are required
+        if (!resultForm.findings && !resultForm.impression && (!resultForm.imageFiles || resultForm.imageFiles.length === 0)) {
+          throw new Error('Veuillez saisir au moins les observations/impression ou télécharger des images');
+        }
+      }
+      
+      // For imaging results, upload files first if any
+      let uploadedImageUrls = '';
+      if (!isAnalysis && resultForm.imageFiles && resultForm.imageFiles.length > 0) {
+        try {
+          const uploadResponse = await laboratoryService.uploadImagingFiles(testRequest.id, resultForm.imageFiles);
+          uploadedImageUrls = uploadResponse.uploaded_files ? uploadResponse.uploaded_files.join(',') : '';
+        } catch (uploadError) {
+          console.error('Error uploading images:', uploadError);
+          // Continue with results upload even if image upload fails
+          onError('Attention: Échec du téléchargement des images, mais les résultats seront sauvegardés');
         }
       }
       
@@ -159,12 +199,9 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
         quality_control_passed: resultForm.quality_control_passed,
         validation_required: resultForm.validation_required
       } : {
-        findings: resultForm.findings || null,
-        impression: resultForm.impression || null,
+        interpretation: resultForm.findings || null,
         conclusion: resultForm.conclusion || null,
-        technique_used: resultForm.technique_used || null,
-        contrast_used: resultForm.contrast_used,
-        contrast_type: resultForm.contrast_type || null,
+        image_files: uploadedImageUrls ? [uploadedImageUrls] : [],
         technician_notes: resultForm.technician_notes || null,
         quality_control_passed: resultForm.quality_control_passed,
         validation_required: resultForm.validation_required
@@ -174,7 +211,11 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      onSuccess(`Résultats ${isAnalysis ? 'd\'analyse' : 'd\'imagerie'} sauvegardés avec succès`);
+      const successMessage = isAnalysis 
+        ? 'Résultats d\'analyse sauvegardés avec succès'
+        : `Résultats d'imagerie sauvegardés avec succès${uploadedImageUrls ? ' avec images' : ''}`;
+      
+      onSuccess(successMessage);
       setResultDialog({ open: false, testRequest: null });
       fetchPendingTests();
       onRefresh();
@@ -213,7 +254,7 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
 
   const isAnalysis = (testRequest) => {
     if (!testRequest) return true; // Default to analysis if testRequest is null/undefined
-    return testRequest.request_type === 'analysis' || !testRequest.request_type;
+    return testRequest.request_type === 'analysis';
   };
 
   if (loading) {
@@ -283,7 +324,11 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Science sx={{ mr: 1, color: 'primary.main', fontSize: 16 }} />
+                      {isAnalysis(testRequest) ? (
+                        <Science sx={{ mr: 1, color: 'primary.main', fontSize: 16 }} />
+                      ) : (
+                        <MedicalServices sx={{ mr: 1, color: 'secondary.main', fontSize: 16 }} />
+                      )}
                       <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                         {testRequest.test_name}
                       </Typography>
@@ -445,23 +490,25 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Observations *"
+                      label="Observations"
                       value={resultForm.findings}
                       onChange={(e) => setResultForm(prev => ({ ...prev, findings: e.target.value }))}
                       multiline
                       rows={4}
                       placeholder="Description détaillée des observations..."
+                      helperText="Obligatoire si aucune image n'est téléchargée"
                     />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Impression *"
+                      label="Impression"
                       value={resultForm.impression}
                       onChange={(e) => setResultForm(prev => ({ ...prev, impression: e.target.value }))}
                       multiline
                       rows={3}
                       placeholder="Impression diagnostique..."
+                      helperText="Obligatoire si aucune image n'est téléchargée"
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -506,6 +553,63 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
                       />
                     </Grid>
                   )}
+                  
+                  {/* Image Upload Section for Imaging Results */}
+                  <Grid item xs={12}>
+                    <Card sx={{ p: 2, backgroundColor: 'rgba(25, 118, 210, 0.04)', border: '1px dashed #1976d2' }}>
+                      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main', display: 'flex', alignItems: 'center' }}>
+                        <MedicalServices sx={{ mr: 1 }} />
+                        Images d'Imagerie
+                        <Typography variant="caption" sx={{ ml: 2, color: 'text.secondary' }}>
+                          (Optionnel si observations/impression sont remplies)
+                        </Typography>
+                      </Typography>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        multiple
+                        onChange={(e) => setResultForm(prev => ({ ...prev, imageFiles: Array.from(e.target.files) }))}
+                        style={{ display: 'none' }}
+                        id="imaging-files-input"
+                      />
+                      <label htmlFor="imaging-files-input">
+                        <Button 
+                          variant="contained" 
+                          component="span" 
+                          startIcon={<CloudUpload />}
+                          sx={{ mb: 2 }}
+                          size="large"
+                        >
+                          Télécharger des Images/PDF
+                        </Button>
+                      </label>
+                      <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 2 }}>
+                        Formats acceptés: JPEG, PNG, GIF, WebP, PDF (max 10MB par fichier, 10 fichiers max)
+                      </Typography>
+                      {resultForm.imageFiles && resultForm.imageFiles.length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="body2" color="primary.main" sx={{ mb: 1, fontWeight: 'medium' }}>
+                            {resultForm.imageFiles.length} fichier(s) sélectionné(s):
+                          </Typography>
+                          {resultForm.imageFiles.map((file, index) => (
+                            <Chip
+                              key={index}
+                              label={`${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`}
+                              size="small"
+                              sx={{ mr: 1, mb: 1 }}
+                              color="primary"
+                              variant="outlined"
+                              onDelete={() => {
+                                const newFiles = [...resultForm.imageFiles];
+                                newFiles.splice(index, 1);
+                                setResultForm(prev => ({ ...prev, imageFiles: newFiles }));
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      )}
+                    </Card>
+                  </Grid>
                 </>
               )}
               

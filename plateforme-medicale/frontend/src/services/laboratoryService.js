@@ -53,6 +53,53 @@ const laboratoryService = {
     }
   },
 
+  // Upload imaging files
+  uploadImagingFiles: async (imagingRequestId, files) => {
+    try {
+      const formData = new FormData();
+      
+      // Add files to FormData
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          formData.append('images', files[i]);
+        }
+      }
+
+      const response = await axios.post(
+        `/laboratory/imaging-requests/${imagingRequestId}/files`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Accept test request
+  acceptTestRequest: async (testRequestId, assignmentData) => {
+    try {
+      const response = await axios.post(`/laboratory/test-requests/${testRequestId}/accept`, assignmentData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Accept imaging request
+  acceptImagingRequest: async (imagingRequestId, assignmentData) => {
+    try {
+      const response = await axios.post(`/laboratory/imaging-requests/${imagingRequestId}/accept`, assignmentData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   // Get laboratory statistics (mock for now)
   getLaboratoryStats: async () => {
     try {

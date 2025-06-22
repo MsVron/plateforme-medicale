@@ -56,20 +56,7 @@ const DashboardLayoutContainer = () => {
       { text: 'Gestion des administrateurs', path: '/admin/admins', icon: <AdminPanelSettings /> },
       { text: 'Gestion des médecins', path: '/admin/medecins', icon: <MedicalServices /> },
       { text: 'Gestion des institutions', path: '/admin/institutions', icon: <Business /> },
-      {
-        text: 'Statistiques Avancées',
-        icon: <Analytics />,
-        expandable: true,
-        subItems: [
-          { text: 'Vue d\'ensemble', path: '/superadmin/stats/overview', icon: <Dashboard /> },
-          { text: 'Utilisateurs', path: '/superadmin/stats/users', icon: <People /> },
-          { text: 'Activité médicale', path: '/superadmin/stats/medical-activity', icon: <Healing /> },
-          { text: 'Médecins', path: '/superadmin/stats/doctors', icon: <MedicalServices /> },
-          { text: 'Patients', path: '/superadmin/stats/patients', icon: <AccountBox /> },
-          { text: 'Institutions', path: '/superadmin/stats/institutions', icon: <Business /> },
-          { text: 'Audit système', path: '/superadmin/stats/audit', icon: <Timeline /> }
-        ]
-      }
+      { text: 'Statistiques de Base', path: '/superadmin/basic-stats', icon: <Analytics /> }
     ],
     admin: [
       { text: 'Gestion des médecins', path: '/admin/medecins', icon: <MedicalServices /> },

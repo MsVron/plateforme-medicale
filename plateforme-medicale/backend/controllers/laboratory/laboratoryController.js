@@ -126,7 +126,7 @@ exports.getPatientTestRequests = async (req, res) => {
       ORDER BY ra.date_prescription DESC, ta.nom
     `, [patientId]);
 
-    // Get imaging requests (simplified to avoid potential table issues)
+    // Get imaging requests with status information
     const [imagingRequests] = await db.execute(`
       SELECT 
         ri.id,
@@ -135,6 +135,8 @@ exports.getPatientTestRequests = async (req, res) => {
         ri.interpretation,
         ri.conclusion,
         ri.image_urls,
+        ri.request_status,
+        ri.priority,
         ti.nom as imaging_type,
         ti.description as imaging_description,
         CONCAT(m.prenom, ' ', m.nom) as medecin_demandeur,
@@ -293,22 +295,22 @@ exports.uploadImagingResults = async (req, res) => {
       conclusion, 
       image_urls,
       technician_user_id,
-      radiologist_id
+      radiologist_id,
+      image_files // Array of uploaded image file URLs
     } = req.body;
 
-    // Validate imaging request exists and is assigned to this lab
+    // Validate imaging request exists and can be processed by any lab
     const [imagingRequests] = await db.execute(`
       SELECT ri.*, p.prenom, p.nom, ti.nom as imaging_type
       FROM resultats_imagerie ri
       JOIN patients p ON ri.patient_id = p.id
       JOIN types_imagerie ti ON ri.type_imagerie_id = ti.id
-      WHERE ri.id = ? AND ri.request_status IN ('scheduled', 'in_progress')
-        AND ri.institution_realisation_id = ?
-    `, [imagingRequestId, laboratoryId]);
+      WHERE ri.id = ? AND ri.request_status IN ('requested', 'scheduled', 'in_progress')
+    `, [imagingRequestId]);
 
     if (imagingRequests.length === 0) {
       return res.status(404).json({ 
-        message: 'Demande d\'imagerie non trouvée, déjà complétée, ou non assignée à ce laboratoire' 
+        message: 'Demande d\'imagerie non trouvée ou déjà complétée' 
       });
     }
 
@@ -329,12 +331,20 @@ exports.uploadImagingResults = async (req, res) => {
       }
     }
 
+    // Combine existing image_urls with new image_files
+    let finalImageUrls = image_urls || '';
+    if (image_files && image_files.length > 0) {
+      const existingUrls = image_urls ? image_urls.split(',').filter(url => url.trim()) : [];
+      const allUrls = [...existingUrls, ...image_files];
+      finalImageUrls = allUrls.join(',');
+    }
+
     // Start transaction
     const conn = await db.getConnection();
     await conn.beginTransaction();
 
     try {
-      // Update imaging results
+      // Update imaging results and assign to current laboratory
       await conn.execute(`
         UPDATE resultats_imagerie 
         SET 
@@ -343,13 +353,14 @@ exports.uploadImagingResults = async (req, res) => {
           image_urls = ?,
           date_realisation = NOW(),
           request_status = 'completed',
+          institution_realisation_id = ?,
           technician_assigned_id = ?,
           medecin_radiologue_id = ?,
           date_status_updated = NOW()
         WHERE id = ?
       `, [
-        interpretation || null, conclusion || null, image_urls || null,
-        technician_user_id || null, radiologist_id || null, imagingRequestId
+        interpretation || null, conclusion || null, finalImageUrls || null,
+        laboratoryId, technician_user_id || null, radiologist_id || null, imagingRequestId
       ]);
 
       // Log the result upload
@@ -370,7 +381,8 @@ exports.uploadImagingResults = async (req, res) => {
       await conn.commit();
 
       return res.status(200).json({ 
-        message: 'Résultats d\'imagerie uploadés avec succès'
+        message: 'Résultats d\'imagerie uploadés avec succès',
+        image_urls: finalImageUrls
       });
     } catch (error) {
       await conn.rollback();
@@ -380,6 +392,100 @@ exports.uploadImagingResults = async (req, res) => {
     }
   } catch (error) {
     console.error('Erreur lors de l\'upload des résultats d\'imagerie:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+// Upload imaging files
+exports.uploadImagingFiles = async (req, res) => {
+  try {
+    const laboratoryId = req.user.id_specifique_role;
+    const { imagingRequestId } = req.params;
+
+    // Validate imaging request exists and can be processed by any lab
+    const [imagingRequests] = await db.execute(`
+      SELECT ri.*, p.prenom, p.nom, ti.nom as imaging_type
+      FROM resultats_imagerie ri
+      JOIN patients p ON ri.patient_id = p.id
+      JOIN types_imagerie ti ON ri.type_imagerie_id = ti.id
+      WHERE ri.id = ? AND ri.request_status IN ('requested', 'scheduled', 'in_progress', 'completed')
+    `, [imagingRequestId]);
+
+    if (imagingRequests.length === 0) {
+      return res.status(404).json({ 
+        message: 'Demande d\'imagerie non trouvée' 
+      });
+    }
+
+    // Check if files were uploaded
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ 
+        message: 'Aucun fichier d\'image uploadé' 
+      });
+    }
+
+    // Process uploaded files
+    const uploadedFiles = [];
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
+    for (const file of req.files) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+      if (!allowedTypes.includes(file.mimetype)) {
+        return res.status(400).json({ 
+          message: `Type de fichier non autorisé: ${file.mimetype}. Types autorisés: JPEG, PNG, GIF, WebP, PDF` 
+        });
+      }
+
+      // Generate file URL
+      const fileUrl = `${baseUrl}/uploads/imaging/${file.filename}`;
+      uploadedFiles.push(fileUrl);
+    }
+
+    // Update imaging request with new file URLs
+    const [currentRequest] = await db.execute(`
+      SELECT image_urls FROM resultats_imagerie WHERE id = ?
+    `, [imagingRequestId]);
+
+    const existingUrls = currentRequest[0]?.image_urls ? 
+      currentRequest[0].image_urls.split(',').filter(url => url.trim()) : [];
+    
+    const allUrls = [...existingUrls, ...uploadedFiles];
+    const finalImageUrls = allUrls.join(',');
+
+    await db.execute(`
+      UPDATE resultats_imagerie 
+      SET 
+        image_urls = ?,
+        institution_realisation_id = ?,
+        date_status_updated = NOW()
+      WHERE id = ?
+    `, [finalImageUrls, laboratoryId, imagingRequestId]);
+
+    // Log the file upload
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'IMAGING_FILES_UPLOADED', 
+      'resultats_imagerie', 
+      imagingRequestId, 
+      `${uploadedFiles.length} fichier(s) d'imagerie uploadé(s)`
+    ]);
+
+    return res.status(200).json({ 
+      message: `${uploadedFiles.length} fichier(s) uploadé(s) avec succès`,
+      uploaded_files: uploadedFiles,
+      total_files: allUrls.length
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'upload des fichiers d\'imagerie:', error);
     return res.status(500).json({ 
       message: 'Erreur serveur', 
       error: error.message 

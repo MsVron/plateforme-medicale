@@ -89,7 +89,12 @@ router.delete('/medecin/patients/:patientId/analysis-requests/:requestId', verif
 router.get('/medecin/imaging-types', verifyToken, medicalRecordController.getImagingTypes);
 router.post('/medecin/patients/:patientId/imaging-requests', verifyToken, medicalRecordController.requestImaging);
 router.put('/medecin/patients/:patientId/imaging-requests/:requestId', verifyToken, medicalRecordController.updateImagingRequest);
-router.delete('/medecin/patients/:patientId/imaging-requests/:requestId', verifyToken, medicalRecordController.cancelImagingRequest);
+
+// Imaging notes management routes
+router.post('/medecin/imaging-results/:imagingResultId/notes', verifyToken, medicalRecordController.addImagingNote);
+router.get('/medecin/imaging-results/:imagingResultId/notes', verifyToken, medicalRecordController.getImagingNotes);
+router.put('/medecin/imaging-results/:imagingResultId/notes/:noteId', verifyToken, medicalRecordController.updateImagingNote);
+router.delete('/medecin/imaging-results/:imagingResultId/notes/:noteId', verifyToken, medicalRecordController.deleteImagingNote);
 
 // Patient profile update routes (all fields modifiable by doctor)
 router.put('/medecin/patients/:patientId/profile', verifyToken, medicalDossierController.updatePatientProfile);

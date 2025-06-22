@@ -2105,4 +2105,73 @@ router.get('/superadmin/stats/medical-activity', verifyToken, isSuperAdmin, asyn
     }
 });
 
+// Basic Statistics for SuperAdmin - Simple counts only
+router.get('/superadmin/basic-stats', verifyToken, isSuperAdmin, async (req, res) => {
+    try {
+        const db = require('../config/db');
+        
+        // Basic entity counts - the most essential metrics
+        const [basicCounts] = await db.execute(`
+            SELECT 
+                (SELECT COUNT(*) FROM patients) as total_patients,
+                (SELECT COUNT(*) FROM medecins) as total_doctors,
+                (SELECT COUNT(*) FROM institutions) as total_institutions,
+                (SELECT COUNT(*) FROM rendez_vous) as total_appointments,
+                (SELECT COUNT(*) FROM consultations) as total_consultations,
+                (SELECT COUNT(*) FROM resultats_analyses) as total_lab_tests,
+                (SELECT COUNT(*) FROM traitements) as total_prescriptions,
+                (SELECT COUNT(*) FROM utilisateurs) as total_users
+        `);
+
+        // Active vs inactive counts - only for tables that have est_actif column
+        const [activeCounts] = await db.execute(`
+            SELECT 
+                (SELECT COUNT(*) FROM patients WHERE est_profil_complete = TRUE) as active_patients,
+                (SELECT COUNT(*) FROM medecins WHERE est_actif = TRUE) as active_doctors,
+                (SELECT COUNT(*) FROM institutions WHERE est_actif = TRUE) as active_institutions,
+                (SELECT COUNT(*) FROM utilisateurs WHERE est_actif = TRUE) as active_users
+        `);
+
+        // Growth metrics - last 30 days
+        const [growthCounts] = await db.execute(`
+            SELECT 
+                (SELECT COUNT(*) FROM patients WHERE date_inscription >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as new_patients_month,
+                (SELECT COUNT(*) FROM medecins WHERE id IS NOT NULL) as new_doctors_month,
+                (SELECT COUNT(*) FROM institutions WHERE date_creation >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as new_institutions_month,
+                (SELECT COUNT(*) FROM rendez_vous WHERE date_creation >= DATE_SUB(NOW(), INTERVAL 7 DAY)) as new_appointments_week
+        `);
+
+        // Institution types distribution
+        const [institutionTypes] = await db.execute(`
+            SELECT 
+                type_institution as name, 
+                COUNT(*) as count 
+            FROM institutions 
+            WHERE type_institution IS NOT NULL
+            GROUP BY type_institution
+            ORDER BY count DESC
+        `);
+
+        // System activity today
+        const [todayActivity] = await db.execute(`
+            SELECT 
+                (SELECT COUNT(*) FROM rendez_vous WHERE DATE(date_heure_debut) = CURDATE()) as appointments_today,
+                (SELECT COUNT(*) FROM consultations WHERE DATE(date_consultation) = CURDATE()) as consultations_today,
+                (SELECT COUNT(*) FROM utilisateurs WHERE DATE(derniere_connexion) = CURDATE()) as active_users_today,
+                (SELECT COUNT(*) FROM patients WHERE est_profil_complete = TRUE) as verified_patients
+        `);
+
+        res.json({
+            basic: basicCounts[0],
+            active: activeCounts[0],
+            growth: growthCounts[0],
+            institutionTypes: institutionTypes,
+            today: todayActivity[0]
+        });
+    } catch (error) {
+        console.error('Error fetching basic statistics:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des statistiques de base' });
+    }
+});
+
 module.exports = router;

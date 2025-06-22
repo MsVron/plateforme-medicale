@@ -313,6 +313,24 @@ class DossierService {
       LIMIT 10
     `, [patientId]);
     
+    // Get notes for each imaging result
+    for (let imaging of imageries) {
+      const [notes] = await db.execute(`
+        SELECT 
+          img_n.id, img_n.note_content, img_n.note_type, img_n.is_important, 
+          img_n.is_private, img_n.created_at, img_n.updated_at,
+          m.prenom as medecin_prenom, m.nom as medecin_nom,
+          s.nom as medecin_specialite
+        FROM imaging_notes img_n
+        JOIN medecins m ON img_n.medecin_id = m.id
+        LEFT JOIN specialites s ON m.specialite_id = s.id
+        WHERE img_n.imaging_result_id = ?
+        ORDER BY img_n.created_at DESC
+      `, [imaging.id]);
+      
+      imaging.notes = notes;
+    }
+    
     console.log('DEBUG: Imageries found:', imageries.length);
     return imageries;
   }

@@ -43,17 +43,8 @@ import AppointmentConfirmation from './pages/AppointmentConfirmation';
 import AppointmentSuccess from './pages/AppointmentSuccess';
 import AppointmentError from './pages/AppointmentError';
 
-// Import Super Admin Statistics Pages
-import StatsOverview from './pages/superadmin/StatsOverview';
-import StatsUsers from './pages/superadmin/StatsUsers';
-import StatsAppointments from './pages/superadmin/StatsAppointments';
-import StatsMedicalActivity from './pages/superadmin/StatsMedicalActivity';
-import StatsDoctors from './pages/superadmin/StatsDoctors';
-import StatsPatients from './pages/superadmin/StatsPatients';
-import StatsInstitutions from './pages/superadmin/StatsInstitutions';
-
-import StatsDashboards from './pages/superadmin/StatsDashboards';
-import StatsAudit from './pages/superadmin/StatsAudit';
+// Import Super Admin Basic Statistics Page
+import BasicStats from './pages/superadmin/BasicStats';
 
 // Import the doctor components
 import { 
@@ -219,90 +210,12 @@ function App() {
               }
             />
 
-            {/* Super Admin Advanced Statistics Routes */}
+            {/* Super Admin Basic Statistics Route */}
             <Route
-              path="/superadmin/stats/overview"
+              path="/superadmin/basic-stats"
               element={
                 <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsOverview />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/superadmin/stats/users"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsUsers />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/superadmin/stats/appointments"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsAppointments />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/superadmin/stats/medical-activity"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsMedicalActivity />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/superadmin/stats/doctors"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsDoctors />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/superadmin/stats/patients"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsPatients />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/superadmin/stats/institutions"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsInstitutions />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/superadmin/stats/dashboards"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsDashboards />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/superadmin/stats/audit"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <StatsAudit />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* System Failures Route */}
-            <Route
-              path="/superadmin/stats/system-failures"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <div style={{ padding: '20px' }}>
-                    <h2>Statistiques des Pannes Système</h2>
-                    <p>Cette page affiche les statistiques détaillées des échecs système et permet aux administrateurs de surveiller la santé de la plateforme.</p>
-                  </div>
+                  <BasicStats />
                 </ProtectedRoute>
               }
             />

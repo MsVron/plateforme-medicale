@@ -43,7 +43,9 @@ import {
   Cancel,
   Visibility,
   Person,
-  LocalHospital
+  LocalHospital,
+  CloudUpload,
+  MedicalServices
 } from '@mui/icons-material';
 import laboratoryService from '../../services/laboratoryService';
 
@@ -123,7 +125,8 @@ const PatientAnalysisPage = () => {
     technique_used: '',
     contrast_used: false,
     contrast_type: '',
-    technician_notes: ''
+    technician_notes: '',
+    imageFiles: []
   });
 
   useEffect(() => {
@@ -193,13 +196,41 @@ const PatientAnalysisPage = () => {
       technique_used: '',
       contrast_used: false,
       contrast_type: '',
-      technician_notes: ''
+      technician_notes: '',
+      imageFiles: []
     });
   };
 
   const handleSaveImaging = async (imagingId) => {
     try {
-      await laboratoryService.uploadImagingResults(imagingId, imagingForm);
+      // Validate that either text results or image files are provided
+      const hasTextResults = imagingForm.findings || imagingForm.impression || imagingForm.conclusion;
+      const hasImageFiles = imagingForm.imageFiles && imagingForm.imageFiles.length > 0;
+      
+      if (!hasTextResults && !hasImageFiles) {
+        showSnackbar('Veuillez saisir au moins les observations/impression ou télécharger des images', 'error');
+        return;
+      }
+      
+      // Upload image files first if any
+      let uploadedImageUrls = '';
+      if (hasImageFiles) {
+        try {
+          const uploadResponse = await laboratoryService.uploadImagingFiles(imagingId, imagingForm.imageFiles);
+          uploadedImageUrls = uploadResponse.uploaded_files ? uploadResponse.uploaded_files.join(',') : '';
+        } catch (uploadError) {
+          console.error('Error uploading images:', uploadError);
+          showSnackbar('Attention: Échec du téléchargement des images, mais les résultats seront sauvegardés', 'warning');
+        }
+      }
+      
+      // Prepare imaging results data
+      const imagingData = {
+        ...imagingForm,
+        image_files: uploadedImageUrls ? [uploadedImageUrls] : []
+      };
+      
+      await laboratoryService.uploadImagingResults(imagingId, imagingData);
       showSnackbar('Résultats d\'imagerie sauvegardés avec succès');
       setEditingImaging(null);
       fetchPatientData(); // Refresh data
@@ -571,7 +602,7 @@ const PatientAnalysisPage = () => {
                       </TableCell>
                       <TableCell>
                         {editingImaging === imaging.id ? (
-                          <Box sx={{ minWidth: 300 }}>
+                          <Box sx={{ minWidth: 400 }}>
                             <TextField
                               size="small"
                               label="Observations"
@@ -595,8 +626,53 @@ const PatientAnalysisPage = () => {
                               label="Conclusion"
                               value={imagingForm.conclusion}
                               onChange={(e) => setImagingForm(prev => ({ ...prev, conclusion: e.target.value }))}
-                              sx={{ width: '100%' }}
+                              sx={{ mb: 2, width: '100%' }}
                             />
+                            
+                            {/* Image Upload Section */}
+                            <Card sx={{ p: 2, backgroundColor: 'rgba(25, 118, 210, 0.04)', border: '1px dashed #1976d2' }}>
+                              <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <MedicalServices sx={{ mr: 1, fontSize: 16 }} />
+                                Images d'Imagerie
+                                <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
+                                  (Optionnel si observations remplies)
+                                </Typography>
+                              </Typography>
+                              <input
+                                type="file"
+                                accept="image/*,.pdf"
+                                multiple
+                                onChange={(e) => setImagingForm(prev => ({ ...prev, imageFiles: Array.from(e.target.files) }))}
+                                style={{ display: 'none' }}
+                                id={`imaging-files-input-${imaging.id}`}
+                              />
+                              <label htmlFor={`imaging-files-input-${imaging.id}`}>
+                                <Button 
+                                  variant="outlined" 
+                                  component="span" 
+                                  startIcon={<CloudUpload />}
+                                  size="small"
+                                  sx={{ mb: 1 }}
+                                >
+                                  Télécharger Images/PDF
+                                </Button>
+                              </label>
+                              {imagingForm.imageFiles && imagingForm.imageFiles.length > 0 && (
+                                <Box sx={{ mt: 1 }}>
+                                  <Typography variant="caption" color="primary.main">
+                                    {imagingForm.imageFiles.length} fichier(s) sélectionné(s):
+                                  </Typography>
+                                  {Array.from(imagingForm.imageFiles).map((file, index) => (
+                                    <Typography key={index} variant="caption" display="block" color="text.secondary">
+                                      • {file.name}
+                                    </Typography>
+                                  ))}
+                                </Box>
+                              )}
+                              <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1 }}>
+                                Formats: JPEG, PNG, GIF, WebP, PDF (max 10MB/fichier)
+                              </Typography>
+                            </Card>
                           </Box>
                         ) : (
                           <Box>
@@ -610,7 +686,26 @@ const PatientAnalysisPage = () => {
                                 <strong>Conclusion:</strong> {imaging.conclusion}
                               </Typography>
                             )}
-                            {!imaging.interpretation && !imaging.conclusion && (
+                            {imaging.image_urls && (
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                  Images disponibles:
+                                </Typography>
+                                {imaging.image_urls.split(',').filter(url => url.trim()).map((imageUrl, index) => (
+                                  <Button
+                                    key={index}
+                                    size="small"
+                                    variant="outlined"
+                                    startIcon={<Visibility />}
+                                    onClick={() => window.open(imageUrl.trim(), '_blank')}
+                                    sx={{ mr: 1, mb: 1 }}
+                                  >
+                                    Image {index + 1}
+                                  </Button>
+                                ))}
+                              </Box>
+                            )}
+                            {!imaging.interpretation && !imaging.conclusion && !imaging.image_urls && (
                               <Typography variant="body2" color="text.secondary">
                                 Aucun résultat
                               </Typography>

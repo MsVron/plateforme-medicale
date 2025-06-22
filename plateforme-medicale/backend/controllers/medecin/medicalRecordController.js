@@ -1101,4 +1101,213 @@ exports.cancelImagingRequest = async (req, res) => {
     console.error('Erreur lors de l\'annulation de la demande d\'imagerie:', error);
     return res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
+};
+
+// Add note to imaging result
+exports.addImagingNote = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { imagingResultId } = req.params;
+    const { 
+      note_content, 
+      note_type, 
+      is_important, 
+      is_private 
+    } = req.body;
+
+    // Validate required fields
+    if (!note_content || !note_content.trim()) {
+      return res.status(400).json({ message: 'Le contenu de la note est obligatoire' });
+    }
+
+    // Validate imaging result exists and get patient info
+    const [imagingResults] = await db.execute(`
+      SELECT ri.*, p.id as patient_id
+      FROM resultats_imagerie ri
+      JOIN patients p ON ri.patient_id = p.id
+      WHERE ri.id = ?
+    `, [imagingResultId]);
+
+    if (imagingResults.length === 0) {
+      return res.status(404).json({ message: 'Résultat d\'imagerie non trouvé' });
+    }
+
+    const imagingResult = imagingResults[0];
+
+    // Insert the note
+    const [result] = await db.execute(`
+      INSERT INTO imaging_notes (
+        imaging_result_id, medecin_id, patient_id, note_content, 
+        note_type, is_important, is_private
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [
+      imagingResultId, medecinId, imagingResult.patient_id, note_content.trim(),
+      note_type || 'observation', is_important || false, is_private || false
+    ]);
+
+    // Log the action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'ADD_IMAGING_NOTE', 
+      'imaging_notes', 
+      result.insertId, 
+      `Note ajoutée sur résultat d'imagerie ID ${imagingResultId}`
+    ]);
+
+    return res.status(201).json({ 
+      message: 'Note ajoutée avec succès',
+      noteId: result.insertId
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout de la note d\'imagerie:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// Get notes for imaging result
+exports.getImagingNotes = async (req, res) => {
+  try {
+    const { imagingResultId } = req.params;
+
+    // Get notes for the imaging result
+    const [notes] = await db.execute(`
+      SELECT 
+        in.id, in.note_content, in.note_type, in.is_important, 
+        in.is_private, in.created_at, in.updated_at,
+        m.prenom as medecin_prenom, m.nom as medecin_nom,
+        s.nom as medecin_specialite
+      FROM imaging_notes in
+      JOIN medecins m ON in.medecin_id = m.id
+      LEFT JOIN specialites s ON m.specialite_id = s.id
+      WHERE in.imaging_result_id = ?
+      ORDER BY in.created_at DESC
+    `, [imagingResultId]);
+
+    return res.status(200).json({ notes });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des notes d\'imagerie:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// Update imaging note
+exports.updateImagingNote = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { imagingResultId, noteId } = req.params;
+    const { 
+      note_content, 
+      note_type, 
+      is_important, 
+      is_private 
+    } = req.body;
+
+    // Validate required fields
+    if (!note_content || !note_content.trim()) {
+      return res.status(400).json({ message: 'Le contenu de la note est obligatoire' });
+    }
+
+    // Validate note exists and belongs to this doctor
+    const [notes] = await db.execute(`
+      SELECT id, medecin_id 
+      FROM imaging_notes 
+      WHERE id = ? AND imaging_result_id = ?
+    `, [noteId, imagingResultId]);
+
+    if (notes.length === 0) {
+      return res.status(404).json({ message: 'Note non trouvée' });
+    }
+
+    if (notes[0].medecin_id !== medecinId) {
+      return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cette note' });
+    }
+
+    // Update the note
+    await db.execute(`
+      UPDATE imaging_notes SET
+        note_content = ?,
+        note_type = COALESCE(?, note_type),
+        is_important = COALESCE(?, is_important),
+        is_private = COALESCE(?, is_private),
+        updated_at = NOW()
+      WHERE id = ?
+    `, [
+      note_content.trim(), note_type, is_important, is_private, noteId
+    ]);
+
+    // Log the action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'UPDATE_IMAGING_NOTE', 
+      'imaging_notes', 
+      noteId, 
+      `Note modifiée sur résultat d'imagerie ID ${imagingResultId}`
+    ]);
+
+    return res.status(200).json({ 
+      message: 'Note modifiée avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la modification de la note d\'imagerie:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// Delete imaging note
+exports.deleteImagingNote = async (req, res) => {
+  try {
+    const medecinId = req.user.id_specifique_role;
+    const { imagingResultId, noteId } = req.params;
+
+    // Validate note exists and belongs to this doctor
+    const [notes] = await db.execute(`
+      SELECT id, medecin_id 
+      FROM imaging_notes 
+      WHERE id = ? AND imaging_result_id = ?
+    `, [noteId, imagingResultId]);
+
+    if (notes.length === 0) {
+      return res.status(404).json({ message: 'Note non trouvée' });
+    }
+
+    if (notes[0].medecin_id !== medecinId) {
+      return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à supprimer cette note' });
+    }
+
+    // Delete the note
+    await db.execute(`
+      DELETE FROM imaging_notes WHERE id = ?
+    `, [noteId]);
+
+    // Log the action
+    await db.execute(`
+      INSERT INTO historique_actions (
+        utilisateur_id, action_type, table_concernee, 
+        enregistrement_id, description
+      ) VALUES (?, ?, ?, ?, ?)
+    `, [
+      req.user.id, 
+      'DELETE_IMAGING_NOTE', 
+      'imaging_notes', 
+      noteId, 
+      `Note supprimée sur résultat d'imagerie ID ${imagingResultId}`
+    ]);
+
+    return res.status(200).json({ 
+      message: 'Note supprimée avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la note d\'imagerie:', error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
 }; 

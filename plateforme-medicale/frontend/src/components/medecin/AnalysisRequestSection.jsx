@@ -28,7 +28,16 @@ import {
   Stack,
   Tabs,
   Tab,
-  Autocomplete
+  Autocomplete,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Divider,
+  ImageList,
+  ImageListItem,
+  ImageListItemBar
 } from '@mui/material';
 import {
   Science as ScienceIcon,
@@ -38,9 +47,18 @@ import {
   Cancel as CancelIcon,
   ExpandMore as ExpandMoreIcon,
   Schedule as ScheduleIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  Save as SaveIcon,
+  NoteAdd as NoteAddIcon,
+  Delete as DeleteIcon,
+  Visibility as ViewIcon,
+  Warning as WarningIcon,
+  PictureAsPdf as PdfIcon
 } from '@mui/icons-material';
 import axios from '../../services/axiosConfig';
+import doctorService from '../../services/doctorService';
+import { formatDateTime } from '../../utils/dateUtils';
 
 const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [], onRefresh }) => {
   // State management
@@ -93,6 +111,20 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
   
   // Expanded sections state
   const [expandedCategories, setExpandedCategories] = useState({});
+
+  // Imaging notes state
+  const [selectedImaging, setSelectedImaging] = useState(null);
+  const [imagingNotes, setImagingNotes] = useState([]);
+  const [noteDialog, setNoteDialog] = useState({ open: false, mode: 'add', note: null });
+  const [imageDialog, setImageDialog] = useState({ open: false, imageUrl: '' });
+  const [loadingNotes, setLoadingNotes] = useState(false);
+  const [savingNote, setSavingNote] = useState(false);
+  const [noteForm, setNoteForm] = useState({
+    note_type: 'observation',
+    note_content: '',
+    is_important: false,
+    is_private: false
+  });
 
   useEffect(() => {
     fetchAnalysisCategories();
@@ -251,8 +283,125 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return 'Non définie';
     return new Date(dateString).toLocaleDateString('fr-FR');
+  };
+
+  // Imaging notes functions
+  const fetchImagingNotes = async (imagingId) => {
+    try {
+      setLoadingNotes(true);
+      const response = await doctorService.getImagingNotes(imagingId);
+      setImagingNotes(response.notes || []);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    } finally {
+      setLoadingNotes(false);
+    }
+  };
+
+  const handleSelectImaging = (imaging) => {
+    setSelectedImaging(imaging);
+    if (imaging?.id) {
+      fetchImagingNotes(imaging.id);
+    }
+  };
+
+  const handleOpenNoteDialog = (mode, note = null) => {
+    if (mode === 'edit' && note) {
+      setNoteForm({
+        note_content: note.note_content,
+        note_type: note.note_type,
+        is_important: note.is_important,
+        is_private: note.is_private
+      });
+    } else {
+      setNoteForm({
+        note_content: '',
+        note_type: 'observation',
+        is_important: false,
+        is_private: false
+      });
+    }
+    setNoteDialog({ open: true, mode, note });
+  };
+
+  const handleSaveNote = async () => {
+    try {
+      setSavingNote(true);
+      
+      if (!noteForm.note_content.trim()) {
+        alert('Le contenu de la note est obligatoire');
+        return;
+      }
+
+      if (!selectedImaging?.id) {
+        alert('Aucun résultat d\'imagerie sélectionné');
+        return;
+      }
+
+      if (noteDialog.mode === 'edit' && noteDialog.note) {
+        await doctorService.updateImagingNote(selectedImaging.id, noteDialog.note.id, noteForm);
+      } else {
+        await doctorService.addImagingNote(selectedImaging.id, noteForm);
+      }
+
+      setNoteDialog({ open: false, mode: 'add', note: null });
+      fetchImagingNotes(selectedImaging.id);
+    } catch (error) {
+      console.error('Error saving note:', error);
+      alert('Erreur lors de la sauvegarde de la note');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) {
+      try {
+        await doctorService.deleteImagingNote(selectedImaging.id, noteId);
+        fetchImagingNotes(selectedImaging.id);
+      } catch (error) {
+        console.error('Error deleting note:', error);
+        alert('Erreur lors de la suppression de la note');
+      }
+    }
+  };
+
+  const getNoteTypeLabel = (type) => {
+    const types = {
+      observation: 'Observation',
+      interpretation: 'Interprétation',
+      follow_up: 'Suivi',
+      concern: 'Préoccupation',
+      recommendation: 'Recommandation'
+    };
+    return types[type] || type;
+  };
+
+  const getNoteTypeColor = (type) => {
+    const colors = {
+      observation: 'default',
+      interpretation: 'primary',
+      follow_up: 'info',
+      concern: 'warning',
+      recommendation: 'success'
+    };
+    return colors[type] || 'default';
+  };
+
+  const getImageUrls = (imaging) => {
+    if (!imaging?.image_urls) return [];
+    return imaging.image_urls.split(',').filter(url => url.trim());
+  };
+
+  const isImageFile = (url) => {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    return imageExtensions.some(ext => url.toLowerCase().includes(ext));
+  };
+
+  const handleImageClick = (imageUrl) => {
+    setImageDialog({ open: true, imageUrl });
   };
 
   const currentForm = requestDialog.type === 'analysis' ? analysisForm : imagingForm;
@@ -398,48 +547,246 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
             </Card>
           ) : (
             <Grid container spacing={2}>
-              {imagingResults.map((imaging) => (
-                <Grid item xs={12} md={6} lg={4} key={imaging.id}>
-                  <Card sx={{ height: '100%' }}>
-                    <CardContent>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-                        {imaging.type_imagerie || imaging.nom}
-                      </Typography>
-                      
-                      <Stack spacing={1}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {getStatusIcon(imaging)}
-                          <Chip 
-                            label={getStatusLabel(imaging)}
-                            size="small"
-                            color={getStatusColor(imaging)}
-                          />
-                        </Box>
-                        
-                        <Typography variant="caption" color="text.secondary">
-                          Demandée le: {formatDate(imaging.date_prescription)}
+              {/* Imaging Results List */}
+              <Grid item xs={12} md={6}>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Résultats d'Imagerie ({imagingResults.length})
+                </Typography>
+                <Grid container spacing={2}>
+                  {imagingResults.map((imaging) => (
+                    <Grid item xs={12} key={imaging.id}>
+                      <Card 
+                        sx={{ 
+                          cursor: 'pointer',
+                          border: selectedImaging?.id === imaging.id ? 2 : 1,
+                          borderColor: selectedImaging?.id === imaging.id ? 'primary.main' : 'grey.300',
+                          '&:hover': { borderColor: 'primary.main' }
+                        }}
+                        onClick={() => handleSelectImaging(imaging)}
+                      >
+                        <CardContent>
+                          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                            {imaging.type_imagerie || imaging.nom}
+                          </Typography>
+                          
+                          <Stack spacing={1}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {getStatusIcon(imaging)}
+                              <Chip 
+                                label={getStatusLabel(imaging)}
+                                size="small"
+                                color={getStatusColor(imaging)}
+                              />
+                              {imaging.notes && imaging.notes.length > 0 && (
+                                <Chip 
+                                  label={`${imaging.notes.length} note(s)`}
+                                  size="small"
+                                  color="info"
+                                  icon={<NoteAddIcon />}
+                                />
+                              )}
+                            </Box>
+                            
+                            <Typography variant="caption" color="text.secondary">
+                              Demandée le: {formatDate(imaging.date_prescription)}
+                            </Typography>
+                            
+                            {imaging.date_realisation && (
+                              <Typography variant="caption" color="text.secondary">
+                                Réalisée le: {formatDate(imaging.date_realisation)}
+                              </Typography>
+                            )}
+                            
+                            {imaging.interpretation && (
+                              <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                                {imaging.interpretation.substring(0, 100)}...
+                              </Typography>
+                            )}
+
+                            {getImageUrls(imaging).length > 0 && (
+                              <Chip 
+                                label={`${getImageUrls(imaging).length} image(s)`}
+                                size="small"
+                                color="secondary"
+                                icon={<ViewIcon />}
+                              />
+                            )}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Grid>
+
+              {/* Imaging Details and Notes */}
+              <Grid item xs={12} md={6}>
+                {selectedImaging ? (
+                  <Box>
+                    {/* Imaging Details */}
+                    <Card sx={{ mb: 2 }}>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                          {selectedImaging.type_imagerie}
                         </Typography>
                         
-                        {imaging.clinical_indication && (
-                          <Typography variant="body2">
-                            <strong>Indication:</strong> {imaging.clinical_indication}
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          <strong>Prescrit par:</strong> Dr. {selectedImaging.prescripteur_prenom} {selectedImaging.prescripteur_nom}
+                        </Typography>
+                        
+                        {selectedImaging.institution_nom && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            <strong>Institution:</strong> {selectedImaging.institution_nom}
                           </Typography>
                         )}
-                        
-                        {imaging.contrast_required && (
-                          <Chip label="Produit de contraste requis" color="warning" size="small" />
+
+                        {selectedImaging.interpretation && (
+                          <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                              Interprétation:
+                            </Typography>
+                            <Typography variant="body2">
+                              {selectedImaging.interpretation}
+                            </Typography>
+                          </Box>
                         )}
-                        
-                        {imaging.interpretation && (
-                          <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                            {imaging.interpretation}
+
+                        {selectedImaging.conclusion && (
+                          <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                              Conclusion:
+                            </Typography>
+                            <Typography variant="body2">
+                              {selectedImaging.conclusion}
+                            </Typography>
+                          </Box>
+                        )}
+
+                        {/* Images Section */}
+                        {getImageUrls(selectedImaging).length > 0 && (
+                          <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                              Images ({getImageUrls(selectedImaging).length}):
+                            </Typography>
+                            <ImageList sx={{ width: '100%', height: 150 }} cols={3} rowHeight={100}>
+                              {getImageUrls(selectedImaging).map((url, index) => (
+                                <ImageListItem key={index} onClick={() => handleImageClick(url)} sx={{ cursor: 'pointer' }}>
+                                  {isImageFile(url) ? (
+                                    <img
+                                      src={url}
+                                      alt={`Imagerie ${index + 1}`}
+                                      loading="lazy"
+                                      style={{ height: '100%', objectFit: 'cover' }}
+                                    />
+                                  ) : (
+                                    <Box 
+                                      sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        height: '100%',
+                                        backgroundColor: 'grey.100'
+                                      }}
+                                    >
+                                      <PdfIcon sx={{ fontSize: 24, color: 'grey.500' }} />
+                                    </Box>
+                                  )}
+                                </ImageListItem>
+                              ))}
+                            </ImageList>
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Notes Section */}
+                    <Card>
+                      <CardContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                          <Typography variant="h6">
+                            Notes Médicales ({imagingNotes.length})
                           </Typography>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<NoteAddIcon />}
+                            onClick={() => handleOpenNoteDialog('add')}
+                          >
+                            Ajouter
+                          </Button>
+                        </Box>
+
+                        {loadingNotes ? (
+                          <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                            <CircularProgress size={24} />
+                          </Box>
+                        ) : imagingNotes.length === 0 ? (
+                          <Alert severity="info">
+                            Aucune note médicale pour ce résultat d'imagerie
+                          </Alert>
+                        ) : (
+                          <List dense>
+                            {imagingNotes.map((note, index) => (
+                              <React.Fragment key={note.id}>
+                                <ListItem alignItems="flex-start">
+                                  <ListItemText
+                                    primary={
+                                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                        <Chip
+                                          label={getNoteTypeLabel(note.note_type)}
+                                          color={getNoteTypeColor(note.note_type)}
+                                          size="small"
+                                          sx={{ mr: 1 }}
+                                        />
+                                        {note.is_important && (
+                                          <WarningIcon color="warning" sx={{ mr: 1, fontSize: 16 }} />
+                                        )}
+                                      </Box>
+                                    }
+                                    secondary={
+                                      <Box>
+                                        <Typography variant="body2" sx={{ mb: 1 }}>
+                                          {note.note_content}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                          {formatDateTime(note.created_at)} - Dr. {note.medecin_prenom} {note.medecin_nom}
+                                        </Typography>
+                                      </Box>
+                                    }
+                                  />
+                                  <ListItemSecondaryAction>
+                                    <IconButton
+                                      edge="end"
+                                      size="small"
+                                      onClick={() => handleOpenNoteDialog('edit', note)}
+                                      sx={{ mr: 1 }}
+                                    >
+                                      <EditIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton
+                                      edge="end"
+                                      size="small"
+                                      onClick={() => handleDeleteNote(note.id)}
+                                      color="error"
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  </ListItemSecondaryAction>
+                                </ListItem>
+                                {index < imagingNotes.length - 1 && <Divider />}
+                              </React.Fragment>
+                            ))}
+                          </List>
                         )}
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </Box>
+                ) : (
+                  <Alert severity="info">
+                    Sélectionnez un résultat d'imagerie pour voir les détails et ajouter des notes
+                  </Alert>
+                )}
+              </Grid>
             </Grid>
           )}
         </Box>
@@ -698,6 +1045,129 @@ const AnalysisRequestSection = ({ patientId, analyses = [], imagingResults = [],
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Note Dialog */}
+      <Dialog 
+        open={noteDialog.open} 
+        onClose={() => setNoteDialog({ open: false, mode: 'add', note: null })}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {noteDialog.mode === 'add' ? 'Ajouter une Note' : 'Modifier la Note'}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Type de note</InputLabel>
+                <Select
+                  value={noteForm.note_type}
+                  onChange={(e) => setNoteForm(prev => ({ ...prev, note_type: e.target.value }))}
+                  label="Type de note"
+                >
+                  <MenuItem value="observation">Observation</MenuItem>
+                  <MenuItem value="interpretation">Interprétation</MenuItem>
+                  <MenuItem value="follow_up">Suivi</MenuItem>
+                  <MenuItem value="concern">Préoccupation</MenuItem>
+                  <MenuItem value="recommendation">Recommandation</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={noteForm.is_important}
+                      onChange={(e) => setNoteForm(prev => ({ ...prev, is_important: e.target.checked }))}
+                    />
+                  }
+                  label="Important"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={noteForm.is_private}
+                      onChange={(e) => setNoteForm(prev => ({ ...prev, is_private: e.target.checked }))}
+                    />
+                  }
+                  label="Privé"
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Contenu de la note *"
+                value={noteForm.note_content}
+                onChange={(e) => setNoteForm(prev => ({ ...prev, note_content: e.target.value }))}
+                fullWidth
+                required
+                multiline
+                rows={4}
+                placeholder="Saisissez votre note médicale..."
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNoteDialog({ open: false, mode: 'add', note: null })}>
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleSaveNote}
+            variant="contained"
+            disabled={savingNote}
+            startIcon={savingNote ? <CircularProgress size={20} /> : <SaveIcon />}
+          >
+            {savingNote ? 'Sauvegarde...' : noteDialog.mode === 'add' ? 'Ajouter' : 'Modifier'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Image Viewer Dialog */}
+      <Dialog
+        open={imageDialog.open}
+        onClose={() => setImageDialog({ open: false, imageUrl: '' })}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          Visualisation de l'image
+          <IconButton onClick={() => setImageDialog({ open: false, imageUrl: '' })}>
+            <CancelIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: 'center', p: 0 }}>
+          {imageDialog.imageUrl && (
+            isImageFile(imageDialog.imageUrl) ? (
+              <img
+                src={imageDialog.imageUrl}
+                alt="Image d'imagerie"
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '80vh', 
+                  objectFit: 'contain' 
+                }}
+              />
+            ) : (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <PdfIcon sx={{ fontSize: 64, color: 'grey.500', mb: 2 }} />
+                <Typography variant="h6" gutterBottom>
+                  Document PDF
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<ViewIcon />}
+                  onClick={() => window.open(imageDialog.imageUrl, '_blank')}
+                >
+                  Ouvrir le PDF
+                </Button>
+              </Box>
+            )
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

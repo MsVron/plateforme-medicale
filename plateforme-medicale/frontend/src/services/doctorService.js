@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './axiosConfig';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -113,6 +113,71 @@ export const doctorService = {
     } catch (error) {
       console.error('Error deleting doctor:', error);
       throw error;
+    }
+  },
+
+  // Imaging notes management
+  addImagingNote: async (imagingResultId, noteData) => {
+    try {
+      const response = await axios.post(`/medecin/imaging-results/${imagingResultId}/notes`, noteData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  getImagingNotes: async (imagingResultId) => {
+    try {
+      const response = await axios.get(`/medecin/imaging-results/${imagingResultId}/notes`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  updateImagingNote: async (imagingResultId, noteId, noteData) => {
+    try {
+      const response = await axios.put(`/medecin/imaging-results/${imagingResultId}/notes/${noteId}`, noteData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  deleteImagingNote: async (imagingResultId, noteId) => {
+    try {
+      const response = await axios.delete(`/medecin/imaging-results/${imagingResultId}/notes/${noteId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Imaging requests management
+  requestImaging: async (patientId, requestData) => {
+    try {
+      const response = await axios.post(`/medecin/patients/${patientId}/imaging-requests`, requestData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  getImagingTypes: async () => {
+    try {
+      const response = await axios.get('/medecin/imaging-types');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  updateImagingRequest: async (patientId, requestId, requestData) => {
+    try {
+      const response = await axios.put(`/medecin/patients/${patientId}/imaging-requests/${requestId}`, requestData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
     }
   }
 };
