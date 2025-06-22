@@ -1,32 +1,78 @@
 const db = require('../../config/db');
 const { searchPatients } = require('../../utils/patientSearch');
 
-// Search patients for laboratory (using shared search utility)
+// Search patients for laboratory (simplified version)
 exports.searchPatients = async (req, res) => {
   try {
     const laboratoryId = req.user.id_specifique_role;
     const { prenom, nom, cne } = req.query;
 
-    const result = await searchPatients({
-      prenom,
-      nom,
-      cne,
-      userId: req.user.id,
-      institutionId: laboratoryId,
-      institutionType: 'laboratory',
-      additionalFields: `,
-        COUNT(ra.id) as pending_tests`,
-      additionalJoins: `
-        LEFT JOIN resultats_analyses ra ON p.id = ra.patient_id 
-          AND ra.statut IN ('en_attente', 'en_cours')`,
-      additionalConditions: `GROUP BY p.id`
-    });
+    // Basic validation
+    if (!prenom && !nom && !cne) {
+      return res.status(400).json({ 
+        message: 'Au moins un critère de recherche doit être fourni (prénom, nom, ou CNE)' 
+      });
+    }
 
-    return res.status(200).json(result);
+    // Build search conditions
+    const whereConditions = [];
+    const queryParams = [];
+
+    if (prenom && prenom.trim()) {
+      whereConditions.push('p.prenom = ?');
+      queryParams.push(prenom.trim());
+    }
+
+    if (nom && nom.trim()) {
+      whereConditions.push('p.nom = ?');
+      queryParams.push(nom.trim());
+    }
+
+    if (cne && cne.trim()) {
+      whereConditions.push('p.CNE = ?');
+      queryParams.push(cne.trim());
+    }
+
+    const whereClause = whereConditions.join(' AND ');
+
+    // Simple patient search query
+    const [patients] = await db.execute(`
+      SELECT 
+        p.id, 
+        p.prenom, 
+        p.nom, 
+        p.date_naissance, 
+        p.sexe, 
+        p.CNE, 
+        p.email, 
+        p.telephone,
+        p.adresse,
+        p.ville,
+        p.code_postal,
+        p.groupe_sanguin,
+        p.contact_urgence_nom,
+        p.contact_urgence_telephone,
+        p.date_inscription
+      FROM patients p
+      WHERE ${whereClause}
+      ORDER BY p.nom, p.prenom
+      LIMIT 50
+    `, queryParams);
+
+    return res.status(200).json({
+      patients,
+      searchCriteria: {
+        prenom: prenom?.trim() || null,
+        nom: nom?.trim() || null,
+        cne: cne?.trim() || null
+      },
+      totalResults: patients.length
+    });
   } catch (error) {
     console.error('Erreur lors de la recherche de patients:', error);
     return res.status(500).json({ 
-      message: error.message
+      message: 'Erreur serveur lors de la recherche',
+      error: error.message
     });
   }
 };
@@ -51,52 +97,62 @@ exports.getPatientTestRequests = async (req, res) => {
     const [testRequests] = await db.execute(`
       SELECT 
         ra.id,
-        ra.date_demande,
+        ra.date_prescription as date_demande,
         ra.date_realisation,
-        ra.statut,
-        ra.valeurs,
+        ra.request_status as statut,
+        ra.valeur_numerique,
+        ra.valeur_texte as valeurs,
+        ra.unite,
+        ra.valeur_normale_min,
+        ra.valeur_normale_max,
         ra.interpretation,
-        ra.commentaires,
-        ra.fichier_resultat,
+        ra.est_normal,
+        ra.est_critique,
+        ra.notes_techniques as commentaires,
+        ra.document_url as fichier_resultat,
         ta.nom as test_name,
-        ta.type_analyse,
-        ta.unite_mesure,
-        ta.valeur_reference_min,
-        ta.valeur_reference_max,
-        ta.valeur_reference_texte,
+        ta.description as test_description,
+        ta.unite as test_unite,
+        ta.valeurs_normales,
         CONCAT(m.prenom, ' ', m.nom) as medecin_demandeur,
         s.nom as medecin_specialite,
         i.nom as laboratoire_executant
       FROM resultats_analyses ra
-      JOIN types_analyses ta ON ra.type_analyse_id = ta.id
-      JOIN medecins m ON ra.medecin_id = m.id
-      JOIN specialites s ON m.specialite_id = s.id
-      LEFT JOIN institutions i ON ra.laboratoire_id = i.id
+      LEFT JOIN types_analyses ta ON ra.type_analyse_id = ta.id
+      LEFT JOIN medecins m ON ra.medecin_prescripteur_id = m.id
+      LEFT JOIN specialites s ON m.specialite_id = s.id
+      LEFT JOIN institutions i ON ra.laboratory_id = i.id
       WHERE ra.patient_id = ?
-      ORDER BY ra.date_demande DESC, ta.nom
+      ORDER BY ra.date_prescription DESC, ta.nom
     `, [patientId]);
 
-    // Get imaging requests
+    // Get imaging requests (simplified to avoid potential table issues)
     const [imagingRequests] = await db.execute(`
       SELECT 
-        ir.*,
+        ri.id,
+        ri.date_prescription,
+        ri.date_realisation,
+        ri.interpretation,
+        ri.conclusion,
+        ri.image_urls,
+        ti.nom as imaging_type,
+        ti.description as imaging_description,
         CONCAT(m.prenom, ' ', m.nom) as medecin_demandeur,
         s.nom as medecin_specialite,
-        i.nom as laboratoire_executant,
-        CONCAT(tech.prenom, ' ', tech.nom) as technician_name
-      FROM imaging_requests ir
-      JOIN medecins m ON ir.requesting_doctor_id = m.id
-      JOIN specialites s ON m.specialite_id = s.id
-      LEFT JOIN institutions i ON ir.assigned_laboratory_id = i.id
-      LEFT JOIN laboratory_technicians tech ON ir.assigned_technician_id = tech.id
-      WHERE ir.patient_id = ?
-      ORDER BY ir.request_date DESC
+        i.nom as laboratoire_executant
+      FROM resultats_imagerie ri
+      LEFT JOIN types_imagerie ti ON ri.type_imagerie_id = ti.id
+      LEFT JOIN medecins m ON ri.medecin_prescripteur_id = m.id
+      LEFT JOIN specialites s ON m.specialite_id = s.id
+      LEFT JOIN institutions i ON ri.institution_realisation_id = i.id
+      WHERE ri.patient_id = ?
+      ORDER BY ri.date_prescription DESC
     `, [patientId]);
 
     return res.status(200).json({ 
       patient: patients[0],
-      testRequests,
-      imagingRequests
+      testRequests: testRequests || [],
+      imagingRequests: imagingRequests || []
     });
   } catch (error) {
     console.error('Erreur lors de la récupération des demandes:', error);

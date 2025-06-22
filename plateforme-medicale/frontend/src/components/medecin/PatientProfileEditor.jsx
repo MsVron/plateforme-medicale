@@ -363,7 +363,7 @@ const PatientProfileEditor = ({ open, onClose, patient, onSuccess, onError }) =>
                 <FormControl fullWidth>
                   <InputLabel>Fumeur</InputLabel>
                   <Select
-                    value={formData.est_fumeur === null ? '' : formData.est_fumeur.toString()}
+                    value={formData.est_fumeur === null || formData.est_fumeur === undefined ? '' : formData.est_fumeur.toString()}
                     label="Fumeur"
                     onChange={(e) => {
                       const value = e.target.value === '' ? null : e.target.value === 'true';
@@ -400,7 +400,7 @@ const PatientProfileEditor = ({ open, onClose, patient, onSuccess, onError }) =>
                 <FormControl fullWidth>
                   <InputLabel>Situation de handicap</InputLabel>
                   <Select
-                    value={formData.a_handicap === null ? '' : formData.a_handicap.toString()}
+                    value={formData.a_handicap === null || formData.a_handicap === undefined ? '' : formData.a_handicap.toString()}
                     label="Situation de handicap"
                     onChange={(e) => {
                       const value = e.target.value === '' ? false : e.target.value === 'true';

@@ -212,6 +212,7 @@ const ResultEntryTab = ({ onSuccess, onError, onRefresh }) => {
   };
 
   const isAnalysis = (testRequest) => {
+    if (!testRequest) return true; // Default to analysis if testRequest is null/undefined
     return testRequest.request_type === 'analysis' || !testRequest.request_type;
   };
 

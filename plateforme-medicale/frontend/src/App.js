@@ -76,6 +76,7 @@ import PatientPrescriptions from './pages/pharmacy/PatientPrescriptions';
 // Import laboratory components
 import LaboratoryDashboard from './components/laboratory/LaboratoryDashboard';
 import LaboratoryHome from './pages/laboratory/LaboratoryHome';
+import PatientAnalysisPage from './pages/laboratory/PatientAnalysisPage';
 
 // Import debug component
 import DebugHospital from './components/DebugHospital';
@@ -562,6 +563,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['laboratory']}>
                   <LaboratoryDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/laboratory/patient/:patientId/analysis"
+              element={
+                <ProtectedRoute allowedRoles={['laboratory']}>
+                  <PatientAnalysisPage />
                 </ProtectedRoute>
               }
             />

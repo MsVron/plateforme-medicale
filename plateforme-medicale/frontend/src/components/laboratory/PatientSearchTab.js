@@ -9,19 +9,7 @@ import {
   CardContent,
   CircularProgress,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Tooltip,
+
   Alert
 } from '@mui/material';
 import {
@@ -29,10 +17,7 @@ import {
   Person,
   Science,
   Assignment,
-  CheckCircle,
-  Schedule,
-  Visibility,
-  Upload,
+
   PersonAdd
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -47,11 +32,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
   });
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
-  const [testRequestsDialog, setTestRequestsDialog] = useState({
-    open: false,
-    patient: null,
-    testRequests: []
-  });
+
 
   const handleSearchChange = (field, value) => {
     setSearchForm(prev => ({
@@ -82,61 +63,15 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
     }
   };
 
-  const handleViewTestRequests = async (patient) => {
-    try {
-      const response = await laboratoryService.getPatientTestRequests(patient.id);
-      setTestRequestsDialog({
-        open: true,
-        patient: patient,
-        testRequests: response.testRequests || []
-      });
-    } catch (error) {
-      console.error('Error fetching test requests:', error);
-      onError(error.message || 'Erreur lors du chargement des demandes d\'analyses');
-    }
+  const handleViewTestRequests = (patient) => {
+    navigate(`/laboratory/patient/${patient.id}/analysis`);
   };
 
-  const getTestStatusChip = (testRequest) => {
-    const statusConfig = {
-      'pending': { label: 'En attente', color: 'warning', icon: <Schedule /> },
-      'in_progress': { label: 'En cours', color: 'info', icon: <Science /> },
-      'completed': { label: 'Terminé', color: 'success', icon: <CheckCircle /> },
-      'cancelled': { label: 'Annulé', color: 'error', icon: <Schedule /> }
-    };
-    
-    const config = statusConfig[testRequest.status] || { label: testRequest.status, color: 'default', icon: <Schedule /> };
-    return <Chip label={config.label} color={config.color} size="small" icon={config.icon} />;
-  };
 
-  const getTestTypeChip = (testType) => {
-    const typeColors = {
-      'blood_test': 'error',
-      'urine_test': 'warning',
-      'imaging': 'info',
-      'biopsy': 'secondary',
-      'other': 'default'
-    };
-    
-    const typeLabels = {
-      'blood_test': 'Analyse de sang',
-      'urine_test': 'Analyse d\'urine',
-      'imaging': 'Imagerie',
-      'biopsy': 'Biopsie',
-      'other': 'Autre'
-    };
-    
-    return (
-      <Chip 
-        label={typeLabels[testType] || testType} 
-        color={typeColors[testType] || 'default'} 
-        size="small" 
-      />
-    );
-  };
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.dark' }}>
+      <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold', color: 'white' }}>
         Rechercher un Patient
       </Typography>
 
@@ -194,7 +129,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
       {/* Search Results */}
       {searchResults.length > 0 && (
         <Box>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'white' }}>
             Résultats de recherche ({searchResults.length})
           </Typography>
           <Grid container spacing={2}>
@@ -247,7 +182,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
                         size="small"
                         sx={{ fontWeight: 'bold' }}
                       >
-                        Voir Analyses
+                        Voir demande
                       </Button>
                     </Box>
                   </CardContent>
@@ -278,108 +213,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
         </Alert>
       )}
 
-      {/* Test Requests Dialog */}
-      <Dialog 
-        open={testRequestsDialog.open} 
-        onClose={() => setTestRequestsDialog({ open: false, patient: null, testRequests: [] })}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 'bold', color: 'primary.dark' }}>
-          Demandes d'Analyses de {testRequestsDialog.patient?.prenom} {testRequestsDialog.patient?.nom}
-        </DialogTitle>
-        <DialogContent>
-          {testRequestsDialog.testRequests.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Science sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary">
-                Aucune demande d'analyse trouvée
-              </Typography>
-            </Box>
-          ) : (
-            <TableContainer component={Paper} sx={{ mt: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <Table>
-                <TableHead sx={{ backgroundColor: 'primary.main' }}>
-                  <TableRow>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Date Demande</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Type d'Analyse</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Médecin</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Statut</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Priorité</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {testRequestsDialog.testRequests.map((testRequest) => (
-                    <TableRow 
-                      key={testRequest.id}
-                      sx={{ 
-                        '&:hover': { backgroundColor: 'rgba(76, 161, 175, 0.04)' },
-                        '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' }
-                      }}
-                    >
-                      <TableCell>
-                        {new Date(testRequest.request_date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                            {testRequest.test_name}
-                          </Typography>
-                          {getTestTypeChip(testRequest.test_type)}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          Dr. {testRequest.doctor_name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {testRequest.doctor_specialty}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {getTestStatusChip(testRequest)}
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={testRequest.priority || 'Normal'} 
-                          color={testRequest.priority === 'urgent' ? 'error' : 'default'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Tooltip title="Voir détails">
-                            <IconButton size="small" color="primary">
-                              <Visibility />
-                            </IconButton>
-                          </Tooltip>
-                          {testRequest.status === 'pending' && (
-                            <Tooltip title="Télécharger résultats">
-                              <IconButton size="small" color="success">
-                                <Upload />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button 
-            onClick={() => setTestRequestsDialog({ open: false, patient: null, testRequests: [] })}
-            variant="contained"
-            sx={{ fontWeight: 'bold' }}
-          >
-            Fermer
-          </Button>
-        </DialogActions>
-      </Dialog>
+
     </Box>
   );
 };

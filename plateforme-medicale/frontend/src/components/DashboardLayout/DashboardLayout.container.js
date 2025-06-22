@@ -56,7 +56,6 @@ const DashboardLayoutContainer = () => {
       { text: 'Gestion des administrateurs', path: '/admin/admins', icon: <AdminPanelSettings /> },
       { text: 'Gestion des médecins', path: '/admin/medecins', icon: <MedicalServices /> },
       { text: 'Gestion des institutions', path: '/admin/institutions', icon: <Business /> },
-      { text: 'Gestion des patients', path: '/admin/patients', icon: <Person /> },
       {
         text: 'Statistiques Avancées',
         icon: <Analytics />,
@@ -103,10 +102,7 @@ const DashboardLayoutContainer = () => {
       { text: 'Tableau de bord', path: '/pharmacy/dashboard', icon: <Dashboard /> }
     ],
     laboratory: [
-      { text: 'Tableau de bord', path: '/laboratory/dashboard', icon: <Dashboard /> },
-      { text: 'Rechercher patient', path: '/laboratory/patients/search', icon: <Search /> },
-      { text: 'Demandes d\'analyses', path: '/laboratory/test-requests', icon: <Assignment /> },
-      { text: 'Travail en attente', path: '/laboratory/pending-work', icon: <Analytics /> }
+      { text: 'Tableau de bord', path: '/laboratory/dashboard', icon: <Dashboard /> }
     ]
   };
 
