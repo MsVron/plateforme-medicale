@@ -17,14 +17,26 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert
+  Alert,
+  IconButton,
+  Tooltip,
+  Divider,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import {
   Search,
   Person,
   LocalHospital,
   PersonAdd,
-  Bed
+  Edit,
+  Assignment,
+  ExitToApp,
+  Save,
+  Cancel,
+  MedicalServices,
+  Visibility,
+  Add as AddIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import hospitalService from '../../services/hospitalService';
@@ -38,18 +50,55 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
   });
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
-  const [admissionDialog, setAdmissionDialog] = useState({
+  
+  // Doctor Assignment Dialog State
+  const [assignmentDialog, setAssignmentDialog] = useState({
     open: false,
     patient: null
   });
-  const [admissionForm, setAdmissionForm] = useState({
-    doctor_id: '',
-    bed_number: '',
-    admission_reason: '',
+  const [assignmentForm, setAssignmentForm] = useState({
+    doctor_ids: [],
+    assignment_reason: '',
+    notes: '',
+    assignment_date: new Date().toISOString().slice(0, 16)
+  });
+  
+  // Discharge Dialog State
+  const [dischargeDialog, setDischargeDialog] = useState({
+    open: false,
+    patient: null
+  });
+  const [dischargeForm, setDischargeForm] = useState({
+    discharge_reason: '',
+    discharge_notes: '',
+    follow_up_required: false,
+    follow_up_date: ''
+  });
+  
+  // Medical Record Edit State
+  const [medicalRecordDialog, setMedicalRecordDialog] = useState({
+    open: false,
+    patient: null,
+    editing: false
+  });
+  const [medicalRecord, setMedicalRecord] = useState({
+    allergies: '',
+    medical_history: '',
+    current_medications: '',
+    vital_signs: {
+      blood_pressure: '',
+      heart_rate: '',
+      temperature: '',
+      weight: '',
+      height: ''
+    },
     notes: ''
   });
+  
   const [doctors, setDoctors] = useState([]);
-  const [admitting, setAdmitting] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [discharging, setDischarging] = useState(false);
+  const [savingRecord, setSavingRecord] = useState(false);
 
   React.useEffect(() => {
     fetchDoctors();
@@ -93,55 +142,144 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
     }
   };
 
-  const handleAdmitPatient = (patient) => {
-    setAdmissionDialog({
+  const handleAssignToDoctor = (patient) => {
+    setAssignmentDialog({
       open: true,
       patient: patient
     });
-    setAdmissionForm({
-      doctor_id: '',
-      bed_number: '',
-      admission_reason: '',
-      notes: ''
+    setAssignmentForm({
+      doctor_ids: [],
+      assignment_reason: '',
+      notes: '',
+      assignment_date: new Date().toISOString().slice(0, 16)
     });
   };
 
-  const handleAdmissionSubmit = async () => {
-    if (!admissionForm.doctor_id || !admissionForm.admission_reason) {
-      onError('Veuillez remplir tous les champs obligatoires');
+  const handleAssignmentSubmit = async () => {
+    if (!assignmentForm.doctor_ids.length || !assignmentForm.assignment_reason) {
+      onError('Veuillez sélectionner au moins un médecin et indiquer la raison');
       return;
     }
 
     try {
-      setAdmitting(true);
-      await hospitalService.admitPatient(admissionDialog.patient.id, admissionForm);
-      onSuccess('Patient admis avec succès');
-      setAdmissionDialog({ open: false, patient: null });
+      setAssigning(true);
+      await hospitalService.assignPatientToDoctors(assignmentDialog.patient.id, assignmentForm);
+      onSuccess('Patient assigné aux médecins avec succès');
+      setAssignmentDialog({ open: false, patient: null });
       onRefresh();
-      // Refresh search results
-      handleSearch();
+      handleSearch(); // Refresh search results
     } catch (error) {
-      console.error('Admission error:', error);
-      onError(error.message || 'Erreur lors de l\'admission');
+      console.error('Assignment error:', error);
+      onError(error.message || 'Erreur lors de l\'assignation');
     } finally {
-      setAdmitting(false);
+      setAssigning(false);
     }
   };
 
-  const getAdmissionStatusChip = (patient) => {
-    if (patient.is_admitted) {
+  const handleDischargePatient = (patient) => {
+    setDischargeDialog({
+      open: true,
+      patient: patient
+    });
+    setDischargeForm({
+      discharge_reason: '',
+      discharge_notes: '',
+      follow_up_required: false,
+      follow_up_date: ''
+    });
+  };
+
+  const handleDischargeSubmit = async () => {
+    if (!dischargeForm.discharge_reason) {
+      onError('Veuillez indiquer la raison de sortie');
+      return;
+    }
+
+    try {
+      setDischarging(true);
+      await hospitalService.dischargePatient(dischargeDialog.patient.id, dischargeForm);
+      onSuccess('Patient sorti avec succès');
+      setDischargeDialog({ open: false, patient: null });
+      onRefresh();
+      handleSearch(); // Refresh search results
+    } catch (error) {
+      console.error('Discharge error:', error);
+      onError(error.message || 'Erreur lors de la sortie');
+    } finally {
+      setDischarging(false);
+    }
+  };
+
+  const handleEditMedicalRecord = async (patient) => {
+    setMedicalRecordDialog({
+      open: true,
+      patient: patient,
+      editing: false
+    });
+    
+    // Fetch existing medical record
+    try {
+      const response = await hospitalService.getPatientMedicalRecord(patient.id);
+      setMedicalRecord(response.data || {
+        allergies: '',
+        medical_history: '',
+        current_medications: '',
+        vital_signs: {
+          blood_pressure: '',
+          heart_rate: '',
+          temperature: '',
+          weight: '',
+          height: ''
+        },
+        notes: ''
+      });
+    } catch (error) {
+      console.error('Error fetching medical record:', error);
+      // Initialize with empty record if fetch fails
+      setMedicalRecord({
+        allergies: '',
+        medical_history: '',
+        current_medications: '',
+        vital_signs: {
+          blood_pressure: '',
+          heart_rate: '',
+          temperature: '',
+          weight: '',
+          height: ''
+        },
+        notes: ''
+      });
+    }
+  };
+
+  const handleSaveMedicalRecord = async () => {
+    try {
+      setSavingRecord(true);
+      await hospitalService.updatePatientMedicalRecord(medicalRecordDialog.patient.id, medicalRecord);
+      onSuccess('Dossier médical mis à jour avec succès');
+      setMedicalRecordDialog({ open: false, patient: null, editing: false });
+    } catch (error) {
+      console.error('Error saving medical record:', error);
+      onError(error.message || 'Erreur lors de la sauvegarde du dossier');
+    } finally {
+      setSavingRecord(false);
+    }
+  };
+
+  const getAssignmentStatusChip = (patient) => {
+    if (patient.assigned_doctors && patient.assigned_doctors.length > 0) {
       return (
         <Chip 
-          label="Admis" 
+          label={`Assigné à ${patient.assigned_doctors.length} médecin(s)`}
           color="success" 
           size="small"
-          icon={<Bed />}
+          icon={<MedicalServices />}
         />
       );
     }
     return (
       <Chip 
-        label="Non admis" 
+        label="Non assigné" 
         color="default" 
         size="small"
       />
@@ -150,7 +288,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.dark' }}>
+      <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
         Rechercher un Patient
       </Typography>
 
@@ -211,6 +349,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
             Résultats de recherche ({searchResults.length})
           </Typography>
+          
           <Grid container spacing={2}>
             {searchResults.map((patient) => (
               <Grid item xs={12} md={6} key={patient.id}>
@@ -227,7 +366,7 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
                           {patient.prenom} {patient.nom}
                         </Typography>
                       </Box>
-                      {getAdmissionStatusChip(patient)}
+                      {getAssignmentStatusChip(patient)}
                     </Box>
                     
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -240,31 +379,54 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
                       <strong>Téléphone:</strong> {patient.telephone || 'Non renseigné'}
                     </Typography>
 
-                    {patient.admission_date && (
-                      <Typography variant="body2" color="success.main" sx={{ mb: 2 }}>
-                        <strong>Date d'admission:</strong> {new Date(patient.admission_date).toLocaleDateString()}
-                      </Typography>
+                    {patient.assigned_doctors && patient.assigned_doctors.length > 0 && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                          Médecins assignés:
+                        </Typography>
+                        {patient.assigned_doctors.map((doctor, index) => (
+                          <Chip 
+                            key={index}
+                            label={`Dr. ${doctor.prenom} ${doctor.nom}`}
+                            size="small"
+                            sx={{ mr: 1, mb: 1 }}
+                          />
+                        ))}
+                      </Box>
                     )}
 
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      {!patient.is_admitted && (
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      <Button
+                        variant="outlined"
+                        startIcon={<Assignment />}
+                        onClick={() => handleEditMedicalRecord(patient)}
+                        size="small"
+                        sx={{ fontWeight: 'bold' }}
+                      >
+                        Dossier médical
+                      </Button>
+                      
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => handleAssignToDoctor(patient)}
+                        size="small"
+                        sx={{ fontWeight: 'bold' }}
+                      >
+                        Assigner médecin
+                      </Button>
+                      
+                      {patient.assigned_doctors && patient.assigned_doctors.length > 0 && (
                         <Button
                           variant="contained"
-                          startIcon={<PersonAdd />}
-                          onClick={() => handleAdmitPatient(patient)}
+                          color="error"
+                          startIcon={<ExitToApp />}
+                          onClick={() => handleDischargePatient(patient)}
                           size="small"
                           sx={{ fontWeight: 'bold' }}
                         >
-                          Admettre
+                          Sortir
                         </Button>
-                      )}
-                      {patient.is_admitted && (
-                        <Chip 
-                          label={`Lit ${patient.bed_number || 'N/A'}`}
-                          color="success"
-                          size="small"
-                          icon={<Bed />}
-                        />
                       )}
                     </Box>
                   </CardContent>
@@ -295,25 +457,40 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
         </Alert>
       )}
 
-      {/* Admission Dialog */}
+      {/* Doctor Assignment Dialog */}
       <Dialog 
-        open={admissionDialog.open} 
-        onClose={() => setAdmissionDialog({ open: false, patient: null })}
+        open={assignmentDialog.open} 
+        onClose={() => setAssignmentDialog({ open: false, patient: null })}
         maxWidth="md"
         fullWidth
       >
         <DialogTitle sx={{ fontWeight: 'bold', color: 'primary.dark' }}>
-          Admettre le Patient: {admissionDialog.patient?.prenom} {admissionDialog.patient?.nom}
+          Assigner le Patient: {assignmentDialog.patient?.prenom} {assignmentDialog.patient?.nom}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Médecin Assigné *</InputLabel>
+                <InputLabel>Médecins à assigner *</InputLabel>
                 <Select
-                  value={admissionForm.doctor_id}
-                  onChange={(e) => setAdmissionForm(prev => ({ ...prev, doctor_id: e.target.value }))}
-                  label="Médecin Assigné *"
+                  multiple
+                  value={assignmentForm.doctor_ids}
+                  onChange={(e) => setAssignmentForm(prev => ({ ...prev, doctor_ids: e.target.value }))}
+                  label="Médecins à assigner *"
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((value) => {
+                        const doctor = doctors.find(d => d.id === value);
+                        return (
+                          <Chip 
+                            key={value} 
+                            label={doctor ? `Dr. ${doctor.prenom} ${doctor.nom}` : value}
+                            size="small" 
+                          />
+                        );
+                      })}
+                    </Box>
+                  )}
                 >
                   {doctors.map((doctor) => (
                     <MenuItem key={doctor.id} value={doctor.id}>
@@ -326,18 +503,19 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Numéro de Lit"
-                value={admissionForm.bed_number}
-                onChange={(e) => setAdmissionForm(prev => ({ ...prev, bed_number: e.target.value }))}
-                variant="outlined"
+                label="Date d'assignation"
+                type="datetime-local"
+                value={assignmentForm.assignment_date}
+                onChange={(e) => setAssignmentForm(prev => ({ ...prev, assignment_date: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Motif d'admission *"
-                value={admissionForm.admission_reason}
-                onChange={(e) => setAdmissionForm(prev => ({ ...prev, admission_reason: e.target.value }))}
+                label="Raison de l'assignation *"
+                value={assignmentForm.assignment_reason}
+                onChange={(e) => setAssignmentForm(prev => ({ ...prev, assignment_reason: e.target.value }))}
                 variant="outlined"
                 multiline
                 rows={2}
@@ -347,8 +525,8 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
               <TextField
                 fullWidth
                 label="Notes"
-                value={admissionForm.notes}
-                onChange={(e) => setAdmissionForm(prev => ({ ...prev, notes: e.target.value }))}
+                value={assignmentForm.notes}
+                onChange={(e) => setAssignmentForm(prev => ({ ...prev, notes: e.target.value }))}
                 variant="outlined"
                 multiline
                 rows={3}
@@ -358,20 +536,233 @@ const PatientSearchTab = ({ onSuccess, onError, onRefresh }) => {
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
           <Button 
-            onClick={() => setAdmissionDialog({ open: false, patient: null })}
-            disabled={admitting}
+            onClick={() => setAssignmentDialog({ open: false, patient: null })}
+            disabled={assigning}
           >
             Annuler
           </Button>
           <Button 
-            variant="contained" 
-            onClick={handleAdmissionSubmit}
-            disabled={admitting}
-            startIcon={admitting ? <CircularProgress size={20} /> : <PersonAdd />}
+            variant="contained"
+            onClick={handleAssignmentSubmit}
+            disabled={assigning}
+            startIcon={assigning ? <CircularProgress size={20} /> : <AddIcon />}
             sx={{ fontWeight: 'bold' }}
           >
-            {admitting ? 'Admission...' : 'Admettre'}
+            {assigning ? 'Assignation...' : 'Assigner'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Discharge Dialog */}
+      <Dialog open={dischargeDialog.open} onClose={() => setDischargeDialog({ open: false, patient: null })} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+            <ExitToApp sx={{ mr: 1 }} />
+            Sortie du Patient
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Raison de sortie *"
+                value={dischargeForm.discharge_reason}
+                onChange={(e) => setDischargeForm(prev => ({ ...prev, discharge_reason: e.target.value }))}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Notes de sortie"
+                multiline
+                rows={4}
+                value={dischargeForm.discharge_notes}
+                onChange={(e) => setDischargeForm(prev => ({ ...prev, discharge_notes: e.target.value }))}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={dischargeForm.follow_up_required}
+                    onChange={(e) => setDischargeForm(prev => ({ ...prev, follow_up_required: e.target.checked }))}
+                  />
+                }
+                label="Suivi requis"
+              />
+            </Grid>
+            {dischargeForm.follow_up_required && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Date de suivi"
+                  type="date"
+                  value={dischargeForm.follow_up_date}
+                  onChange={(e) => setDischargeForm(prev => ({ ...prev, follow_up_date: e.target.value }))}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+            )}
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDischargeDialog({ open: false, patient: null })}>
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleDischargeSubmit} 
+            variant="contained" 
+            color="error"
+            disabled={discharging}
+            startIcon={discharging ? <CircularProgress size={20} /> : <ExitToApp />}
+          >
+            {discharging ? 'Sortie...' : 'Confirmer la sortie'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Medical Record Dialog */}
+      <Dialog open={medicalRecordDialog.open} onClose={() => setMedicalRecordDialog({ open: false, patient: null, editing: false })} maxWidth="lg" fullWidth>
+        <DialogTitle>
+          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+            <Assignment sx={{ mr: 1 }} />
+            Dossier Médical - {medicalRecordDialog.patient?.prenom} {medicalRecordDialog.patient?.nom}
+            <Button
+              startIcon={<Edit />}
+              onClick={() => setMedicalRecordDialog(prev => ({ ...prev, editing: !prev.editing }))}
+              sx={{ ml: 'auto' }}
+            >
+              {medicalRecordDialog.editing ? 'Annuler' : 'Modifier'}
+            </Button>
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Allergies"
+                multiline
+                rows={3}
+                value={medicalRecord.allergies}
+                onChange={(e) => setMedicalRecord(prev => ({ ...prev, allergies: e.target.value }))}
+                disabled={!medicalRecordDialog.editing}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Antécédents médicaux"
+                multiline
+                rows={3}
+                value={medicalRecord.medical_history}
+                onChange={(e) => setMedicalRecord(prev => ({ ...prev, medical_history: e.target.value }))}
+                disabled={!medicalRecordDialog.editing}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Médicaments actuels"
+                multiline
+                rows={3}
+                value={medicalRecord.current_medications}
+                onChange={(e) => setMedicalRecord(prev => ({ ...prev, current_medications: e.target.value }))}
+                disabled={!medicalRecordDialog.editing}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Constantes vitales</Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Tension artérielle"
+                value={medicalRecord.vital_signs?.blood_pressure || ''}
+                onChange={(e) => setMedicalRecord(prev => ({ 
+                  ...prev, 
+                  vital_signs: { ...prev.vital_signs, blood_pressure: e.target.value }
+                }))}
+                disabled={!medicalRecordDialog.editing}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Fréquence cardiaque"
+                value={medicalRecord.vital_signs?.heart_rate || ''}
+                onChange={(e) => setMedicalRecord(prev => ({ 
+                  ...prev, 
+                  vital_signs: { ...prev.vital_signs, heart_rate: e.target.value }
+                }))}
+                disabled={!medicalRecordDialog.editing}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Température"
+                value={medicalRecord.vital_signs?.temperature || ''}
+                onChange={(e) => setMedicalRecord(prev => ({ 
+                  ...prev, 
+                  vital_signs: { ...prev.vital_signs, temperature: e.target.value }
+                }))}
+                disabled={!medicalRecordDialog.editing}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Poids (kg)"
+                value={medicalRecord.vital_signs?.weight || ''}
+                onChange={(e) => setMedicalRecord(prev => ({ 
+                  ...prev, 
+                  vital_signs: { ...prev.vital_signs, weight: e.target.value }
+                }))}
+                disabled={!medicalRecordDialog.editing}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Taille (cm)"
+                value={medicalRecord.vital_signs?.height || ''}
+                onChange={(e) => setMedicalRecord(prev => ({ 
+                  ...prev, 
+                  vital_signs: { ...prev.vital_signs, height: e.target.value }
+                }))}
+                disabled={!medicalRecordDialog.editing}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Notes médicales"
+                multiline
+                rows={4}
+                value={medicalRecord.notes}
+                onChange={(e) => setMedicalRecord(prev => ({ ...prev, notes: e.target.value }))}
+                disabled={!medicalRecordDialog.editing}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMedicalRecordDialog({ open: false, patient: null, editing: false })}>
+            Fermer
+          </Button>
+          {medicalRecordDialog.editing && (
+            <Button 
+              onClick={handleSaveMedicalRecord} 
+              variant="contained"
+              disabled={savingRecord}
+              startIcon={savingRecord ? <CircularProgress size={20} /> : <Save />}
+            >
+              {savingRecord ? 'Sauvegarde...' : 'Sauvegarder'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

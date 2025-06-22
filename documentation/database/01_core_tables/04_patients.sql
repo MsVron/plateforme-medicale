@@ -25,6 +25,16 @@ CREATE TABLE patients (
   consommation_alcool ENUM('non', 'occasionnel', 'régulier', 'quotidien'),
   activite_physique ENUM('sédentaire', 'légère', 'modérée', 'intense'),
   profession VARCHAR(100),
+  -- Handicap/Disability fields
+  a_handicap BOOLEAN DEFAULT FALSE,
+  type_handicap ENUM('moteur', 'sensoriel', 'intellectuel', 'psychique', 'multiple', 'autre') DEFAULT NULL,
+  type_handicap_autre VARCHAR(100) DEFAULT NULL,
+  niveau_handicap ENUM('léger', 'modéré', 'sévère') DEFAULT NULL,
+  description_handicap TEXT DEFAULT NULL,
+  besoins_accessibilite TEXT DEFAULT NULL,
+  equipements_medicaux TEXT DEFAULT NULL,
+  autonomie_niveau ENUM('autonome', 'assistance_partielle', 'assistance_totale') DEFAULT NULL,
+  -- End handicap fields
   medecin_traitant_id INT,
   date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   est_inscrit_par_medecin BOOLEAN DEFAULT FALSE,

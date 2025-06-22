@@ -42,9 +42,9 @@ export const hospitalService = {
     }
   },
 
-  dischargePatient: async (assignmentId, dischargeData) => {
+  dischargePatient: async (patientId, dischargeData) => {
     try {
-      const response = await axios.put(`/hospital/assignments/${assignmentId}/discharge`, dischargeData);
+      const response = await axios.put(`/hospital/patients/${patientId}/discharge`, dischargeData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -113,6 +113,35 @@ export const hospitalService = {
   getSpecialties: async () => {
     try {
       const response = await axios.get('/hospital/specialties');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Medical records management
+  getPatientMedicalRecord: async (patientId) => {
+    try {
+      const response = await axios.get(`/hospital/patients/${patientId}/medical-record`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  updatePatientMedicalRecord: async (patientId, medicalRecordData) => {
+    try {
+      const response = await axios.put(`/hospital/patients/${patientId}/medical-record`, medicalRecordData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Patient-Doctor assignment management
+  assignPatientToDoctors: async (patientId, assignmentData) => {
+    try {
+      const response = await axios.post(`/hospital/patients/${patientId}/assign-doctors`, assignmentData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

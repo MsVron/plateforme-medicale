@@ -66,6 +66,7 @@ import {
 // Import hospital components
 import HospitalDashboard from './components/hospital/HospitalDashboard';
 import HospitalHome from './pages/hospital/HospitalHome';
+import PatientSearchTab from './components/hospital/PatientSearchTab';
 
 // Import pharmacy components
 import PharmacyDashboard from './components/pharmacy/PharmacyDashboard';
@@ -369,6 +370,30 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/medecin/appointments"
+              element={
+                <ProtectedRoute allowedRoles={['medecin']}>
+                  <UpcomingAppointments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/medecin/patients/:patientId/dossier"
+              element={
+                <ProtectedRoute allowedRoles={['medecin']}>
+                  <MedicalDossier />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/medecin/calendar"
+              element={
+                <ProtectedRoute allowedRoles={['medecin']}>
+                  <MedecinCalendar />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Patient routes */}
             <Route
@@ -460,6 +485,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['hospital']}>
                   <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital/patients/search"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <PatientSearchTab />
                 </ProtectedRoute>
               }
             />

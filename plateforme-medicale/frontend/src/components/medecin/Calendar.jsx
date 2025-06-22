@@ -42,6 +42,12 @@ const Calendar = () => {
           })
         ]);
         
+        console.log('=== CALENDAR DATA ===');
+        console.log('Appointments:', appointmentsRes.data);
+        console.log('Availabilities:', availabilitiesRes.data);
+        console.log('Absences:', absencesRes.data);
+        console.log('=====================');
+        
         setAppointments(appointmentsRes.data.appointments || []);
         setAvailabilities(availabilitiesRes.data.availabilities || []);
         setAbsences(absencesRes.data.absences || []);
@@ -79,17 +85,29 @@ const Calendar = () => {
   const getAppointmentsForDay = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return appointments.filter(appointment => {
-      const appointmentDate = format(parseISO(appointment.date_heure), 'yyyy-MM-dd');
-      return appointmentDate === dateStr;
+      try {
+        if (!appointment.date_heure_debut) return false;
+        const appointmentDate = format(parseISO(appointment.date_heure_debut), 'yyyy-MM-dd');
+        return appointmentDate === dateStr;
+      } catch (error) {
+        console.error('Error parsing appointment date:', appointment.date_heure_debut, error);
+        return false;
+      }
     });
   };
 
   const isAbsent = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return absences.some(absence => {
-      const startDate = format(parseISO(absence.date_debut), 'yyyy-MM-dd');
-      const endDate = format(parseISO(absence.date_fin), 'yyyy-MM-dd');
-      return dateStr >= startDate && dateStr <= endDate;
+      try {
+        if (!absence.date_debut || !absence.date_fin) return false;
+        const startDate = format(parseISO(absence.date_debut), 'yyyy-MM-dd');
+        const endDate = format(parseISO(absence.date_fin), 'yyyy-MM-dd');
+        return dateStr >= startDate && dateStr <= endDate;
+      } catch (error) {
+        console.error('Error parsing absence dates:', absence, error);
+        return false;
+      }
     });
   };
 
@@ -101,26 +119,32 @@ const Calendar = () => {
   };
 
   const renderAppointment = (appointment) => {
-    const time = format(parseISO(appointment.date_heure), 'HH:mm');
-    return (
-      <Paper 
-        key={appointment.id}
-        sx={{ 
-          p: 1, 
-          mb: 1, 
-          bgcolor: appointment.status === 'confirmed' ? '#e3f2fd' : 
-                  appointment.status === 'completed' ? '#e8f5e9' : 
-                  appointment.status === 'cancelled' ? '#ffebee' : '#fff3e0'
-        }}
-      >
-        <Typography variant="body2" fontWeight="bold">
-          {time} - {appointment.patient?.prenom} {appointment.patient?.nom}
-        </Typography>
-        <Typography variant="caption" display="block">
-          {appointment.motif || 'Consultation'}
-        </Typography>
-      </Paper>
-    );
+    try {
+      if (!appointment.date_heure_debut) return null;
+      const time = format(parseISO(appointment.date_heure_debut), 'HH:mm');
+      return (
+        <Paper 
+          key={appointment.id}
+          sx={{ 
+            p: 1, 
+            mb: 1, 
+            bgcolor: appointment.statut === 'confirmé' ? '#e3f2fd' : 
+                    appointment.statut === 'terminé' ? '#e8f5e9' : 
+                    appointment.statut === 'annulé' ? '#ffebee' : '#fff3e0'
+          }}
+        >
+          <Typography variant="body2" fontWeight="bold">
+            {time} - {appointment.patient_prenom} {appointment.patient_nom}
+          </Typography>
+          <Typography variant="caption" display="block">
+            {appointment.motif || 'Consultation'}
+          </Typography>
+        </Paper>
+      );
+    } catch (error) {
+      console.error('Error rendering appointment:', appointment, error);
+      return null;
+    }
   };
 
   const renderDay = (date) => {

@@ -45,7 +45,16 @@ const PatientProfileEditor = ({ open, onClose, patient, onSuccess, onError }) =>
     consommation_alcool: patient?.consommation_alcool || '',
     activite_physique: patient?.activite_physique || '',
     profession: patient?.profession || '',
-    allergies_notes: patient?.allergies_notes || ''
+    allergies_notes: patient?.allergies_notes || '',
+    // Handicap fields
+    a_handicap: patient?.a_handicap || false,
+    type_handicap: patient?.type_handicap || '',
+    type_handicap_autre: patient?.type_handicap_autre || '',
+    niveau_handicap: patient?.niveau_handicap || '',
+    description_handicap: patient?.description_handicap || '',
+    besoins_accessibilite: patient?.besoins_accessibilite || '',
+    equipements_medicaux: patient?.equipements_medicaux || '',
+    autonomie_niveau: patient?.autonomie_niveau || ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -378,6 +387,142 @@ const PatientProfileEditor = ({ open, onClose, patient, onSuccess, onError }) =>
                   placeholder="Notes générales sur les allergies du patient..."
                 />
               </Grid>
+            </Grid>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* Handicap Information */}
+            <Typography variant="h6" gutterBottom>
+              Informations sur le handicap
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Situation de handicap</InputLabel>
+                  <Select
+                    value={formData.a_handicap === null ? '' : formData.a_handicap.toString()}
+                    label="Situation de handicap"
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? false : e.target.value === 'true';
+                      handleChange('a_handicap', value);
+                    }}
+                  >
+                    <MenuItem value="false">Non</MenuItem>
+                    <MenuItem value="true">Oui</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              
+              {formData.a_handicap && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Type de handicap</InputLabel>
+                      <Select
+                        value={formData.type_handicap}
+                        label="Type de handicap"
+                        onChange={(e) => {
+                          handleChange('type_handicap', e.target.value);
+                          // Clear custom type when switching away from "autre"
+                          if (e.target.value !== 'autre') {
+                            handleChange('type_handicap_autre', '');
+                          }
+                        }}
+                      >
+                        <MenuItem value="">Non spécifié</MenuItem>
+                        <MenuItem value="moteur">Moteur</MenuItem>
+                        <MenuItem value="sensoriel">Sensoriel</MenuItem>
+                        <MenuItem value="intellectuel">Intellectuel</MenuItem>
+                        <MenuItem value="psychique">Psychique</MenuItem>
+                        <MenuItem value="multiple">Multiple</MenuItem>
+                        <MenuItem value="autre">Autre</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  
+                  {/* Custom handicap type field - only show when "autre" is selected */}
+                  {formData.type_handicap === 'autre' && (
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Préciser le type de handicap"
+                        value={formData.type_handicap_autre}
+                        onChange={(e) => handleChange('type_handicap_autre', e.target.value)}
+                        placeholder="Veuillez préciser le type de handicap..."
+                        required
+                      />
+                    </Grid>
+                  )}
+                  
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Niveau de handicap</InputLabel>
+                      <Select
+                        value={formData.niveau_handicap}
+                        label="Niveau de handicap"
+                        onChange={(e) => handleChange('niveau_handicap', e.target.value)}
+                      >
+                        <MenuItem value="">Non spécifié</MenuItem>
+                        <MenuItem value="léger">Léger</MenuItem>
+                        <MenuItem value="modéré">Modéré</MenuItem>
+                        <MenuItem value="sévère">Sévère</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Niveau d'autonomie</InputLabel>
+                      <Select
+                        value={formData.autonomie_niveau}
+                        label="Niveau d'autonomie"
+                        onChange={(e) => handleChange('autonomie_niveau', e.target.value)}
+                      >
+                        <MenuItem value="">Non spécifié</MenuItem>
+                        <MenuItem value="autonome">Autonome</MenuItem>
+                        <MenuItem value="assistance_partielle">Assistance partielle</MenuItem>
+                        <MenuItem value="assistance_totale">Assistance totale</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Description du handicap"
+                      multiline
+                      rows={3}
+                      value={formData.description_handicap}
+                      onChange={(e) => handleChange('description_handicap', e.target.value)}
+                      placeholder="Description détaillée du handicap..."
+                    />
+                  </Grid>
+                  
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Besoins d'accessibilité"
+                      multiline
+                      rows={3}
+                      value={formData.besoins_accessibilite}
+                      onChange={(e) => handleChange('besoins_accessibilite', e.target.value)}
+                      placeholder="Rampe d'accès, ascenseur, toilettes adaptées..."
+                    />
+                  </Grid>
+                  
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Équipements médicaux"
+                      multiline
+                      rows={3}
+                      value={formData.equipements_medicaux}
+                      onChange={(e) => handleChange('equipements_medicaux', e.target.value)}
+                      placeholder="Fauteuil roulant, prothèses, appareils auditifs..."
+                    />
+                  </Grid>
+                </>
+              )}
             </Grid>
           </Box>
         </DialogContent>

@@ -497,6 +497,40 @@ const MedicalDossier = () => {
                       secondary={patient.profession || 'Non renseignée'} 
                     />
                   </ListItem>
+                  {patient.a_handicap && (
+                    <ListItem>
+                      <ListItemText 
+                        primary="Situation de handicap" 
+                        secondary={
+                          <Box>
+                            <Chip 
+                              size="small" 
+                              color="info" 
+                              label={`${
+                                patient.type_handicap === 'autre' 
+                                  ? (patient.type_handicap_autre || 'Autre (non précisé)') 
+                                  : (patient.type_handicap || 'Non spécifié')
+                              } - ${patient.niveau_handicap || 'Non spécifié'}`}
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                            {patient.autonomie_niveau && (
+                              <Chip 
+                                size="small" 
+                                color="secondary" 
+                                label={`Autonomie: ${patient.autonomie_niveau.replace('_', ' ')}`}
+                                sx={{ mr: 1, mb: 1 }}
+                              />
+                            )}
+                            {patient.description_handicap && (
+                              <Typography variant="body2" sx={{ mt: 1 }}>
+                                {patient.description_handicap}
+                              </Typography>
+                            )}
+                          </Box>
+                        } 
+                      />
+                    </ListItem>
+                  )}
                 </List>
               </Grid>
               
@@ -597,6 +631,41 @@ const MedicalDossier = () => {
                   }}>
                     {patient.allergies_notes}
                   </Typography>
+                </Grid>
+              )}
+
+              {/* Accessibility and Medical Equipment */}
+              {patient.a_handicap && (patient.besoins_accessibilite || patient.equipements_medicaux) && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Besoins spéciaux
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {patient.besoins_accessibilite && (
+                      <Grid item xs={12} md={6}>
+                        <Card variant="outlined" sx={{ p: 2 }}>
+                          <Typography variant="subtitle2" gutterBottom color="info.main">
+                            Besoins d'accessibilité
+                          </Typography>
+                          <Typography variant="body2">
+                            {patient.besoins_accessibilite}
+                          </Typography>
+                        </Card>
+                      </Grid>
+                    )}
+                    {patient.equipements_medicaux && (
+                      <Grid item xs={12} md={6}>
+                        <Card variant="outlined" sx={{ p: 2 }}>
+                          <Typography variant="subtitle2" gutterBottom color="info.main">
+                            Équipements médicaux
+                          </Typography>
+                          <Typography variant="body2">
+                            {patient.equipements_medicaux}
+                          </Typography>
+                        </Card>
+                      </Grid>
+                    )}
+                  </Grid>
                 </Grid>
               )}
               

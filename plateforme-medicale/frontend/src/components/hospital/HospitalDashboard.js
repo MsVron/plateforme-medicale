@@ -64,7 +64,10 @@ const HospitalDashboard = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-
+  const handleRefresh = () => {
+    // Trigger refresh for the current tab
+    window.location.reload();
+  };
 
   return (
     <Box sx={{ flexGrow: 1, p: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
@@ -85,8 +88,6 @@ const HospitalDashboard = () => {
           </Typography>
         </Box>
       </Paper>
-
-
 
       {/* Main Content */}
       <Paper elevation={3} sx={{ flexGrow: 1 }}>
@@ -119,7 +120,7 @@ const HospitalDashboard = () => {
             <HospitalDoctorsTab 
               onSuccess={handleSuccess}
               onError={handleError}
-              onRefresh={() => {}}
+              onRefresh={handleRefresh}
             />
           )}
           {activeTab === 1 && <WalkInPatientTab />}

@@ -56,4 +56,8 @@ router.get('/stats/admissions', verifyToken, isHospital, hospitalController.getA
 // Get all medical specialties
 router.get('/specialties', hospitalController.getSpecialties);
 
+// Medical record routes
+router.get('/patients/:patientId/medical-record', verifyToken, isHospital, hospitalController.getPatientMedicalRecord);
+router.put('/patients/:patientId/medical-record', verifyToken, isHospital, hospitalController.updatePatientMedicalRecord);
+
 module.exports = router; 

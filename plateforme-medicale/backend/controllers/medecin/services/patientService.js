@@ -12,7 +12,10 @@ class PatientService {
       prenom, nom, date_naissance, sexe, CNE, adresse, ville, code_postal, pays,
       telephone, email, contact_urgence_nom, contact_urgence_telephone, contact_urgence_relation,
       groupe_sanguin, taille_cm, poids_kg, est_fumeur, consommation_alcool, activite_physique,
-      profession, allergies_notes
+      profession, allergies_notes,
+      // Handicap fields
+      a_handicap, type_handicap, type_handicap_autre, niveau_handicap, description_handicap,
+      besoins_accessibilite, equipements_medicaux, autonomie_niveau
     } = profileData;
 
     // Validate patient exists
@@ -62,14 +65,24 @@ class PatientService {
         consommation_alcool = COALESCE(?, consommation_alcool),
         activite_physique = COALESCE(?, activite_physique),
         profession = COALESCE(?, profession),
-        allergies_notes = COALESCE(?, allergies_notes)
+        allergies_notes = COALESCE(?, allergies_notes),
+        a_handicap = COALESCE(?, a_handicap),
+        type_handicap = COALESCE(?, type_handicap),
+        type_handicap_autre = COALESCE(?, type_handicap_autre),
+        niveau_handicap = COALESCE(?, niveau_handicap),
+        description_handicap = COALESCE(?, description_handicap),
+        besoins_accessibilite = COALESCE(?, besoins_accessibilite),
+        equipements_medicaux = COALESCE(?, equipements_medicaux),
+        autonomie_niveau = COALESCE(?, autonomie_niveau)
       WHERE id = ?
     `, [
       prenom, nom, date_naissance, sexe, CNE, adresse, ville, code_postal,
       pays, telephone, email, contact_urgence_nom, contact_urgence_telephone,
       contact_urgence_relation, groupe_sanguin, taille_cm, poids_kg,
       est_fumeur, consommation_alcool, activite_physique, profession,
-      allergies_notes, patientId
+      allergies_notes, a_handicap, type_handicap, type_handicap_autre, niveau_handicap, 
+      description_handicap, besoins_accessibilite, equipements_medicaux, 
+      autonomie_niveau, patientId
     ]);
 
     // Log action
