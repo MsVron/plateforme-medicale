@@ -4,7 +4,7 @@ const medecinController = require('../controllers/medecinController');
 const appointmentController = require('../controllers/medecin/appointmentController');
 const medicalRecordController = require('../controllers/medecin/medicalRecordController');
 const medicalDossierController = require('../controllers/medecin/medicalDossierController');
-const { verifyToken, isAdmin, isSuperAdmin } = require('../middlewares/auth');
+const { verifyToken, isAdmin, isSuperAdmin, isMedecin } = require('../middlewares/auth');
 
 // Public routes (no authentication required)
 router.get('/medecins/public', medecinController.getPublicMedecins);
@@ -99,9 +99,14 @@ router.post('/medecin/patients/:patientId/medical-history', verifyToken, medical
 
 // Patient notes management
 router.post('/medecin/patients/:patientId/notes', verifyToken, medicalDossierController.addPatientNote);
+router.put('/medecin/patients/:patientId/notes/:noteId', verifyToken, medicalDossierController.updatePatientNote);
+router.delete('/medecin/patients/:patientId/notes/:noteId', verifyToken, medicalDossierController.deletePatientNote);
 
 // Autocomplete/search routes for forms
 router.get('/medecin/medications/search', verifyToken, medicalDossierController.getMedications);
 router.get('/medecin/allergies/search', verifyToken, medicalDossierController.getAllergies);
+
+// Create follow-up appointment for patient
+router.post('/medecin/patients/:patientId/follow-up-appointment', verifyToken, isMedecin, medicalDossierController.createFollowUpAppointment);
 
 module.exports = router;

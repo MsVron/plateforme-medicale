@@ -180,6 +180,109 @@ class PatientService {
   }
 
   /**
+   * Update patient note
+   */
+  static async updatePatientNote(patientId, noteId, medecinId, noteData, userId) {
+    const { contenu, est_important, categorie, date_note } = noteData;
+
+    // Validate required fields
+    if (!patientId || !noteId || !contenu) {
+      throw new Error('Patient ID, note ID et contenu sont obligatoires');
+    }
+
+    // Validate patient exists
+    const [patients] = await db.execute('SELECT id FROM patients WHERE id = ?', [patientId]);
+    if (patients.length === 0) {
+      throw new Error('Patient non trouvé');
+    }
+
+    // Validate note exists and belongs to this doctor
+    const [notes] = await db.execute(
+      'SELECT id, medecin_id FROM notes_patient WHERE id = ? AND patient_id = ?',
+      [noteId, patientId]
+    );
+    
+    if (notes.length === 0) {
+      throw new Error('Note non trouvée');
+    }
+
+    // Check if doctor is authorized to modify this note
+    if (notes[0].medecin_id !== medecinId) {
+      throw new Error('Vous n\'êtes pas autorisé à modifier cette note');
+    }
+
+    // Use provided date or keep existing timestamp
+    const noteDate = date_note || new Date().toISOString().split('T')[0];
+
+    // Update note
+    await db.execute(`
+      UPDATE notes_patient 
+      SET contenu = ?, est_important = ?, categorie = ?, date_creation = ?
+      WHERE id = ? AND patient_id = ?
+    `, [
+      contenu, 
+      est_important || false, 
+      categorie || 'general', 
+      noteDate,
+      noteId,
+      patientId
+    ]);
+
+    // Log action
+    await this.logPatientAction(
+      userId, 
+      'UPDATE_PATIENT_NOTE', 
+      noteId, 
+      `Modification d'une note pour le patient ID ${patientId}`
+    );
+  }
+
+  /**
+   * Delete patient note
+   */
+  static async deletePatientNote(patientId, noteId, medecinId, userId) {
+    // Validate required fields
+    if (!patientId || !noteId) {
+      throw new Error('Patient ID et note ID sont obligatoires');
+    }
+
+    // Validate patient exists
+    const [patients] = await db.execute('SELECT id FROM patients WHERE id = ?', [patientId]);
+    if (patients.length === 0) {
+      throw new Error('Patient non trouvé');
+    }
+
+    // Validate note exists and belongs to this doctor
+    const [notes] = await db.execute(
+      'SELECT id, medecin_id FROM notes_patient WHERE id = ? AND patient_id = ?',
+      [noteId, patientId]
+    );
+    
+    if (notes.length === 0) {
+      throw new Error('Note non trouvée');
+    }
+
+    // Check if doctor is authorized to delete this note
+    if (notes[0].medecin_id !== medecinId) {
+      throw new Error('Vous n\'êtes pas autorisé à supprimer cette note');
+    }
+
+    // Delete note
+    await db.execute(
+      'DELETE FROM notes_patient WHERE id = ? AND patient_id = ?',
+      [noteId, patientId]
+    );
+
+    // Log action
+    await this.logPatientAction(
+      userId, 
+      'DELETE_PATIENT_NOTE', 
+      noteId, 
+      `Suppression d'une note pour le patient ID ${patientId}`
+    );
+  }
+
+  /**
    * Get available medications for autocomplete
    */
   static async getMedications(searchTerm) {
@@ -264,7 +367,9 @@ class PatientService {
     const tableMap = {
       'UPDATE_PATIENT_PROFILE': 'patients',
       'ADD_MEDICAL_HISTORY': 'antecedents_medicaux',
-      'ADD_PATIENT_NOTE': 'notes_patient'
+      'ADD_PATIENT_NOTE': 'notes_patient',
+      'UPDATE_PATIENT_NOTE': 'notes_patient',
+      'DELETE_PATIENT_NOTE': 'notes_patient'
     };
 
     await db.execute(`

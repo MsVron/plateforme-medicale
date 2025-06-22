@@ -32,7 +32,8 @@ class DossierService {
       notes,
       analyses,
       imageries,
-      documents
+      documents,
+      appointmentsSummary
     ] = await Promise.all([
       this.getPatientAllergies(patientId),
       this.getMedicalHistory(patientId),
@@ -43,7 +44,8 @@ class DossierService {
       this.getPatientNotes(patientId),
       this.getAnalysisResults(patientId),
       this.getImagingResults(patientId),
-      this.getMedicalDocuments(patientId)
+      this.getMedicalDocuments(patientId),
+      this.getAppointmentsSummary(patientId)
     ]);
 
     // Log access for audit
@@ -61,7 +63,7 @@ class DossierService {
       analyses,
       imageries,
       documents,
-      summary: this.generateSummary(consultations, traitements, allergies)
+      summary: this.generateSummary(consultations, traitements, allergies, appointmentsSummary)
     };
   }
 
@@ -220,13 +222,33 @@ class DossierService {
   }
 
   /**
+   * Get appointments from the past year for summary statistics
+   */
+  static async getAppointmentsSummary(patientId) {
+    console.log('DEBUG: Fetching appointments summary...');
+    const [summaryData] = await db.execute(`
+      SELECT 
+        COUNT(*) as total_appointments,
+        SUM(CASE WHEN rv.statut = 'terminé' THEN 1 ELSE 0 END) as completed_appointments,
+        SUM(CASE WHEN rv.date_heure_debut >= DATE_SUB(NOW(), INTERVAL 1 YEAR) THEN 1 ELSE 0 END) as appointments_past_year,
+        SUM(CASE WHEN rv.statut = 'terminé' AND rv.date_heure_debut >= DATE_SUB(NOW(), INTERVAL 1 YEAR) THEN 1 ELSE 0 END) as completed_past_year,
+        MAX(rv.date_heure_debut) as last_appointment_date
+      FROM rendez_vous rv
+      WHERE rv.patient_id = ?
+    `, [patientId]);
+    
+    console.log('DEBUG: Appointments summary:', summaryData[0]);
+    return summaryData[0];
+  }
+
+  /**
    * Get patient notes from doctors
    */
   static async getPatientNotes(patientId) {
     console.log('DEBUG: Fetching notes...');
     const [notes] = await db.execute(`
       SELECT 
-        n.id, n.contenu, n.date_creation, n.est_important, n.categorie,
+        n.id, n.contenu, n.date_creation, n.est_important, n.categorie, n.medecin_id,
         m.prenom as medecin_prenom, m.nom as medecin_nom
       FROM notes_patient n
       JOIN medecins m ON n.medecin_id = m.id
@@ -336,11 +358,18 @@ class DossierService {
   /**
    * Generate dossier summary
    */
-  static generateSummary(consultations, traitements, allergies) {
+  static generateSummary(consultations, traitements, allergies, appointmentsSummary) {
     return {
       totalConsultations: consultations.length,
       totalTreatments: traitements.length,
       totalAllergies: allergies.length,
+      // Appointment statistics
+      totalAppointments: appointmentsSummary?.total_appointments || 0,
+      appointmentsPastYear: appointmentsSummary?.appointments_past_year || 0,
+      completedAppointments: appointmentsSummary?.completed_appointments || 0,
+      completedPastYear: appointmentsSummary?.completed_past_year || 0,
+      lastAppointmentDate: appointmentsSummary?.last_appointment_date || null,
+      // Existing fields
       lastConsultation: consultations.length > 0 ? consultations[0].date_consultation : null,
       hasActiveAlerts: allergies.some(a => a.severite === 'sévère' || a.severite === 'mortelle')
     };

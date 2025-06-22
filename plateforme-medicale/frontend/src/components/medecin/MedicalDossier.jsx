@@ -51,6 +51,7 @@ const MedicalDossier = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dossier, setDossier] = useState(null);
+  const [currentMedecinId, setCurrentMedecinId] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     personal: true,        // Only personal information expanded by default
     treatments: false,     // Current medications
@@ -66,6 +67,7 @@ const MedicalDossier = () => {
   const [historyDialog, setHistoryDialog] = useState({ open: false, data: null });
   const [noteDialog, setNoteDialog] = useState({ open: false, data: null });
   const [profileEditorOpen, setProfileEditorOpen] = useState(false);
+  const [followUpDialog, setFollowUpDialog] = useState({ open: false });
   
   // Form states
   const [treatmentForm, setTreatmentForm] = useState({
@@ -94,6 +96,14 @@ const MedicalDossier = () => {
     categorie: 'general',
     date_note: new Date().toISOString().split('T')[0]
   });
+
+  const [followUpForm, setFollowUpForm] = useState({
+    date: '',
+    time: '',
+    duration: 30,
+    motif: '',
+    notes_medecin: ''
+  });
   
   // Autocomplete data
   const [medications, setMedications] = useState([]);
@@ -104,6 +114,7 @@ const MedicalDossier = () => {
 
   useEffect(() => {
     fetchDossier();
+    getCurrentMedecinId();
   }, [patientId]);
 
   const fetchDossier = async () => {
@@ -119,6 +130,18 @@ const MedicalDossier = () => {
       setError(err.response?.data?.message || 'Impossible de récupérer le dossier médical. Veuillez réessayer plus tard.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getCurrentMedecinId = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/medecin/dashboard', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCurrentMedecinId(response.data.medecin.id);
+    } catch (err) {
+      console.error('Error getting current medecin ID:', err);
     }
   };
 
@@ -278,18 +301,41 @@ const MedicalDossier = () => {
     setNoteDialog({ open: true, data: null });
   };
 
+  const handleEditNote = (note) => {
+    setNoteForm({
+      contenu: note.contenu,
+      est_important: note.est_important,
+      categorie: note.categorie,
+      date_note: note.date_creation ? note.date_creation.split('T')[0] : new Date().toISOString().split('T')[0]
+    });
+    setNoteDialog({ open: true, data: note });
+  };
+
   const handleSaveNote = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`/medecin/patients/${patientId}/notes`, noteForm, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
       
-      setSnackbar({
-        open: true,
-        message: 'Note ajoutée avec succès',
-        severity: 'success'
-      });
+      if (noteDialog.data) {
+        // Edit existing note
+        await axios.put(`/medecin/patients/${patientId}/notes/${noteDialog.data.id}`, noteForm, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSnackbar({
+          open: true,
+          message: 'Note modifiée avec succès',
+          severity: 'success'
+        });
+      } else {
+        // Add new note
+        await axios.post(`/medecin/patients/${patientId}/notes`, noteForm, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSnackbar({
+          open: true,
+          message: 'Note ajoutée avec succès',
+          severity: 'success'
+        });
+      }
       
       setNoteDialog({ open: false, data: null });
       fetchDossier(); // Refresh data
@@ -300,6 +346,30 @@ const MedicalDossier = () => {
         message: err.response?.data?.message || 'Erreur lors de la sauvegarde de la note',
         severity: 'error'
       });
+    }
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`/medecin/patients/${patientId}/notes/${noteId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSnackbar({
+          open: true,
+          message: 'Note supprimée avec succès',
+          severity: 'success'
+        });
+        fetchDossier(); // Refresh data
+      } catch (err) {
+        console.error('Error deleting note:', err);
+        setSnackbar({
+          open: true,
+          message: err.response?.data?.message || 'Erreur lors de la suppression de la note',
+          severity: 'error'
+        });
+      }
     }
   };
 
@@ -332,6 +402,77 @@ const MedicalDossier = () => {
     setSnackbar({ open: true, message, severity: 'error' });
   };
 
+  // Follow-up appointment functions
+  const handleOpenFollowUpDialog = () => {
+    // Set default date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    setFollowUpForm({
+      date: tomorrow.toISOString().split('T')[0],
+      time: '09:00',
+      duration: 30,
+      motif: 'Rendez-vous de suivi',
+      notes_medecin: ''
+    });
+    setFollowUpDialog({ open: true });
+  };
+
+  const handleSaveFollowUpAppointment = async () => {
+    try {
+      if (!followUpForm.date || !followUpForm.time || !followUpForm.motif) {
+        setSnackbar({ 
+          open: true, 
+          message: 'Date, heure et motif sont requis', 
+          severity: 'error' 
+        });
+        return;
+      }
+
+      // Create datetime objects
+      const appointmentDateTime = new Date(`${followUpForm.date}T${followUpForm.time}`);
+      const endDateTime = new Date(appointmentDateTime.getTime() + followUpForm.duration * 60000);
+
+      const token = localStorage.getItem('token');
+      await axios.post(`/medecin/patients/${patientId}/follow-up-appointment`, {
+        date_heure_debut: appointmentDateTime.toISOString(),
+        date_heure_fin: endDateTime.toISOString(),
+        motif: followUpForm.motif,
+        notes_medecin: followUpForm.notes_medecin
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSnackbar({ 
+        open: true, 
+        message: 'Rendez-vous de suivi créé avec succès', 
+        severity: 'success' 
+      });
+      
+      setFollowUpDialog({ open: false });
+      
+      // Reset form
+      setFollowUpForm({
+        date: '',
+        time: '',
+        duration: 30,
+        motif: '',
+        notes_medecin: ''
+      });
+
+      // Refresh dossier to show new appointment
+      fetchDossier();
+      
+    } catch (err) {
+      console.error('Error creating follow-up appointment:', err);
+      setSnackbar({ 
+        open: true, 
+        message: err.response?.data?.message || 'Erreur lors de la création du rendez-vous de suivi', 
+        severity: 'error' 
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
@@ -356,7 +497,26 @@ const MedicalDossier = () => {
     );
   }
 
-  const { patient, allergies: patientAllergies, antecedents, traitements, consultations, constantes, appointments, notes, analyses, imageries, documents, summary } = dossier;
+  const { 
+    patient, 
+    allergies: patientAllergies = [], 
+    antecedents = [], 
+    traitements = [], 
+    consultations = [], 
+    constantes = [], 
+    appointments = [], 
+    notes = [], 
+    analyses = [], 
+    imageries = [], 
+    documents = [], 
+    summary 
+  } = dossier;
+
+  // Debug logging
+  console.log('Notes data:', notes);
+  console.log('Notes length:', notes ? notes.length : 'undefined');
+  console.log('Summary data:', summary);
+  console.log('Appointments count:', summary?.appointmentsPastYear, summary?.totalAppointments);
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -396,18 +556,31 @@ const MedicalDossier = () => {
             )}
             <Chip
               icon={<MedicalIcon />}
-              label={`${summary.totalTreatments} traitements`}
+              label={`${summary.totalTreatments || 0} traitements`}
               color="primary"
               variant="outlined"
               sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}
             />
             <Chip
               icon={<AssignmentIcon />}
-              label={`${summary.totalConsultations} consultations`}
+              label={
+                summary.appointmentsPastYear > 0 
+                  ? `${summary.appointmentsPastYear} rendez-vous (1 an)` 
+                  : `${summary.totalAppointments || 0} rendez-vous`
+              }
               color="primary"
               variant="outlined"
               sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}
             />
+            {summary.totalConsultations > 0 && (
+              <Chip
+                icon={<MedicalIcon />}
+                label={`${summary.totalConsultations} consultations`}
+                color="secondary"
+                variant="outlined"
+                sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}
+              />
+            )}
           </Stack>
         </Box>
         
@@ -955,12 +1128,14 @@ const MedicalDossier = () => {
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <NoteIcon sx={{ mr: 2, color: 'primary.main' }} />
                 <Typography variant="h6">Notes Médicales</Typography>
-                <Chip 
-                  label={notes.length} 
-                  size="small" 
-                  color="secondary" 
-                  sx={{ ml: 2 }} 
-                />
+                {notes && notes.length > 0 && (
+                  <Chip 
+                    label={notes.length} 
+                    size="small" 
+                    color="secondary" 
+                    sx={{ ml: 2 }} 
+                  />
+                )}
               </Box>
               <IconButton 
                 color="primary" 
@@ -975,7 +1150,7 @@ const MedicalDossier = () => {
             </Box>
           </AccordionSummary>
           <AccordionDetails>
-            {notes.length === 0 ? (
+            {!notes || notes.length === 0 ? (
               <Typography color="text.secondary">Aucune note médicale</Typography>
             ) : (
               <List>
@@ -1004,6 +1179,27 @@ const MedicalDossier = () => {
                         </Box>
                       }
                     />
+                    {/* Show edit/delete buttons only if current doctor created the note */}
+                    {currentMedecinId && note.medecin_id === currentMedecinId && (
+                      <Box sx={{ ml: 2 }}>
+                        <IconButton 
+                          size="small" 
+                          color="primary"
+                          onClick={() => handleEditNote(note)}
+                          title="Modifier la note"
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={() => handleDeleteNote(note.id)}
+                          title="Supprimer la note"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
                   </ListItem>
                 ))}
               </List>
@@ -1017,18 +1213,34 @@ const MedicalDossier = () => {
           onChange={() => handleSectionToggle('appointments')}
           sx={{ mb: 2 }}
         >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <DateIcon sx={{ mr: 2, color: 'primary.main' }} />
               <Typography variant="h6">Rendez-vous</Typography>
-              <Chip 
-                label={appointments.length} 
-                size="small" 
-                color="info" 
-                sx={{ ml: 2 }} 
-              />
+              {appointments && appointments.length > 0 && (
+                <Chip 
+                  label={appointments.length} 
+                  size="small" 
+                  color="info" 
+                  sx={{ ml: 2 }} 
+                />
+              )}
             </Box>
-          </AccordionSummary>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent accordion from toggling
+                handleOpenFollowUpDialog();
+              }}
+              sx={{ mr: 3 }}
+            >
+              Rendez-vous de suivi
+            </Button>
+          </Box>
+        </AccordionSummary>
           <AccordionDetails>
             {appointments.length === 0 ? (
               <Typography color="text.secondary">Aucun rendez-vous enregistré</Typography>
@@ -1075,6 +1287,103 @@ const MedicalDossier = () => {
           </AccordionDetails>
         </Accordion>
       </Box>
+
+      {/* Follow-up Appointment Dialog */}
+      <Dialog 
+        open={followUpDialog.open} 
+        onClose={() => setFollowUpDialog({ open: false })}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <DateIcon sx={{ mr: 1, color: 'primary.main' }} />
+            Programmer un rendez-vous de suivi
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={6}>
+              <TextField
+                label="Date du rendez-vous *"
+                type="date"
+                value={followUpForm.date}
+                onChange={(e) => setFollowUpForm(prev => ({ ...prev, date: e.target.value }))}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                inputProps={{
+                  min: new Date().toISOString().split('T')[0] // Minimum date is today
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={6}>
+              <TextField
+                label="Heure *"
+                type="time"
+                value={followUpForm.time}
+                onChange={(e) => setFollowUpForm(prev => ({ ...prev, time: e.target.value }))}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                label="Durée (minutes)"
+                type="number"
+                value={followUpForm.duration}
+                onChange={(e) => setFollowUpForm(prev => ({ ...prev, duration: parseInt(e.target.value) || 30 }))}
+                fullWidth
+                inputProps={{
+                  min: 15,
+                  max: 180,
+                  step: 15
+                }}
+                helperText="Durée en minutes (15-180 min, par pas de 15)"
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                label="Motif du rendez-vous *"
+                value={followUpForm.motif}
+                onChange={(e) => setFollowUpForm(prev => ({ ...prev, motif: e.target.value }))}
+                fullWidth
+                placeholder="ex: Contrôle post-consultation, Suivi traitement..."
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                label="Notes médicales"
+                value={followUpForm.notes_medecin}
+                onChange={(e) => setFollowUpForm(prev => ({ ...prev, notes_medecin: e.target.value }))}
+                fullWidth
+                multiline
+                rows={3}
+                placeholder="Notes internes pour le suivi du patient..."
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setFollowUpDialog({ open: false })}
+            startIcon={<CancelIcon />}
+          >
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleSaveFollowUpAppointment}
+            variant="contained"
+            startIcon={<SaveIcon />}
+            disabled={!followUpForm.date || !followUpForm.time || !followUpForm.motif}
+          >
+            Programmer le rendez-vous
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Treatment Dialog */}
       <Dialog 
@@ -1302,7 +1611,9 @@ const MedicalDossier = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Ajouter une note médicale</DialogTitle>
+        <DialogTitle>
+          {noteDialog.data ? 'Modifier la note médicale' : 'Ajouter une note médicale'}
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
@@ -1371,7 +1682,7 @@ const MedicalDossier = () => {
             startIcon={<SaveIcon />}
             disabled={!noteForm.contenu}
           >
-            Ajouter
+            {noteDialog.data ? 'Modifier' : 'Ajouter'}
           </Button>
         </DialogActions>
       </Dialog>
