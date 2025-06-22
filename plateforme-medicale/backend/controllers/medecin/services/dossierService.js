@@ -79,7 +79,9 @@ class DossierService {
         p.groupe_sanguin, p.taille_cm, p.poids_kg, p.est_fumeur,
         p.consommation_alcool, p.activite_physique, p.profession,
         p.contact_urgence_nom, p.contact_urgence_telephone, p.contact_urgence_relation,
-        p.allergies_notes, p.est_inscrit_par_medecin, p.date_inscription
+        p.allergies_notes, p.est_inscrit_par_medecin, p.date_inscription,
+        p.a_handicap, p.type_handicap, p.type_handicap_autre, p.niveau_handicap,
+        p.description_handicap, p.besoins_accessibilite, p.equipements_medicaux, p.autonomie_niveau
       FROM patients p 
       WHERE p.id = ?
     `, [patientId]);

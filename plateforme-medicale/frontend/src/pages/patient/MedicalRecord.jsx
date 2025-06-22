@@ -51,7 +51,8 @@ import {
   Email as EmailIcon,
   Home as HomeIcon,
   Work as WorkIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  Accessible as AccessibleIcon
 } from '@mui/icons-material';
 
 const MedicalRecord = () => {
@@ -287,6 +288,92 @@ const MedicalRecord = () => {
               </Card>
             </Grid>
           </Grid>
+
+          {/* Handicap Information */}
+          {patient.a_handicap && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                <AccessibleIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Informations sur le handicap
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Type et niveau
+                      </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        <Chip
+                          label={`Type: ${
+                            patient.type_handicap === 'autre' 
+                              ? (patient.type_handicap_autre || 'Autre (non précisé)') 
+                              : (patient.type_handicap || 'Non spécifié')
+                          }`}
+                          color="info"
+                          variant="outlined"
+                          sx={{ mb: 1 }}
+                        />
+                        {patient.niveau_handicap && (
+                          <Chip
+                            label={`Niveau: ${patient.niveau_handicap}`}
+                            color="secondary"
+                            variant="outlined"
+                            sx={{ mb: 1 }}
+                          />
+                        )}
+                        {patient.autonomie_niveau && (
+                          <Chip
+                            label={`Autonomie: ${patient.autonomie_niveau.replace('_', ' ')}`}
+                            color="primary"
+                            variant="outlined"
+                            sx={{ mb: 1 }}
+                          />
+                        )}
+                      </Stack>
+                      {patient.description_handicap && (
+                        <Typography variant="body2" sx={{ mt: 2 }}>
+                          <strong>Description:</strong> {patient.description_handicap}
+                        </Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+                
+                {(patient.besoins_accessibilite || patient.equipements_medicaux) && (
+                  <Grid item xs={12} md={6}>
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Besoins spéciaux
+                        </Typography>
+                        {patient.besoins_accessibilite && (
+                          <Box sx={{ mb: 2 }}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              <strong>Besoins d'accessibilité:</strong>
+                            </Typography>
+                            <Typography variant="body2">
+                              {patient.besoins_accessibilite}
+                            </Typography>
+                          </Box>
+                        )}
+                        {patient.equipements_medicaux && (
+                          <Box>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              <strong>Équipements médicaux:</strong>
+                            </Typography>
+                            <Typography variant="body2">
+                              {patient.equipements_medicaux}
+                            </Typography>
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          )}
 
           {/* Allergies */}
           <Box sx={{ mt: 3 }}>

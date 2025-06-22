@@ -21,7 +21,15 @@ exports.getPatientMedicalRecord = async (req, res) => {
     const { patientId } = req.params;
 
     // Check if patient exists
-    const [patients] = await db.execute('SELECT id, prenom, nom, date_naissance, sexe FROM patients WHERE id = ?', [patientId]);
+    const [patients] = await db.execute(`
+      SELECT id, prenom, nom, date_naissance, sexe, CNE, email, telephone, adresse, ville, 
+             code_postal, pays, groupe_sanguin, taille_cm, poids_kg, est_fumeur,
+             consommation_alcool, activite_physique, profession,
+             contact_urgence_nom, contact_urgence_telephone, contact_urgence_relation,
+             allergies_notes, est_inscrit_par_medecin, date_inscription,
+             a_handicap, type_handicap, type_handicap_autre, niveau_handicap,
+             description_handicap, besoins_accessibilite, equipements_medicaux, autonomie_niveau
+      FROM patients WHERE id = ?`, [patientId]);
     
     if (patients.length === 0) {
       return res.status(404).json({ message: 'Patient non trouvé' });

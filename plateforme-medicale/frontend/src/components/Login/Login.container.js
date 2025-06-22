@@ -25,6 +25,9 @@ const LoginContainer = () => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
+      // Trigger theme update for the new user role
+      window.dispatchEvent(new Event('userDataChanged'));
+
       console.log('Login successful:', response.data);
 
       // Navigate based on user role

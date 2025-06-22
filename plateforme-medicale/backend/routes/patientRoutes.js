@@ -299,6 +299,8 @@ router.get("/patient/medical-record", verifyToken, isPatient, async (req, res) =
                 p.groupe_sanguin, p.taille_cm, p.poids_kg, p.est_fumeur, 
                 p.consommation_alcool, p.activite_physique, p.profession,
                 p.allergies_notes,
+                p.a_handicap, p.type_handicap, p.type_handicap_autre, p.niveau_handicap,
+                p.description_handicap, p.besoins_accessibilite, p.equipements_medicaux, p.autonomie_niveau,
                 mt.prenom as medecin_traitant_prenom,
                 mt.nom as medecin_traitant_nom,
                 s.nom as medecin_traitant_specialite
