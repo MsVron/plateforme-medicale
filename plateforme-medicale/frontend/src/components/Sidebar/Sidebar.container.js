@@ -67,8 +67,6 @@ const SidebarContainer = () => {
       { text: 'Tableau de bord', path: '/medecin/dashboard', icon: <DashboardIcon /> },
       { text: 'Rendez-vous', path: '/medecin/appointments', icon: <EventIcon /> },
       { text: 'Rechercher un patient', path: '/medecin/patients/search', icon: <SearchIcon /> },
-      { text: 'Dossiers médicaux', path: '/medecin/medical-records', icon: <MedicalIcon /> },
-      { text: 'Calendrier', path: '/medecin/calendar', icon: <CalendarIcon /> },
     ];
   } else if (user.role === 'hospital') {
     menuItems = [

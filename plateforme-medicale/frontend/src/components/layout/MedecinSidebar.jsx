@@ -77,18 +77,6 @@ const MedecinSidebar = ({ children }) => {
           <ListItemText primary="Rendez-vous" />
         </ListItem>
         
-        <ListItem 
-          button 
-          component={Link} 
-          to="/medecin/calendar" 
-          selected={isActive('/medecin/calendar')}
-        >
-          <ListItemIcon>
-            <CalendarIcon color={isActive('/medecin/calendar') ? 'primary' : 'inherit'} />
-          </ListItemIcon>
-          <ListItemText primary="Calendrier" />
-        </ListItem>
-        
         <ListItem button onClick={handlePatientsClick}>
           <ListItemIcon>
             <PeopleIcon color={location.pathname.includes('/medecin/patients') ? 'primary' : 'inherit'} />

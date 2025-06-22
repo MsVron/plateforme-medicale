@@ -80,9 +80,7 @@ const DashboardLayoutContainer = () => {
     medecin: [
       { text: 'Mon espace', path: '/medecin', icon: <Dashboard /> },
       { text: 'Rendez-vous', path: '/medecin/appointments', icon: <EventIcon /> },
-      { text: 'Rechercher un patient', path: '/medecin/patients/search', icon: <Search /> },
-      { text: 'Dossiers médicaux', path: '/medecin/medical-records', icon: <MedicalInformation /> },
-      { text: 'Calendrier', path: '/medecin/calendar', icon: <CalendarMonth /> }
+      { text: 'Rechercher un patient', path: '/medecin/patients/search', icon: <Search /> }
     ],
     patient: [
       { text: 'Mon espace', path: '/patient', icon: <Dashboard /> },
