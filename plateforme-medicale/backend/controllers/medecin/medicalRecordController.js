@@ -1177,15 +1177,15 @@ exports.getImagingNotes = async (req, res) => {
     // Get notes for the imaging result
     const [notes] = await db.execute(`
       SELECT 
-        in.id, in.note_content, in.note_type, in.is_important, 
-        in.is_private, in.created_at, in.updated_at,
+        img_notes.id, img_notes.note_content, img_notes.note_type, img_notes.is_important, 
+        img_notes.is_private, img_notes.created_at, img_notes.updated_at,
         m.prenom as medecin_prenom, m.nom as medecin_nom,
         s.nom as medecin_specialite
-      FROM imaging_notes in
-      JOIN medecins m ON in.medecin_id = m.id
+      FROM imaging_notes img_notes
+      JOIN medecins m ON img_notes.medecin_id = m.id
       LEFT JOIN specialites s ON m.specialite_id = s.id
-      WHERE in.imaging_result_id = ?
-      ORDER BY in.created_at DESC
+      WHERE img_notes.imaging_result_id = ?
+      ORDER BY img_notes.created_at DESC
     `, [imagingResultId]);
 
     return res.status(200).json({ notes });

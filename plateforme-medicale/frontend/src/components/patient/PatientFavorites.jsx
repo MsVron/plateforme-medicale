@@ -22,8 +22,7 @@ import {
   CalendarMonth as CalendarIcon,
   LocationOn as LocationIcon,
   Phone as PhoneIcon,
-  Email as EmailIcon,
-  Star as StarIcon
+  Email as EmailIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -228,14 +227,7 @@ const PatientFavorites = () => {
                     </Typography>
                   )}
 
-                  {doctor.rating && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, width: '100% !important' }}>
-                      <StarIcon fontSize="small" sx={{ mr: 0.5, color: 'warning.main', flexShrink: 0 }} />
-                      <Typography variant="body2" color="text.secondary" sx={{ flex: 1, fontSize: '0.9rem !important' }}>
-                        {doctor.rating}/5 ({doctor.reviews_count || 0} avis)
-                      </Typography>
-                    </Box>
-                  )}
+
                 </CardContent>
 
                 <CardActions sx={{ p: 2, pt: 0, width: '100% !important' }}>

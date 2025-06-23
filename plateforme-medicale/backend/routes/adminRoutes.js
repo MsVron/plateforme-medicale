@@ -2339,10 +2339,18 @@ router.post('/superadmin/review-doctor-request', verifyToken, isSuperAdmin, asyn
 
             // If approved, execute the actual change
             if (action === 'approved') {
+                console.log('🔍 [DEBUG] Raw request_data:', request.request_data);
                 const requestData = JSON.parse(request.request_data);
+                console.log('🔍 [DEBUG] Parsed requestData:', requestData);
+                console.log('🔍 [DEBUG] Request type:', request.request_type);
+                console.log('🔍 [DEBUG] Medecin ID:', request.medecin_id);
                 
                 if (request.request_type === 'create') {
+                    console.log('🔍 [DEBUG] Creating new doctor...');
                     // Create doctor record directly (no user table dependency based on schema)
+                    // Map email field if it comes as 'email' instead of 'email_professionnel'
+                    const emailValue = requestData.email_professionnel || requestData.email;
+                    
                     await db.execute(`
                         INSERT INTO medecins (
                             prenom, nom, specialite_id, numero_ordre, telephone, 
@@ -2356,7 +2364,7 @@ router.post('/superadmin/review-doctor-request', verifyToken, isSuperAdmin, asyn
                         requestData.specialite_id,
                         requestData.numero_ordre,
                         requestData.telephone,
-                        requestData.email_professionnel,
+                        emailValue,
                         requestData.institution_id,
                         requestData.adresse,
                         requestData.ville,
@@ -2366,22 +2374,49 @@ router.post('/superadmin/review-doctor-request', verifyToken, isSuperAdmin, asyn
                         requestData.accepte_nouveaux_patients || true,
                         requestData.accepte_patients_walk_in || true
                     ]);
+                    console.log('🔍 [DEBUG] Doctor creation successful');
                 } else if (request.request_type === 'modify' && request.medecin_id) {
+                    // Define valid fields for the medecins table
+                    const validMedecinFields = [
+                        'prenom', 'nom', 'specialite_id', 'numero_ordre', 'telephone',
+                        'email_professionnel', 'photo_url', 'biographie', 'institution_id',
+                        'est_actif', 'adresse', 'ville', 'code_postal', 'pays',
+                        'latitude', 'longitude', 'tarif_consultation', 'accepte_nouveaux_patients',
+                        'temps_consultation_moyen', 'langues_parlees', 'accepte_patients_walk_in'
+                    ];
+                    
                     const updateFields = [];
                     const updateValues = [];
                     
+                    console.log('🔍 [DEBUG] Original requestData keys:', Object.keys(requestData));
+                    
+                    // Handle email field mapping
+                    if (requestData.email && !requestData.email_professionnel) {
+                        requestData.email_professionnel = requestData.email;
+                        console.log('🔍 [DEBUG] Mapped email to email_professionnel');
+                    }
+                    
                     Object.keys(requestData).forEach(key => {
-                        if (requestData[key] !== null && requestData[key] !== undefined) {
+                        // Only include valid fields that exist in the medecins table
+                        if (validMedecinFields.includes(key) && requestData[key] !== null && requestData[key] !== undefined && requestData[key] !== '') {
                             updateFields.push(`${key} = ?`);
                             updateValues.push(requestData[key]);
+                            console.log(`🔍 [DEBUG] Including field: ${key} = ${requestData[key]}`);
+                        } else {
+                            console.log(`🔍 [DEBUG] Skipping invalid field: ${key} = ${requestData[key]}`);
                         }
                     });
+                    
+                    console.log('🔍 [DEBUG] Final update fields:', updateFields);
                     
                     if (updateFields.length > 0) {
                         updateValues.push(request.medecin_id);
                         await db.execute(`
                             UPDATE medecins SET ${updateFields.join(', ')} WHERE id = ?
                         `, updateValues);
+                        console.log('🔍 [DEBUG] Doctor update successful');
+                    } else {
+                        console.log('🔍 [DEBUG] No valid fields to update');
                     }
                 } else if (request.request_type === 'delete' && request.medecin_id) {
                     await db.execute(`
@@ -2405,13 +2440,24 @@ router.post('/superadmin/review-doctor-request', verifyToken, isSuperAdmin, asyn
             res.json({ message: `Demande ${action === 'approved' ? 'approuvée' : 'rejetée'} avec succès` });
 
         } catch (error) {
+            console.error('❌ [ERROR] Error in transaction, rolling back');
             await db.query('ROLLBACK');
+            console.error('❌ [ERROR] Error reviewing doctor request:', error);
+            console.error('❌ [ERROR] Error details:', {
+                message: error.message,
+                code: error.code,
+                errno: error.errno,
+                sqlMessage: error.sqlMessage
+            });
             throw error;
         }
 
     } catch (error) {
-        console.error('Error reviewing doctor request:', error);
-        res.status(500).json({ message: 'Erreur lors de la révision de la demande' });
+        console.error('❌ [ERROR] Outer error catch:', error);
+        res.status(500).json({ 
+            message: 'Erreur lors de la révision de la demande',
+            error: error.message 
+        });
     }
 });
 

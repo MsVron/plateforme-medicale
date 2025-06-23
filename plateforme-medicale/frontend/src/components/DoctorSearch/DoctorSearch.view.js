@@ -28,7 +28,6 @@ import {
   DialogContent,
   List,
   ListItem,
-  Rating,
   Avatar,
   LinearProgress,
   Stack
@@ -45,7 +44,6 @@ import BugReportIcon from '@mui/icons-material/BugReport';
 import CloseIcon from '@mui/icons-material/Close';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import StarIcon from '@mui/icons-material/Star';
 import SimpleMap from './SimpleMap';
 import FavoriteButton from './FavoriteButton';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
@@ -408,19 +406,6 @@ const DoctorSearchView = ({
                             </Box>
                             
                             <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Rating 
-                                  value={doctor.rating_average || 0} 
-                                  precision={0.5} 
-                                  size="small" 
-                                  readOnly 
-                                  icon={<StarIcon fontSize="inherit" />}
-                                />
-                                <Typography variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
-                                  ({doctor.rating_count || 0} avis)
-                                </Typography>
-                              </Box>
-                              
                               {doctor.temps_consultation_moyen && (
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                   <AccessTimeIcon sx={{ mr: 0.5, color: 'primary.main', fontSize: 20 }} />
@@ -546,39 +531,7 @@ const DoctorSearchView = ({
                   )}
                 </Box>
                 
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    Évaluations
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Rating 
-                      value={selectedDoctor.rating_average || 0} 
-                      precision={0.5} 
-                      readOnly 
-                      icon={<StarIcon fontSize="inherit" />}
-                    />
-                    <Typography variant="body2" sx={{ ml: 1 }}>
-                      ({selectedDoctor.rating_count || 0} avis)
-                    </Typography>
-                  </Box>
-                  {selectedDoctor.recent_reviews && selectedDoctor.recent_reviews.length > 0 ? (
-                    <Box sx={{ mt: 2 }}>
-                      {selectedDoctor.recent_reviews.map((review, index) => (
-                        <Box key={index} sx={{ mb: 2, p: 1, borderLeft: '3px solid #eee' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                            <Rating value={review.note} size="small" readOnly />
-                            <Typography variant="caption" sx={{ ml: 1 }}>
-                              {review.est_anonyme ? 'Anonyme' : review.patient_nom} - {formatDate(review.date_evaluation)}
-                            </Typography>
-                          </Box>
-                          <Typography variant="body2">{review.commentaire}</Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  ) : (
-                    <Typography variant="body2">Aucun avis disponible pour ce médecin.</Typography>
-                  )}
-                </Box>
+
                 
                 <Box>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
