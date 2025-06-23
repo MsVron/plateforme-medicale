@@ -412,14 +412,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/hospital/walk-in"
-              element={
-                <ProtectedRoute allowedRoles={['hospital']}>
-                  <HospitalDashboard />
-                </ProtectedRoute>
-              }
-            />
+
             <Route
               path="/hospital/admissions"
               element={
@@ -441,6 +434,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['hospital']}>
                   <DebugHospital />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital/patient-direct"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <WalkInPatientPage />
                 </ProtectedRoute>
               }
             />

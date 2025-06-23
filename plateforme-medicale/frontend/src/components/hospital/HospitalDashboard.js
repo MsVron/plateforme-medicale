@@ -13,7 +13,6 @@ import {
   LocalHospital as HospitalIcon
 } from '@mui/icons-material';
 import HospitalDoctorsTab from './HospitalDoctorsTab';
-import WalkInPatientTab from './WalkInPatientTab';
 import HospitalAdmissionsTab from './HospitalAdmissionsTab';
 
 const HospitalDashboard = () => {
@@ -26,15 +25,13 @@ const HospitalDashboard = () => {
   const routeToTabMap = {
     '/hospital/dashboard': 0,
     '/hospital/doctors': 0,
-    '/hospital/walk-in': 1,
-    '/hospital/admissions': 2
+    '/hospital/admissions': 1
   };
 
   // Map tab indices to routes
   const tabToRouteMap = {
     0: '/hospital/doctors',
-    1: '/hospital/walk-in',
-    2: '/hospital/admissions'
+    1: '/hospital/admissions'
   };
 
   useEffect(() => {
@@ -111,7 +108,6 @@ const HospitalDashboard = () => {
           }}
         >
           <Tab label="Médecins de l'Hôpital" />
-          <Tab label="Patients Sans Rendez-vous" />
           <Tab label="Admissions Hospitalières" />
         </Tabs>
 
@@ -123,8 +119,7 @@ const HospitalDashboard = () => {
               onRefresh={handleRefresh}
             />
           )}
-          {activeTab === 1 && <WalkInPatientTab />}
-          {activeTab === 2 && <HospitalAdmissionsTab />}
+          {activeTab === 1 && <HospitalAdmissionsTab />}
         </Box>
       </Paper>
 

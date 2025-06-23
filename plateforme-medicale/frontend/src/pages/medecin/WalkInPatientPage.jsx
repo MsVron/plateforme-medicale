@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Box,
@@ -38,6 +38,16 @@ import axios from 'axios';
 
 const WalkInPatientPage = () => {
   const navigate = useNavigate();
+  
+  // Detect user role to determine API endpoint and navigation
+  const [userRole, setUserRole] = useState('medecin');
+  
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.role) {
+      setUserRole(user.role);
+    }
+  }, []);
   
   const [formData, setFormData] = useState({
     prenom: '',
@@ -279,8 +289,14 @@ const WalkInPatientPage = () => {
     
     try {
       const token = localStorage.getItem('token');
+      
+      // Determine API endpoint based on user role
+      const apiEndpoint = userRole === 'hospital' 
+        ? '/hospital/patients/walk-in'
+        : '/patient/direct';
+      
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/patient/direct`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}${apiEndpoint}`,
         {
           ...formData,
           date_naissance: formData.date_naissance ? formData.date_naissance.toISOString().split('T')[0] : null
@@ -366,11 +382,28 @@ const WalkInPatientPage = () => {
 
   const shouldShowError = (fieldName) => touchedFields[fieldName] && errors[fieldName];
 
+  // Determine navigation paths based on user role
+  const getBackPath = () => {
+    return userRole === 'hospital' ? '/hospital/dashboard' : '/medecin';
+  };
+
+  const getPageTitle = () => {
+    return userRole === 'hospital' 
+      ? 'Inscription Patient à l\'Hôpital'
+      : 'Inscription Patient sur place';
+  };
+
+  const getPageSubtitle = () => {
+    return userRole === 'hospital'
+      ? 'Inscrire un nouveau patient présent à l\'hôpital'
+      : 'Inscrire un nouveau patient présent au cabinet';
+  };
+
   if (registrationSuccess && patientCredentials) {
     return (
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <IconButton onClick={() => navigate('/medecin')} sx={{ mr: 2 }}>
+          <IconButton onClick={() => navigate(getBackPath())} sx={{ mr: 2 }}>
             <ArrowBackIcon />
           </IconButton>
           <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
@@ -432,7 +465,7 @@ const WalkInPatientPage = () => {
           </Button>
           <Button 
             variant="outlined"
-            onClick={() => navigate('/medecin')}
+            onClick={() => navigate(getBackPath())}
           >
             Retour au tableau de bord
           </Button>
@@ -444,15 +477,15 @@ const WalkInPatientPage = () => {
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton onClick={() => navigate('/medecin')} sx={{ mr: 2 }}>
+        <IconButton onClick={() => navigate(getBackPath())} sx={{ mr: 2 }}>
           <ArrowBackIcon />
         </IconButton>
         <Box>
-          <Typography variant="h4" component="h1" sx={{ color: 'primary.main' }}>
-            Inscription Patient sur place
+          <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
+            {getPageTitle()}
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Inscrire un nouveau patient présent au cabinet
+          <Typography variant="body1" sx={{ color: 'white' }}>
+            {getPageSubtitle()}
           </Typography>
         </Box>
       </Box>
@@ -656,7 +689,7 @@ const WalkInPatientPage = () => {
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
             <Button 
               variant="outlined"
-              onClick={() => navigate('/medecin')}
+              onClick={() => navigate(getBackPath())}
               disabled={isSubmitting}
             >
               Annuler

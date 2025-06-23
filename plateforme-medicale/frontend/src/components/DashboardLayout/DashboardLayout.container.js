@@ -81,8 +81,6 @@ const DashboardLayoutContainer = () => {
     ],
     hospital: [
       { text: 'Tableau de bord', path: '/hospital/dashboard', icon: <Dashboard /> },
-      { text: 'Rechercher patient', path: '/hospital/patients/search', icon: <Search /> },
-      { text: 'Patients hôpital', path: '/hospital/patients', icon: <People /> },
       { text: 'Patient direct', path: '/hospital/patient-direct', icon: <PersonAdd /> }
     ],
     pharmacy: [
