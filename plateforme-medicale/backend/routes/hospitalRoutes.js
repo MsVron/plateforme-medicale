@@ -65,4 +65,18 @@ router.get('/specialties', hospitalController.getSpecialties);
 router.get('/patients/:patientId/medical-record', verifyToken, isHospital, hospitalController.getPatientMedicalRecord);
 router.put('/patients/:patientId/medical-record', verifyToken, isHospital, hospitalController.updatePatientMedicalRecord);
 
+// Comprehensive medical dossier route (like doctors have)
+router.get('/patients/:patientId/dossier', verifyToken, isHospital, hospitalController.getPatientDossier);
+
+// Medical data modification routes for hospital staff
+router.post('/patients/:patientId/treatments', verifyToken, isHospital, hospitalController.addTreatment);
+router.put('/patients/:patientId/treatments/:treatmentId', verifyToken, isHospital, hospitalController.updateTreatment);
+router.delete('/patients/:patientId/treatments/:treatmentId', verifyToken, isHospital, hospitalController.deleteTreatment);
+
+router.post('/patients/:patientId/medical-history', verifyToken, isHospital, hospitalController.addMedicalHistory);
+
+router.post('/patients/:patientId/notes', verifyToken, isHospital, hospitalController.addPatientNote);
+router.put('/patients/:patientId/notes/:noteId', verifyToken, isHospital, hospitalController.updatePatientNote);
+router.delete('/patients/:patientId/notes/:noteId', verifyToken, isHospital, hospitalController.deletePatientNote);
+
 module.exports = router; 

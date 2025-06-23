@@ -1,5 +1,8 @@
 const db = require('../../config/db');
 const { searchPatients } = require('../../utils/patientSearch');
+const DossierService = require('../medecin/services/dossierService');
+const TreatmentService = require('../medecin/services/treatmentService');
+const PatientService = require('../medecin/services/patientService');
 
 // Search patients for hospital (using shared search utility)
 exports.searchPatients = async (req, res) => {
@@ -1778,5 +1781,322 @@ exports.assignDoctorToAdmission = async (req, res) => {
     });
   }
 };
+
+// Get comprehensive medical dossier for hospital staff
+exports.getPatientDossier = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { patientId } = req.params;
+
+    // Verify patient has been admitted to this hospital (current or past admission)
+    const [admissionCheck] = await db.execute(`
+      SELECT DISTINCT ha.patient_id
+      FROM hospital_assignments ha
+      WHERE ha.patient_id = ? AND ha.hospital_id = ?
+    `, [patientId, hospitalId]);
+
+    if (admissionCheck.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'Patient non admis dans cet hôpital - accès refusé'
+      });
+    }
+
+    // Use the same DossierService as doctors, but with hospital user context
+    const dossier = await DossierService.getPatientDossier(
+      patientId, 
+      null, // No specific doctor ID for hospital staff
+      req.user.id
+    );
+
+    return res.status(200).json(dossier);
+  } catch (error) {
+    console.error('Error fetching patient dossier for hospital:', error);
+    
+    if (error.message === 'Patient non trouvé') {
+      return res.status(404).json({ 
+        success: false,
+        message: error.message 
+      });
+    }
+    
+    return res.status(500).json({ 
+      success: false,
+      message: 'Erreur serveur lors de la récupération du dossier médical', 
+      error: error.message
+    });
+  }
+};
+
+// Treatment management for hospital staff
+exports.addTreatment = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { patientId } = req.params;
+    
+    // Verify patient access
+    await verifyPatientHospitalAccess(patientId, hospitalId);
+    
+    const treatmentId = await TreatmentService.addTreatment(
+      patientId, 
+      null, // No specific doctor ID for hospital staff
+      req.body, 
+      req.user.id,
+      hospitalId // Pass hospital ID for institutional prescription
+    );
+
+    return res.status(201).json({ 
+      message: 'Traitement ajouté avec succès',
+      treatmentId
+    });
+  } catch (error) {
+    console.error('Error adding treatment from hospital:', error);
+    
+    if (error.message.includes('obligatoires') || error.message.includes('date')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    if (error.message === 'Patient non trouvé' || error.message.includes('accès refusé')) {
+      return res.status(404).json({ message: error.message });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Erreur serveur lors de l\'ajout du traitement', 
+      error: error.message 
+    });
+  }
+};
+
+exports.updateTreatment = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { patientId, treatmentId } = req.params;
+
+    // Verify patient access
+    await verifyPatientHospitalAccess(patientId, hospitalId);
+
+    await TreatmentService.updateTreatment(
+      patientId, 
+      treatmentId, 
+      null, // No specific doctor ID for hospital staff
+      req.body, 
+      req.user.id
+    );
+
+    return res.status(200).json({ message: 'Traitement mis à jour avec succès' });
+  } catch (error) {
+    console.error('Error updating treatment from hospital:', error);
+    
+    if (error.message.includes('date')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    if (error.message === 'Traitement non trouvé') {
+      return res.status(404).json({ message: error.message });
+    }
+    
+    if (error.message.includes('autorisé') || error.message.includes('accès refusé')) {
+      return res.status(403).json({ message: error.message });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Erreur serveur lors de la modification du traitement', 
+      error: error.message 
+    });
+  }
+};
+
+exports.deleteTreatment = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { patientId, treatmentId } = req.params;
+
+    // Verify patient access
+    await verifyPatientHospitalAccess(patientId, hospitalId);
+
+    await TreatmentService.deleteTreatment(patientId, treatmentId, null, req.user.id);
+
+    return res.status(200).json({ message: 'Traitement supprimé avec succès' });
+  } catch (error) {
+    console.error('Error deleting treatment from hospital:', error);
+    
+    if (error.message === 'Traitement non trouvé') {
+      return res.status(404).json({ message: error.message });
+    }
+    
+    if (error.message.includes('prescripteur') || error.message.includes('accès refusé')) {
+      return res.status(403).json({ message: error.message });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Erreur serveur lors de la suppression du traitement', 
+      error: error.message 
+    });
+  }
+};
+
+// Medical history management for hospital staff
+exports.addMedicalHistory = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { patientId } = req.params;
+
+    // Verify patient access
+    await verifyPatientHospitalAccess(patientId, hospitalId);
+
+    await PatientService.addMedicalHistory(
+      patientId,
+      null, // No specific doctor ID for hospital staff
+      req.body, 
+      req.user.id
+    );
+
+    return res.status(201).json({ 
+      message: 'Antécédent médical ajouté avec succès'
+    });
+  } catch (error) {
+    console.error('Error adding medical history from hospital:', error);
+    
+    if (error.message.includes('obligatoires')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    if (error.message === 'Patient non trouvé' || error.message.includes('accès refusé')) {
+      return res.status(404).json({ message: error.message });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Erreur serveur lors de l\'ajout de l\'antécédent médical', 
+      error: error.message 
+    });
+  }
+};
+
+// Patient notes management for hospital staff
+exports.addPatientNote = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { patientId } = req.params;
+
+    // Verify patient access
+    await verifyPatientHospitalAccess(patientId, hospitalId);
+
+    await PatientService.addPatientNote(
+      patientId,
+      null, // No specific doctor ID for hospital staff
+      req.body, 
+      req.user.id
+    );
+
+    return res.status(201).json({ 
+      message: 'Note ajoutée avec succès'
+    });
+  } catch (error) {
+    console.error('Error adding patient note from hospital:', error);
+    
+    if (error.message.includes('obligatoires')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    if (error.message === 'Patient non trouvé' || error.message.includes('accès refusé')) {
+      return res.status(404).json({ message: error.message });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Erreur serveur lors de l\'ajout de la note', 
+      error: error.message 
+    });
+  }
+};
+
+exports.updatePatientNote = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { patientId, noteId } = req.params;
+
+    // Verify patient access
+    await verifyPatientHospitalAccess(patientId, hospitalId);
+
+    await PatientService.updatePatientNote(
+      patientId,
+      noteId,
+      null, // No specific doctor ID for hospital staff
+      req.body, 
+      req.user.id
+    );
+
+    return res.status(200).json({ 
+      message: 'Note modifiée avec succès'
+    });
+  } catch (error) {
+    console.error('Error updating patient note from hospital:', error);
+    
+    if (error.message.includes('obligatoires')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    if (error.message === 'Patient non trouvé' || error.message === 'Note non trouvée') {
+      return res.status(404).json({ message: error.message });
+    }
+    
+    if (error.message.includes('autorisé') || error.message.includes('accès refusé')) {
+      return res.status(403).json({ message: error.message });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Erreur serveur lors de la modification de la note', 
+      error: error.message 
+    });
+  }
+};
+
+exports.deletePatientNote = async (req, res) => {
+  try {
+    const hospitalId = req.user.id_specifique_role;
+    const { patientId, noteId } = req.params;
+
+    // Verify patient access
+    await verifyPatientHospitalAccess(patientId, hospitalId);
+
+    await PatientService.deletePatientNote(
+      patientId,
+      noteId,
+      null, // No specific doctor ID for hospital staff
+      req.user.id
+    );
+
+    return res.status(200).json({ 
+      message: 'Note supprimée avec succès'
+    });
+  } catch (error) {
+    console.error('Error deleting patient note from hospital:', error);
+    
+    if (error.message === 'Patient non trouvé' || error.message === 'Note non trouvée') {
+      return res.status(404).json({ message: error.message });
+    }
+    
+    if (error.message.includes('autorisé') || error.message.includes('accès refusé')) {
+      return res.status(403).json({ message: error.message });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Erreur serveur lors de la suppression de la note', 
+      error: error.message 
+    });
+  }
+};
+
+// Helper function to verify patient hospital access
+async function verifyPatientHospitalAccess(patientId, hospitalId) {
+  const [admissionCheck] = await db.execute(`
+    SELECT DISTINCT ha.patient_id
+    FROM hospital_assignments ha
+    WHERE ha.patient_id = ? AND ha.hospital_id = ?
+  `, [patientId, hospitalId]);
+
+  if (admissionCheck.length === 0) {
+    throw new Error('Patient non admis dans cet hôpital - accès refusé');
+  }
+}
 
 

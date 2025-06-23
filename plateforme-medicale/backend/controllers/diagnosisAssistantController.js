@@ -528,7 +528,9 @@ function generateBasicResponse(message, conversationHistory = []) {
 // Basic symptom analysis using rule-based mapping
 exports.analyzeSymptoms = async (req, res) => {
   try {
-    const patientId = req.user.id_specifique_role;
+    // Handle both authenticated and unauthenticated users
+    const patientId = req.user ? req.user.id_specifique_role : null;
+    const isPublicUser = !req.user;
     const { symptoms, additionalInfo } = req.body;
 
     if (!symptoms || symptoms.length === 0) {
@@ -600,20 +602,24 @@ exports.analyzeSymptoms = async (req, res) => {
     // Limit to top 5 suggestions
     const topSuggestions = suggestions.slice(0, 5);
 
-    // Store analysis in database
-    const [result] = await db.execute(`
-      INSERT INTO diagnosis_suggestions (
-        patient_id, symptoms, suggestions, additional_info
-      ) VALUES (?, ?, ?, ?)
-    `, [
-      patientId,
-      JSON.stringify(processedSymptoms),
-      JSON.stringify(topSuggestions),
-      additionalInfo || null
-    ]);
+    // Store analysis in database (only for authenticated users)
+    let analysisId = null;
+    if (!isPublicUser) {
+      const [result] = await db.execute(`
+        INSERT INTO diagnosis_suggestions (
+          patient_id, symptoms, suggestions, additional_info
+        ) VALUES (?, ?, ?, ?)
+      `, [
+        patientId,
+        JSON.stringify(processedSymptoms),
+        JSON.stringify(topSuggestions),
+        additionalInfo || null
+      ]);
+      analysisId = result.insertId;
+    }
 
     const response = {
-      analysisId: result.insertId,
+      analysisId,
       symptoms: processedSymptoms,
       suggestions: topSuggestions,
       hasEmergencySymptoms,
@@ -635,7 +641,9 @@ exports.analyzeSymptoms = async (req, res) => {
 // Advanced AI analysis using Google Colab only
 exports.analyzeSymptomsAdvanced = async (req, res) => {
   try {
-    const patientId = req.user.id_specifique_role;
+    // Handle both authenticated and unauthenticated users
+    const patientId = req.user ? req.user.id_specifique_role : null;
+    const isPublicUser = !req.user;
     const { symptoms, additionalInfo } = req.body;
 
     if (!symptoms || symptoms.length === 0) {
@@ -651,20 +659,24 @@ exports.analyzeSymptomsAdvanced = async (req, res) => {
       emergencySymptoms.includes(symptom.toLowerCase().replace(/\s+/g, '_'))
     );
 
-    // Store analysis in database
-    const [result] = await db.execute(`
-      INSERT INTO diagnosis_suggestions (
-        patient_id, symptoms, suggestions, additional_info
-      ) VALUES (?, ?, ?, ?)
-    `, [
-      patientId,
-      JSON.stringify(symptoms),
-      JSON.stringify(aiAnalysis.analysis),
-      additionalInfo || null
-    ]);
+    // Store analysis in database (only for authenticated users)
+    let analysisId = null;
+    if (!isPublicUser) {
+      const [result] = await db.execute(`
+        INSERT INTO diagnosis_suggestions (
+          patient_id, symptoms, suggestions, additional_info
+        ) VALUES (?, ?, ?, ?)
+      `, [
+        patientId,
+        JSON.stringify(symptoms),
+        JSON.stringify(aiAnalysis.analysis),
+        additionalInfo || null
+      ]);
+      analysisId = result.insertId;
+    }
 
     const response = {
-      analysisId: result.insertId,
+      analysisId,
       symptoms,
       analysis: aiAnalysis.analysis,
       service: aiAnalysis.service,
@@ -688,7 +700,9 @@ exports.analyzeSymptomsAdvanced = async (req, res) => {
 // Chat with AI assistant
 exports.chatWithAssistant = async (req, res) => {
   try {
-    const patientId = req.user.id_specifique_role;
+    // Handle both authenticated and unauthenticated users
+    const patientId = req.user ? req.user.id_specifique_role : null;
+    const isPublicUser = !req.user;
     const { message, conversationId, language = 'fr' } = req.body;
 
     if (!message) {
@@ -699,7 +713,7 @@ exports.chatWithAssistant = async (req, res) => {
 
     // Retrieve conversation history from database
     let conversationHistory = [];
-    if (conversationId) {
+    if (conversationId && !isPublicUser) {
       try {
         const [historyRows] = await db.execute(`
           SELECT message, sender, timestamp 
@@ -736,14 +750,16 @@ exports.chatWithAssistant = async (req, res) => {
       }
     }
 
-    // Store user message in database
-    try {
-      await db.execute(`
-        INSERT INTO chat_history (conversation_id, patient_id, message, sender)
-        VALUES (?, ?, ?, 'user')
-      `, [currentConversationId, patientId, message]);
-    } catch (dbError) {
-      console.warn('Could not store user message:', dbError.message);
+    // Store user message in database (only for authenticated users)
+    if (!isPublicUser) {
+      try {
+        await db.execute(`
+          INSERT INTO chat_history (conversation_id, patient_id, message, sender)
+          VALUES (?, ?, ?, 'user')
+        `, [currentConversationId, patientId, message]);
+      } catch (dbError) {
+        console.warn('Could not store user message:', dbError.message);
+      }
     }
 
     let aiResponse = null;
@@ -754,7 +770,7 @@ exports.chatWithAssistant = async (req, res) => {
     context.language = language;
     context.conversationHistory = conversationHistory; // Add conversation context
     context.conversationId = currentConversationId; // Add conversation ID
-    context.patientId = patientId.toString(); // Add patient ID
+    context.patientId = patientId ? patientId.toString() : 'public_user'; // Add patient ID
     
     const aiResult = await aiManager.generateMedicalResponse(message, context);
     aiResponse = aiResult.response;
@@ -807,14 +823,16 @@ exports.chatWithAssistant = async (req, res) => {
     aiResponse += disclaimer;
     }
 
-    // Store assistant response in database
-    try {
-      await db.execute(`
-        INSERT INTO chat_history (conversation_id, patient_id, message, sender)
-        VALUES (?, ?, ?, 'assistant')
-      `, [currentConversationId, patientId, aiResponse]);
-    } catch (dbError) {
-      console.warn('Could not store assistant message:', dbError.message);
+    // Store assistant response in database (only for authenticated users)
+    if (!isPublicUser) {
+      try {
+        await db.execute(`
+          INSERT INTO chat_history (conversation_id, patient_id, message, sender)
+          VALUES (?, ?, ?, 'assistant')
+        `, [currentConversationId, patientId, aiResponse]);
+      } catch (dbError) {
+        console.warn('Could not store assistant message:', dbError.message);
+      }
     }
 
     const chatResponse = {

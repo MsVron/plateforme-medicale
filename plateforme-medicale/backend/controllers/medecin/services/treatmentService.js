@@ -5,17 +5,17 @@ const db = require('../../../config/db');
  */
 class TreatmentService {
   /**
-   * Add or update treatment
+   * Add treatment (supports both doctor and institutional prescriptions)
    */
-  static async addTreatment(patientId, medecinId, treatmentData, userId) {
+  static async addTreatment(patientId, medecinId, treatmentData, userId, institutionId = null) {
     const {
       medicament_id, nom_medicament, posologie, date_debut, date_fin,
       est_permanent, instructions, rappel_prise, frequence_rappel
     } = treatmentData;
 
     // Validate required fields
-    if (!patientId || (!medicament_id && !nom_medicament) || !posologie || !date_debut) {
-      throw new Error('Patient ID, médicament, posologie et date de début sont obligatoires');
+    if (!patientId || !posologie || !date_debut) {
+      throw new Error('Patient ID, posologie et date de début sont obligatoires');
     }
 
     // Validate patient exists
@@ -30,18 +30,41 @@ class TreatmentService {
     // Validate dates
     this.validateTreatmentDates(date_debut, date_fin);
 
+    // Determine prescriber type and prepare insert data
+    let insertQuery, insertParams;
+    
+    if (institutionId) {
+      // Institutional prescription
+      insertQuery = `
+        INSERT INTO traitements (
+          patient_id, medicament_id, posologie, date_debut, date_fin,
+          est_permanent, prescripteur_type, institution_prescripteur_id, 
+          prescripteur_user_id, instructions, rappel_prise, frequence_rappel
+        ) VALUES (?, ?, ?, ?, ?, ?, 'institution', ?, ?, ?, ?, ?)
+      `;
+      insertParams = [
+        patientId, finalMedicamentId, posologie, date_debut, date_fin,
+        est_permanent || false, institutionId, userId, instructions || null,
+        rappel_prise || false, frequence_rappel || null
+      ];
+    } else {
+      // Doctor prescription (original behavior)
+      insertQuery = `
+        INSERT INTO traitements (
+          patient_id, medicament_id, posologie, date_debut, date_fin,
+          est_permanent, prescripteur_type, medecin_prescripteur_id, 
+          prescripteur_user_id, instructions, rappel_prise, frequence_rappel
+        ) VALUES (?, ?, ?, ?, ?, ?, 'medecin', ?, ?, ?, ?, ?)
+      `;
+      insertParams = [
+        patientId, finalMedicamentId, posologie, date_debut, date_fin,
+        est_permanent || false, medecinId, userId, instructions || null,
+        rappel_prise || false, frequence_rappel || null
+      ];
+    }
+
     // Insert treatment
-    const [result] = await db.execute(`
-      INSERT INTO traitements (
-        patient_id, medicament_id, posologie, date_debut, date_fin,
-        est_permanent, medecin_prescripteur_id, instructions,
-        rappel_prise, frequence_rappel
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      patientId, finalMedicamentId, posologie, date_debut, date_fin,
-      est_permanent || false, medecinId, instructions || null,
-      rappel_prise || false, frequence_rappel || null
-    ]);
+    const [result] = await db.execute(insertQuery, insertParams);
 
     // Log action
     await this.logTreatmentAction(userId, 'ADD_TREATMENT', result.insertId, patientId);

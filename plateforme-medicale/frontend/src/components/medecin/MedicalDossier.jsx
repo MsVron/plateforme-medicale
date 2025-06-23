@@ -52,6 +52,8 @@ const MedicalDossier = () => {
   const [error, setError] = useState(null);
   const [dossier, setDossier] = useState(null);
   const [currentMedecinId, setCurrentMedecinId] = useState(null);
+  const [userRole, setUserRole] = useState(null); // Track user role
+  const [isHospitalUser, setIsHospitalUser] = useState(false); // Track if hospital user
   const [expandedSections, setExpandedSections] = useState({
     personal: true,        // Only personal information expanded by default
     treatments: false,     // Current medications
@@ -116,13 +118,34 @@ const MedicalDossier = () => {
   useEffect(() => {
     fetchDossier();
     getCurrentMedecinId();
+    detectUserRole(); // Detect if hospital or medecin user
   }, [patientId]);
+
+  const detectUserRole = () => {
+    // Check current URL path to determine user role
+    const currentPath = window.location.pathname;
+    if (currentPath.includes('/hospital/')) {
+      setIsHospitalUser(true);
+      setUserRole('hospital');
+    } else if (currentPath.includes('/medecin/')) {
+      setIsHospitalUser(false);
+      setUserRole('medecin');
+    }
+  };
 
   const fetchDossier = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/medecin/patients/${patientId}/dossier`, {
+      const currentPath = window.location.pathname;
+      const isHospital = currentPath.includes('/hospital/');
+      
+      // Use appropriate API endpoint based on user role
+      const apiEndpoint = isHospital 
+        ? `/hospital/patients/${patientId}/dossier`
+        : `/medecin/patients/${patientId}/dossier`;
+      
+      const response = await axios.get(apiEndpoint, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDossier(response.data);
@@ -198,9 +221,14 @@ const MedicalDossier = () => {
   const handleSaveTreatment = async () => {
     try {
       const token = localStorage.getItem('token');
+      const currentPath = window.location.pathname;
+      const isHospital = currentPath.includes('/hospital/');
+      
+      // Use appropriate API endpoint based on user role
+      const baseUrl = isHospital ? '/hospital' : '/medecin';
       const url = treatmentDialog.mode === 'add' 
-        ? `/medecin/patients/${patientId}/treatments`
-        : `/medecin/patients/${patientId}/treatments/${treatmentDialog.data.id}`;
+        ? `${baseUrl}/patients/${patientId}/treatments`
+        : `${baseUrl}/patients/${patientId}/treatments/${treatmentDialog.data.id}`;
       
       const method = treatmentDialog.mode === 'add' ? 'post' : 'put';
       
@@ -233,7 +261,12 @@ const MedicalDossier = () => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/medecin/patients/${patientId}/treatments/${treatmentId}`, {
+      const currentPath = window.location.pathname;
+      const isHospital = currentPath.includes('/hospital/');
+      
+      // Use appropriate API endpoint based on user role
+      const baseUrl = isHospital ? '/hospital' : '/medecin';
+      await axios.delete(`${baseUrl}/patients/${patientId}/treatments/${treatmentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -269,7 +302,12 @@ const MedicalDossier = () => {
   const handleSaveHistory = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`/medecin/patients/${patientId}/medical-history`, historyForm, {
+      const currentPath = window.location.pathname;
+      const isHospital = currentPath.includes('/hospital/');
+      
+      // Use appropriate API endpoint based on user role
+      const baseUrl = isHospital ? '/hospital' : '/medecin';
+      await axios.post(`${baseUrl}/patients/${patientId}/medical-history`, historyForm, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -315,10 +353,15 @@ const MedicalDossier = () => {
   const handleSaveNote = async () => {
     try {
       const token = localStorage.getItem('token');
+      const currentPath = window.location.pathname;
+      const isHospital = currentPath.includes('/hospital/');
+      
+      // Use appropriate API endpoint based on user role
+      const baseUrl = isHospital ? '/hospital' : '/medecin';
       
       if (noteDialog.data) {
-        // Edit existing note
-        await axios.put(`/medecin/patients/${patientId}/notes/${noteDialog.data.id}`, noteForm, {
+        // Update existing note
+        await axios.put(`${baseUrl}/patients/${patientId}/notes/${noteDialog.data.id}`, noteForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSnackbar({
@@ -328,7 +371,7 @@ const MedicalDossier = () => {
         });
       } else {
         // Add new note
-        await axios.post(`/medecin/patients/${patientId}/notes`, noteForm, {
+        await axios.post(`${baseUrl}/patients/${patientId}/notes`, noteForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSnackbar({
@@ -351,26 +394,35 @@ const MedicalDossier = () => {
   };
 
   const handleDeleteNote = async (noteId) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`/medecin/patients/${patientId}/notes/${noteId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setSnackbar({
-          open: true,
-          message: 'Note supprimée avec succès',
-          severity: 'success'
-        });
-        fetchDossier(); // Refresh data
-      } catch (err) {
-        console.error('Error deleting note:', err);
-        setSnackbar({
-          open: true,
-          message: err.response?.data?.message || 'Erreur lors de la suppression de la note',
-          severity: 'error'
-        });
-      }
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const currentPath = window.location.pathname;
+      const isHospital = currentPath.includes('/hospital/');
+      
+      // Use appropriate API endpoint based on user role
+      const baseUrl = isHospital ? '/hospital' : '/medecin';
+      await axios.delete(`${baseUrl}/patients/${patientId}/notes/${noteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSnackbar({
+        open: true,
+        message: 'Note supprimée avec succès',
+        severity: 'success'
+      });
+      
+      fetchDossier(); // Refresh data
+    } catch (err) {
+      console.error('Error deleting note:', err);
+      setSnackbar({
+        open: true,
+        message: err.response?.data?.message || 'Erreur lors de la suppression de la note',
+        severity: 'error'
+      });
     }
   };
 
@@ -1217,34 +1269,34 @@ const MedicalDossier = () => {
           onChange={() => handleSectionToggle('appointments')}
           sx={{ mb: 2 }}
         >
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <DateIcon sx={{ mr: 2, color: 'primary.main' }} />
-              <Typography variant="h6">Rendez-vous</Typography>
-              {appointments && appointments.length > 0 && (
-                <Chip 
-                  label={appointments.length} 
-                  size="small" 
-                  color="info" 
-                  sx={{ ml: 2 }} 
-                />
-              )}
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <DateIcon sx={{ mr: 2, color: 'primary.main' }} />
+                <Typography variant="h6">Rendez-vous</Typography>
+                {appointments && appointments.length > 0 && (
+                  <Chip 
+                    label={appointments.length} 
+                    size="small" 
+                    color="info" 
+                    sx={{ ml: 2 }} 
+                  />
+                )}
+              </Box>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent accordion from toggling
+                  handleOpenFollowUpDialog();
+                }}
+                sx={{ mr: 3 }}
+              >
+                Rendez-vous de suivi
+              </Button>
             </Box>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent accordion from toggling
-                handleOpenFollowUpDialog();
-              }}
-              sx={{ mr: 3 }}
-            >
-              Rendez-vous de suivi
-            </Button>
-          </Box>
-        </AccordionSummary>
+          </AccordionSummary>
           <AccordionDetails>
             {appointments.length === 0 ? (
               <Typography color="text.secondary">Aucun rendez-vous enregistré</Typography>

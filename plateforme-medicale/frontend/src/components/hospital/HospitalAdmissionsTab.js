@@ -582,6 +582,11 @@ const HospitalAdmissionsTab = ({ onStatsUpdate }) => {
     return `${diffDays} jour${diffDays > 1 ? 's' : ''}`;
   };
 
+  const handleViewMedicalDossier = (admission) => {
+    // Navigate to the hospital medical dossier route
+    navigate(`/hospital/patients/${admission.patient_id}/dossier`);
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
       <Box>
@@ -717,6 +722,14 @@ const HospitalAdmissionsTab = ({ onStatsUpdate }) => {
                       <TableCell>{getStatusChip(admission)}</TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 1 }}>
+                          <IconButton
+                            size="small"
+                            color="info"
+                            onClick={() => handleViewMedicalDossier(admission)}
+                            title="Voir le dossier médical"
+                          >
+                            <ViewIcon />
+                          </IconButton>
                           {!admission.discharge_date && (
                             <>
                               <IconButton

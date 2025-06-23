@@ -445,6 +445,16 @@ function App() {
               }
             />
 
+            {/* Hospital medical dossier route */}
+            <Route
+              path="/hospital/patients/:patientId/dossier"
+              element={
+                <ProtectedRoute allowedRoles={['hospital']}>
+                  <MedicalDossier />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Pharmacy routes */}
             <Route
               path="/pharmacy"

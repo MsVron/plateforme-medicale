@@ -31,6 +31,9 @@ const hospitalRoutes = require('./routes/hospitalRoutes');
 const pharmacyRoutes = require('./routes/pharmacyRoutes');
 const laboratoryRoutes = require('./routes/laboratoryRoutes');
 
+// Public routes (no authentication required)
+const publicRoutes = require('./routes/publicRoutes');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', patientRoutes);
@@ -38,6 +41,9 @@ app.use('/api', medecinRoutes);
 app.use('/api', institutionRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/appointments', appointmentRoutes);
+
+// Public API routes (no authentication required)
+app.use('/api', publicRoutes);
 
 // Institution-specific API routes
 app.use('/api/hospital', hospitalRoutes);

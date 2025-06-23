@@ -138,6 +138,16 @@ export const hospitalService = {
     }
   },
 
+  // Comprehensive medical dossier (like doctors have)
+  getPatientDossier: async (patientId) => {
+    try {
+      const response = await axios.get(`/hospital/patients/${patientId}/dossier`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   // Patient-Doctor assignment management
   assignPatientToDoctors: async (patientId, assignmentData) => {
     try {

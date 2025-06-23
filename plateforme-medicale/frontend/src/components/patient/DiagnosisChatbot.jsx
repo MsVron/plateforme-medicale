@@ -54,14 +54,7 @@ const DiagnosisChatbot = () => {
   const [language, setLanguage] = useState('fr'); // 'fr' for French, 'ar' for Arabic
   
   // Chat state
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      type: 'assistant',
-      message: 'Bonjour ! Je suis votre assistant médical virtuel. Je peux vous aider à analyser vos symptômes et répondre à vos questions de santé. Comment puis-je vous aider aujourd\'hui ?',
-      timestamp: new Date().toISOString()
-    }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState(null);
@@ -90,9 +83,19 @@ const DiagnosisChatbot = () => {
 
   // Function to get welcome message based on language
   const getWelcomeMessage = (lang) => {
-    return lang === 'fr' 
+    const token = localStorage.getItem('token');
+    const baseMessage = lang === 'fr' 
       ? 'Bonjour ! Je suis votre assistant médical virtuel. Je peux vous aider à analyser vos symptômes et répondre à vos questions de santé. Comment puis-je vous aider aujourd\'hui ?'
       : 'أهلا وسهلا! أنا المساعد الطبي الذكي ديالك. يمكنني نعاونك باش تحلل الأعراض ديالك ونجاوب على الأسئلة ديال الصحة. كيفاش يمكنني نعاونك اليوم؟';
+    
+    if (!token) {
+      const guestMessage = lang === 'fr' 
+        ? '\n\n💡 **Mode invité** : Vous pouvez tester l\'assistant gratuitement ! Pour sauvegarder vos conversations et accéder à l\'historique, créez un compte patient.'
+        : '\n\n💡 **وضع الضيف** : يمكنك تجربة المساعد مجاناً! باش تحفظ المحادثات وتشوف التاريخ، دير حساب مريض.';
+      return baseMessage + guestMessage;
+    }
+    
+    return baseMessage;
   };
 
   // Function to handle language change
@@ -107,6 +110,20 @@ const DiagnosisChatbot = () => {
       )
     );
   };
+
+  // Initialize welcome message
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([
+        {
+          id: 1,
+          type: 'assistant',
+          message: getWelcomeMessage(language),
+          timestamp: new Date().toISOString()
+        }
+      ]);
+    }
+  }, [language]);
 
   useEffect(() => {
     if (isOpen && currentView === 'symptoms') {
@@ -137,15 +154,10 @@ const DiagnosisChatbot = () => {
   const fetchCommonSymptoms = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        console.warn('No authentication token found');
-        setError('Veuillez vous connecter pour accéder aux symptômes');
-        return;
-      }
+      const endpoint = token ? '/patient/diagnosis/symptoms' : '/public/diagnosis/symptoms';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-      const response = await axios.get('/patient/diagnosis/symptoms', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(endpoint, { headers });
       setCommonSymptoms(response.data.symptoms);
     } catch (error) {
       console.error('Error fetching symptoms:', error);
@@ -165,6 +177,13 @@ const DiagnosisChatbot = () => {
     setIsLoadingHistory(true);
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        // For unauthenticated users, show empty history with a message
+        setDiagnosisHistory([]);
+        setError('Connectez-vous pour voir votre historique de diagnostics');
+        return;
+      }
+      
       const response = await axios.get('/patient/diagnosis/history', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -193,28 +212,14 @@ const DiagnosisChatbot = () => {
 
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        const errorMessage = {
-          id: Date.now() + 1,
-          type: 'assistant',
-          message: language === 'fr' 
-            ? 'Veuillez vous connecter pour utiliser l\'assistant médical.'
-            : 'خاصك تدخل باش تستعمل المساعد الطبي.',
-          timestamp: new Date().toISOString(),
-          isError: true
-        };
-        setMessages(prev => [...prev, errorMessage]);
-        setIsTyping(false);
-        return;
-      }
+      const endpoint = token ? '/patient/diagnosis/chat' : '/public/diagnosis/chat';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-      const response = await axios.post('/patient/diagnosis/chat', {
+      const response = await axios.post(endpoint, {
         message: inputMessage,
         conversationId,
         language
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      }, { headers });
 
       const assistantMessage = {
         id: Date.now() + 1,
@@ -298,14 +303,15 @@ const DiagnosisChatbot = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const endpoint = advanced ? '/patient/diagnosis/analyze-advanced' : '/patient/diagnosis/analyze';
+      const endpoint = advanced 
+        ? (token ? '/patient/diagnosis/analyze-advanced' : '/public/diagnosis/analyze-advanced')
+        : (token ? '/patient/diagnosis/analyze' : '/public/diagnosis/analyze');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
       const response = await axios.post(endpoint, {
         symptoms: selectedSymptoms.map(s => s.label),
         additionalInfo
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      }, { headers });
 
       // Add analysis result to chat
       const analysisMessage = {
