@@ -59,6 +59,7 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [institutionRequests, setInstitutionRequests] = useState([]);
   const [doctorRequests, setDoctorRequests] = useState([]);
+  const [specialties, setSpecialities] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [reviewDialog, setReviewDialog] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
@@ -69,6 +70,7 @@ const Notifications = () => {
     testBackendConnection();
     fetchNotifications();
     fetchPendingRequests();
+    fetchSpecialties();
   }, []);
 
   const testBackendConnection = async () => {
@@ -178,7 +180,23 @@ const Notifications = () => {
         try {
           const institutionData = JSON.parse(institutionText);
           console.log('🔍 [DEBUG] Institution requests data:', institutionData);
-          setInstitutionRequests(institutionData.requests || []);
+          
+          // Parse request_data JSON strings for institution requests
+          const processedInstitutionRequests = (institutionData.requests || []).map(request => {
+            if (request.request_data && typeof request.request_data === 'string') {
+              try {
+                request.request_data = JSON.parse(request.request_data);
+                console.log('🔍 [DEBUG] Parsed institution request_data:', request.request_data);
+              } catch (parseError) {
+                console.error('❌ [ERROR] Failed to parse institution request_data JSON:', parseError);
+                console.error('❌ [ERROR] Original request_data:', request.request_data);
+                request.request_data = null;
+              }
+            }
+            return request;
+          });
+          
+          setInstitutionRequests(processedInstitutionRequests);
         } catch (parseError) {
           console.error('❌ [ERROR] Failed to parse institution requests JSON:', parseError);
           console.error('❌ [ERROR] Institution response was:', institutionText);
@@ -191,7 +209,23 @@ const Notifications = () => {
         try {
           const doctorData = JSON.parse(doctorText);
           console.log('🔍 [DEBUG] Doctor requests data:', doctorData);
-          setDoctorRequests(doctorData.requests || []);
+          
+          // Parse request_data JSON strings for doctor requests
+          const processedDoctorRequests = (doctorData.requests || []).map(request => {
+            if (request.request_data && typeof request.request_data === 'string') {
+              try {
+                request.request_data = JSON.parse(request.request_data);
+                console.log('🔍 [DEBUG] Parsed doctor request_data:', request.request_data);
+              } catch (parseError) {
+                console.error('❌ [ERROR] Failed to parse doctor request_data JSON:', parseError);
+                console.error('❌ [ERROR] Original request_data:', request.request_data);
+                request.request_data = null;
+              }
+            }
+            return request;
+          });
+          
+          setDoctorRequests(processedDoctorRequests);
         } catch (parseError) {
           console.error('❌ [ERROR] Failed to parse doctor requests JSON:', parseError);
           console.error('❌ [ERROR] Doctor response was:', doctorText);
@@ -204,6 +238,28 @@ const Notifications = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchSpecialties = async () => {
+    try {
+      console.log('🔍 [DEBUG] Fetching specialties...');
+      const response = await fetch('/api/specialites/public');
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 [DEBUG] Specialties data:', data);
+        setSpecialities(data.specialites || []);
+      } else {
+        console.error('❌ [ERROR] Failed to fetch specialties:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ [ERROR] Error fetching specialties:', error);
+    }
+  };
+
+  const getSpecialtyName = (specialtyId) => {
+    const specialty = specialties.find(s => s.id === specialtyId);
+    return specialty ? specialty.nom : `ID: ${specialtyId}`;
   };
 
   const handleApproveRequest = (request, type) => {
@@ -302,7 +358,7 @@ const Notifications = () => {
         </Typography>
         <Box>
           <Tooltip title="Actualiser">
-            <IconButton onClick={() => { fetchNotifications(); fetchPendingRequests(); }}>
+            <IconButton onClick={() => { fetchNotifications(); fetchPendingRequests(); fetchSpecialties(); }}>
               <RefreshIcon sx={{ color: 'white' }} />
             </IconButton>
           </Tooltip>
@@ -513,10 +569,19 @@ const Notifications = () => {
                           Nom: {request.request_data.nom || 'N/A'} {request.request_data.prenom || ''}
                         </Typography>
                         <Typography variant="body2">
-                          Spécialité: {request.request_data.specialite || 'N/A'}
+                          Spécialité: {request.request_data.specialite_id ? getSpecialtyName(request.request_data.specialite_id) : 'N/A'}
                         </Typography>
                         <Typography variant="body2">
                           Email: {request.request_data.email || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2">
+                          Téléphone: {request.request_data.telephone || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2">
+                          Numéro d'ordre: {request.request_data.numero_ordre || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2">
+                          Ville: {request.request_data.ville || 'N/A'}
                         </Typography>
                       </Box>
                     )}
