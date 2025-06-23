@@ -22,6 +22,27 @@ CREATE TABLE institution_change_requests (
   INDEX idx_change_requests_requested_by (requested_by_user_id)
 );
 
+-- DOCTOR CHANGE REQUESTS TABLE (for admin-initiated doctor changes requiring super admin approval)
+CREATE TABLE doctor_change_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  medecin_id INT DEFAULT NULL,
+  request_type ENUM('create', 'modify', 'delete') NOT NULL,
+  requested_by_user_id INT NOT NULL,
+  request_data JSON NOT NULL,
+  current_data JSON DEFAULT NULL,
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  reviewed_by_user_id INT DEFAULT NULL,
+  review_comment TEXT DEFAULT NULL,
+  date_requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  date_reviewed DATETIME DEFAULT NULL,
+  FOREIGN KEY (medecin_id) REFERENCES medecins(id),
+  FOREIGN KEY (requested_by_user_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (reviewed_by_user_id) REFERENCES utilisateurs(id),
+  INDEX idx_doctor_change_requests_status (status),
+  INDEX idx_doctor_change_requests_type (request_type),
+  INDEX idx_doctor_change_requests_requested_by (requested_by_user_id)
+);
+
 -- HOSPITAL ASSIGNMENTS TABLE
 CREATE TABLE hospital_assignments (
   id INT AUTO_INCREMENT PRIMARY KEY,

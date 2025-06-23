@@ -43,8 +43,9 @@ import AppointmentConfirmation from './pages/AppointmentConfirmation';
 import AppointmentSuccess from './pages/AppointmentSuccess';
 import AppointmentError from './pages/AppointmentError';
 
-// Import Super Admin Basic Statistics Page
+// Import Super Admin pages
 import BasicStats from './pages/superadmin/BasicStats';
+import Notifications from './pages/superadmin/Notifications';
 
 // Import the doctor components
 import { 
@@ -217,6 +218,16 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['super_admin']}>
                   <BasicStats />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Super Admin Notifications Route */}
+            <Route
+              path="/superadmin/notifications"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <Notifications />
                 </ProtectedRoute>
               }
             />

@@ -58,9 +58,17 @@ exports.verifyToken = (req, res, next) => {
 
 // Super Admin only
 exports.isSuperAdmin = (req, res, next) => {
+  console.log('🔍 [DEBUG] isSuperAdmin middleware called');
+  console.log('🔍 [DEBUG] User role from token:', req.user.role);
+  console.log('🔍 [DEBUG] Request URL:', req.originalUrl);
+  console.log('🔍 [DEBUG] Full user object:', req.user);
+  
   if (req.user.role !== 'super_admin') {
+    console.log('❌ [ERROR] Access denied - user role is not super_admin');
     return res.status(403).json({ message: "Accès réservé aux super administrateurs" });
   }
+  
+  console.log('✅ [SUCCESS] Super admin access granted');
   next();
 };
 

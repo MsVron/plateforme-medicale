@@ -13,6 +13,16 @@ const appointmentReminderService = require('./services/appointmentReminderServic
 app.use(cors());
 app.use(express.json());
 
+// Add debugging middleware
+app.use((req, res, next) => {
+  console.log('🌐 [REQUEST]', req.method, req.originalUrl);
+  console.log('🌐 [HEADERS]', {
+    authorization: req.headers.authorization ? 'Present' : 'Missing',
+    contentType: req.headers['content-type']
+  });
+  next();
+});
+
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -42,6 +52,16 @@ app.use('/api', institutionRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/appointments', appointmentRoutes);
 
+// Debug: Log registered routes
+console.log('🔧 [ROUTES] Registered routes:');
+console.log('🔧 [ROUTES] /api/auth -> authRoutes');
+console.log('🔧 [ROUTES] /api/admin -> adminRoutes (includes superadmin endpoints)');
+console.log('🔧 [ROUTES] /api -> patientRoutes');
+console.log('🔧 [ROUTES] /api -> medecinRoutes');
+console.log('🔧 [ROUTES] /api -> institutionRoutes');
+console.log('🔧 [ROUTES] /api/evaluations -> evaluationRoutes');
+console.log('🔧 [ROUTES] /api/appointments -> appointmentRoutes');
+
 // Public API routes (no authentication required)
 app.use('/api', publicRoutes);
 
@@ -53,6 +73,18 @@ app.use('/api/laboratory', laboratoryRoutes);
 // Route de test
 app.get('/', (req, res) => {
   res.json({ message: 'Bienvenue sur l\'API de la Plateforme Médicale' });
+});
+
+// Add catch-all route for debugging unmatched requests
+app.use('*', (req, res) => {
+  console.log('❌ [UNMATCHED ROUTE]', req.method, req.originalUrl);
+  console.log('❌ [AVAILABLE ROUTES] Check if the route exists in the registered routes');
+  res.status(404).json({ 
+    error: 'Route not found',
+    method: req.method,
+    url: req.originalUrl,
+    message: 'This route does not exist on the server'
+  });
 });
 
 // Route to check appointment reminder service status

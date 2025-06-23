@@ -23,7 +23,8 @@ import {
   Assessment,
   Timeline,
   AccountBox,
-  Healing
+  Healing,
+  Notifications
 } from '@mui/icons-material';
 import DashboardLayoutView from './DashboardLayout.view';
 
@@ -56,12 +57,12 @@ const DashboardLayoutContainer = () => {
       { text: 'Gestion des administrateurs', path: '/admin/admins', icon: <AdminPanelSettings /> },
       { text: 'Gestion des médecins', path: '/admin/medecins', icon: <MedicalServices /> },
       { text: 'Gestion des institutions', path: '/admin/institutions', icon: <Business /> },
+      { text: 'Notifications', path: '/superadmin/notifications', icon: <Notifications /> },
       { text: 'Statistiques de Base', path: '/superadmin/basic-stats', icon: <Analytics /> }
     ],
     admin: [
       { text: 'Gestion des médecins', path: '/admin/medecins', icon: <MedicalServices /> },
-      { text: 'Gestion des institutions', path: '/admin/institutions', icon: <Business /> },
-      { text: 'Statistiques', path: '/admin/statistics', icon: <Analytics /> }
+      { text: 'Gestion des institutions', path: '/admin/institutions', icon: <Business /> }
     ],
     medecin: [
       { text: 'Mon espace', path: '/medecin', icon: <Dashboard /> },

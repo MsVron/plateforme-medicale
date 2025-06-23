@@ -7,11 +7,16 @@ CREATE TABLE notifications (
   utilisateur_id INT NOT NULL,
   titre VARCHAR(100) NOT NULL,
   message TEXT NOT NULL,
-  type ENUM('rdv', 'annulation', 'rappel', 'résultat', 'système') NOT NULL,
+  type ENUM('rdv', 'annulation', 'rappel', 'résultat', 'système', 'approval_request', 'approval_response') NOT NULL,
   est_lue BOOLEAN DEFAULT FALSE,
   date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   date_lecture DATETIME,
-  FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id)
+  related_request_id INT DEFAULT NULL,
+  related_request_type ENUM('institution', 'doctor') DEFAULT NULL,
+  FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id),
+  INDEX idx_notifications_user (utilisateur_id),
+  INDEX idx_notifications_type (type),
+  INDEX idx_notifications_unread (est_lue)
 );
 
 -- Table des documents médicaux

@@ -16,9 +16,187 @@ router.get('/medecins/public/:id', medecinController.getPublicMedecinById);
 // Protected routes
 router.get('/medecins', verifyToken, isAdmin, medecinController.getMedecins);
 router.get('/medecins/:id', verifyToken, medecinController.getMedecinById);
-router.post('/medecins', verifyToken, isAdmin, medecinController.addMedecin);
-router.put('/medecins/:id', verifyToken, isAdmin, medecinController.editMedecin);
-router.delete('/medecins/:id', verifyToken, isSuperAdmin, medecinController.deleteMedecin);
+// Doctor management with approval system
+router.post('/medecins', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const db = require('../config/db');
+        
+        // Create approval request instead of direct creation
+        const requestData = req.body;
+        
+        await db.query('START TRANSACTION');
+        
+        try {
+            // Create the approval request
+            const [result] = await db.execute(`
+                INSERT INTO doctor_change_requests (
+                    request_type, requested_by_user_id, request_data, status, date_requested
+                ) VALUES (?, ?, ?, 'pending', NOW())
+            `, ['create', req.user.id, JSON.stringify(requestData)]);
+            
+            const requestId = result.insertId;
+            
+            // Notify all superadmins
+            const [superadmins] = await db.execute(`
+                SELECT id FROM utilisateurs WHERE role = 'super_admin' AND est_actif = TRUE
+            `);
+            
+            for (const superadmin of superadmins) {
+                await db.execute(`
+                    INSERT INTO notifications (utilisateur_id, titre, message, type, related_request_id, related_request_type)
+                    VALUES (?, ?, ?, 'approval_request', ?, 'doctor')
+                `, [
+                    superadmin.id,
+                    'Nouvelle demande de création de médecin',
+                    `L'administrateur ${req.user.prenom} ${req.user.nom} demande la création d'un nouveau médecin: ${requestData.prenom} ${requestData.nom}`,
+                    requestId
+                ]);
+            }
+            
+            await db.query('COMMIT');
+            
+            res.json({ 
+                message: 'Demande de création de médecin soumise pour approbation',
+                requestId: requestId 
+            });
+            
+        } catch (error) {
+            await db.query('ROLLBACK');
+            throw error;
+        }
+        
+    } catch (error) {
+        console.error('Error creating doctor approval request:', error);
+        res.status(500).json({ message: 'Erreur lors de la soumission de la demande' });
+    }
+});
+
+router.put('/medecins/:id', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const db = require('../config/db');
+        const doctorId = req.params.id;
+        
+        // Get current doctor data
+        const [currentDoctors] = await db.execute(`
+            SELECT * FROM medecins WHERE id = ?
+        `, [doctorId]);
+        
+        if (currentDoctors.length === 0) {
+            return res.status(404).json({ message: 'Médecin non trouvé' });
+        }
+        
+        const currentData = currentDoctors[0];
+        const requestData = req.body;
+        
+        await db.query('START TRANSACTION');
+        
+        try {
+            // Create the approval request
+            const [result] = await db.execute(`
+                INSERT INTO doctor_change_requests (
+                    medecin_id, request_type, requested_by_user_id, request_data, current_data, status, date_requested
+                ) VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+            `, [doctorId, 'modify', req.user.id, JSON.stringify(requestData), JSON.stringify(currentData)]);
+            
+            const requestId = result.insertId;
+            
+            // Notify all superadmins
+            const [superadmins] = await db.execute(`
+                SELECT id FROM utilisateurs WHERE role = 'super_admin' AND est_actif = TRUE
+            `);
+            
+            for (const superadmin of superadmins) {
+                await db.execute(`
+                    INSERT INTO notifications (utilisateur_id, titre, message, type, related_request_id, related_request_type)
+                    VALUES (?, ?, ?, 'approval_request', ?, 'doctor')
+                `, [
+                    superadmin.id,
+                    'Demande de modification de médecin',
+                    `L'administrateur ${req.user.prenom} ${req.user.nom} demande la modification du médecin: ${currentData.prenom} ${currentData.nom}`,
+                    requestId
+                ]);
+            }
+            
+            await db.query('COMMIT');
+            
+            res.json({ 
+                message: 'Demande de modification de médecin soumise pour approbation',
+                requestId: requestId 
+            });
+            
+        } catch (error) {
+            await db.query('ROLLBACK');
+            throw error;
+        }
+        
+    } catch (error) {
+        console.error('Error creating doctor modification request:', error);
+        res.status(500).json({ message: 'Erreur lors de la soumission de la demande' });
+    }
+});
+
+router.delete('/medecins/:id', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const db = require('../config/db');
+        const doctorId = req.params.id;
+        
+        // Get current doctor data
+        const [currentDoctors] = await db.execute(`
+            SELECT * FROM medecins WHERE id = ?
+        `, [doctorId]);
+        
+        if (currentDoctors.length === 0) {
+            return res.status(404).json({ message: 'Médecin non trouvé' });
+        }
+        
+        const currentData = currentDoctors[0];
+        
+        await db.query('START TRANSACTION');
+        
+        try {
+            // Create the approval request
+            const [result] = await db.execute(`
+                INSERT INTO doctor_change_requests (
+                    medecin_id, request_type, requested_by_user_id, current_data, status, date_requested
+                ) VALUES (?, ?, ?, ?, 'pending', NOW())
+            `, [doctorId, 'delete', req.user.id, JSON.stringify(currentData)]);
+            
+            const requestId = result.insertId;
+            
+            // Notify all superadmins
+            const [superadmins] = await db.execute(`
+                SELECT id FROM utilisateurs WHERE role = 'super_admin' AND est_actif = TRUE
+            `);
+            
+            for (const superadmin of superadmins) {
+                await db.execute(`
+                    INSERT INTO notifications (utilisateur_id, titre, message, type, related_request_id, related_request_type)
+                    VALUES (?, ?, ?, 'approval_request', ?, 'doctor')
+                `, [
+                    superadmin.id,
+                    'Demande de suppression de médecin',
+                    `L'administrateur ${req.user.prenom} ${req.user.nom} demande la suppression du médecin: ${currentData.prenom} ${currentData.nom}`,
+                    requestId
+                ]);
+            }
+            
+            await db.query('COMMIT');
+            
+            res.json({ 
+                message: 'Demande de suppression de médecin soumise pour approbation',
+                requestId: requestId 
+            });
+            
+        } catch (error) {
+            await db.query('ROLLBACK');
+            throw error;
+        }
+        
+    } catch (error) {
+        console.error('Error creating doctor deletion request:', error);
+        res.status(500).json({ message: 'Erreur lors de la soumission de la demande' });
+    }
+});
 router.get('/specialites', verifyToken, isAdmin, medecinController.getSpecialites);
 router.get('/institutions', verifyToken, isAdmin, medecinController.getInstitutions);
 router.get('/medecin/dashboard', verifyToken, medecinController.getCurrentMedecin);

@@ -108,112 +108,68 @@ router.get('/institutions', verifyToken, isAdmin, async (req, res) => {
 router.post('/institutions', verifyToken, isAdmin, async (req, res) => {
     try {
         const db = require('../config/db');
-        const bcrypt = require('bcrypt');
-        const { getInstitutionUserRole, isValidInstitutionType } = require('../utils/institutionMapping');
+        const { isValidInstitutionType } = require('../utils/institutionMapping');
         const {
             nom, adresse, ville, code_postal, pays, telephone, email_contact,
             description, type, username, password
         } = req.body;
+
+        // Validate required fields
+        if (!nom || !adresse || !ville || !code_postal || !type) {
+            return res.status(400).json({ 
+                message: 'Nom, adresse, ville, code postal et type sont obligatoires' 
+            });
+        }
 
         // Validate institution type
         if (!isValidInstitutionType(type)) {
             return res.status(400).json({ message: 'Type d\'institution invalide' });
         }
 
-        // Map institution type to user role
-        const type_institution = getInstitutionUserRole(type);
-
-
-
-        // Get connection and start transaction manually
-        const connection = await db.getConnection();
-        
-        try {
-            await connection.beginTransaction();
-            
-            // Insert institution
-            const [result] = await connection.execute(
-                `INSERT INTO institutions (
+        // Create approval request instead of directly creating institution
+        const requestData = {
                     nom, adresse, ville, code_postal, pays, telephone, email_contact,
-                    description, type, type_institution
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [nom, adresse, ville, code_postal, pays, telephone, email_contact,
-                 description, type, type_institution]
-            );
+            description, type, username, password
+        };
 
-            const institutionId = result.insertId;
-            let generatedCredentials = null;
+        const [result] = await db.execute(`
+            INSERT INTO institution_change_requests (institution_id, request_type, requested_by_user_id, request_data, status, date_requested)
+            VALUES (?, 'create', ?, ?, 'pending', NOW())
+        `, [null, req.user.id, JSON.stringify(requestData)]);
 
-            // Generate user account for non-cabinet privé institutions
-            if (type !== 'cabinet privé') {
-                // Validate required fields for user account creation
-                if (!username || !password) {
-                    await connection.rollback();
-                    connection.release();
-                    return res.status(400).json({ message: 'Nom d\'utilisateur et mot de passe requis pour ce type d\'institution' });
-                }
-                
-                // Use provided username and password
-                const finalUsername = username;
-                const finalPassword = password;
-                
-                // Use email_contact or create a default email if empty
-                const userEmail = email_contact || `${finalUsername.replace(/[^a-zA-Z0-9]/g, '')}@institution.local`;
-                
-                // Check if username already exists
-                const [existingUser] = await connection.execute(
-                    'SELECT id FROM utilisateurs WHERE nom_utilisateur = ?',
-                    [finalUsername]
-                );
-                
-                if (existingUser.length > 0) {
-                    await connection.rollback();
-                    connection.release();
-                    return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà utilisé' });
-                }
-                
-                const hashedPassword = await bcrypt.hash(finalPassword, 10);
+        // Get all superadmin users
+        const [superAdmins] = await db.execute(`
+            SELECT id FROM utilisateurs WHERE role = 'super_admin' AND est_actif = TRUE
+        `);
 
-                // Insert user account
-                await connection.execute(
-                    `INSERT INTO utilisateurs (
-                        nom_utilisateur, mot_de_passe, email, role, id_specifique_role, est_actif, est_verifie
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                    [finalUsername, hashedPassword, userEmail, type_institution, institutionId, true, true]
-                );
+        // Create notification for all superadmins
+        for (const admin of superAdmins) {
+            await db.execute(`
+                INSERT INTO notifications (utilisateur_id, titre, message, type, related_request_id, related_request_type)
+                VALUES (?, ?, ?, 'approval_request', ?, 'institution')
+            `, [
+                admin.id,
+                'Nouvelle demande d\'institution',
+                `Une nouvelle demande de création d'institution "${nom}" nécessite votre approbation.`,
+                result.insertId
+            ]);
+        }
 
-                generatedCredentials = {
-                    username: finalUsername,
-                    password: finalPassword
-                };
-            }
-
-            await connection.commit();
-            connection.release();
-
-            res.json({ 
-                message: 'Institution ajoutée avec succès',
-                institutionId: institutionId,
-                credentials: generatedCredentials
+        res.status(201).json({ 
+            message: 'Demande de création d\'institution soumise avec succès. En attente d\'approbation du super administrateur.',
+            requestId: result.insertId
             });
 
         } catch (error) {
-            await connection.rollback();
-            connection.release();
-            throw error;
-        }
-
-    } catch (error) {
-        console.error('Error adding institution:', error);
-        res.status(500).json({ message: 'Erreur lors de l\'ajout de l\'institution' });
+        console.error('Error creating institution request:', error);
+        res.status(500).json({ message: 'Erreur lors de la soumission de la demande d\'institution' });
     }
 });
 
 router.put('/institutions/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const db = require('../config/db');
-        const bcrypt = require('bcrypt');
-        const { getInstitutionUserRole, isValidInstitutionType } = require('../utils/institutionMapping');
+        const { isValidInstitutionType } = require('../utils/institutionMapping');
         const institutionId = req.params.id;
         const {
             nom, adresse, ville, code_postal, pays, telephone, email_contact,
@@ -225,105 +181,55 @@ router.put('/institutions/:id', verifyToken, isAdmin, async (req, res) => {
             return res.status(400).json({ message: 'Type d\'institution invalide' });
         }
 
-        // Map institution type to user role
-        const type_institution = getInstitutionUserRole(type);
+        // Get current institution data for comparison
+        const [currentInstitution] = await db.execute(
+            'SELECT * FROM institutions WHERE id = ?',
+            [institutionId]
+        );
 
-        // Get connection and start transaction manually
-        const connection = await db.getConnection();
-
-        try {
-            await connection.beginTransaction();
-            
-            // Update institution
-            await connection.execute(
-                `UPDATE institutions SET 
-                    nom = ?, adresse = ?, ville = ?, code_postal = ?, pays = ?,
-                    telephone = ?, email_contact = ?, description = ?,
-                    type = ?, type_institution = ?
-                WHERE id = ?`,
-                [nom, adresse, ville, code_postal, pays, telephone, email_contact,
-                 description, type, type_institution, institutionId]
-            );
-
-            // Handle user account updates for non-cabinet privé institutions
-            if (type !== 'cabinet privé') {
-                // Check if user account exists for this institution
-                const [existingUser] = await connection.execute(
-                    'SELECT id, nom_utilisateur FROM utilisateurs WHERE id_specifique_role = ? AND role = ?',
-                    [institutionId, type_institution]
-                );
-
-                if (existingUser.length > 0) {
-                    // Update existing user account
-                    const userId = existingUser[0].id;
-                    const currentUsername = existingUser[0].nom_utilisateur;
-
-                    // Check if username changed and if new username is available
-                    if (username && username !== currentUsername) {
-                        const [usernameCheck] = await connection.execute(
-                            'SELECT id FROM utilisateurs WHERE nom_utilisateur = ? AND id != ?',
-                            [username, userId]
-                        );
-
-                        if (usernameCheck.length > 0) {
-                            await connection.rollback();
-                            connection.release();
-                            return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà utilisé' });
-                        }
-
-                        await connection.execute(
-                            'UPDATE utilisateurs SET nom_utilisateur = ? WHERE id = ?',
-                            [username, userId]
-                        );
-                    }
-
-                    // Update password if provided
-                    if (password) {
-                        const hashedPassword = await bcrypt.hash(password, 10);
-                        await connection.execute(
-                            'UPDATE utilisateurs SET mot_de_passe = ? WHERE id = ?',
-                            [hashedPassword, userId]
-                        );
-                    }
-                } else if (username && password) {
-                    // Create new user account if it doesn't exist
-                    const [usernameCheck] = await connection.execute(
-                        'SELECT id FROM utilisateurs WHERE nom_utilisateur = ?',
-                        [username]
-                    );
-
-                    if (usernameCheck.length > 0) {
-                        await connection.rollback();
-                        connection.release();
-                        return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà utilisé' });
-                    }
-
-                    // Use email_contact or create a default email if empty
-                    const userEmail = email_contact || `${username.replace(/[^a-zA-Z0-9]/g, '')}@institution.local`;
-                    
-                    const hashedPassword = await bcrypt.hash(password, 10);
-                    await connection.execute(
-                        `INSERT INTO utilisateurs (
-                            nom_utilisateur, mot_de_passe, email, role, id_specifique_role, est_actif, est_verifie
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                        [username, hashedPassword, userEmail, type_institution, institutionId, true, true]
-                    );
-                }
-            }
-
-            await connection.commit();
-            connection.release();
-            res.json({ message: 'Institution mise à jour avec succès' });
-
-        } catch (error) {
-            await connection.rollback();
-            connection.release();
-            throw error;
+        if (currentInstitution.length === 0) {
+            return res.status(404).json({ message: 'Institution non trouvée' });
         }
 
-    } catch (error) {
-        console.error('Error updating institution:', error);
-        res.status(500).json({ message: 'Erreur lors de la mise à jour de l\'institution' });
+        // Create approval request for modification
+        const requestData = {
+            nom, adresse, ville, code_postal, pays, telephone, email_contact,
+            description, type, username, password
+        };
+
+        const currentData = currentInstitution[0];
+
+        const [result] = await db.execute(`
+            INSERT INTO institution_change_requests (institution_id, request_type, requested_by_user_id, request_data, current_data, status, date_requested)
+            VALUES (?, 'modify', ?, ?, ?, 'pending', NOW())
+        `, [institutionId, req.user.id, JSON.stringify(requestData), JSON.stringify(currentData)]);
+
+        // Get all superadmin users
+        const [superAdmins] = await db.execute(`
+            SELECT id FROM utilisateurs WHERE role = 'super_admin' AND est_actif = TRUE
+        `);
+
+        // Create notification for all superadmins
+        for (const admin of superAdmins) {
+            await db.execute(`
+                INSERT INTO notifications (utilisateur_id, titre, message, type, related_request_id, related_request_type)
+                VALUES (?, ?, ?, 'approval_request', ?, 'institution')
+            `, [
+                admin.id,
+                'Demande de modification d\'institution',
+                `Une demande de modification de l'institution "${currentData.nom}" nécessite votre approbation.`,
+                result.insertId
+            ]);
+        }
+
+        res.json({ 
+            message: 'Demande de modification d\'institution soumise avec succès. En attente d\'approbation du super administrateur.',
+            requestId: result.insertId
+        });
+
+        } catch (error) {
+        console.error('Error creating institution modification request:', error);
+        res.status(500).json({ message: 'Erreur lors de la soumission de la demande de modification' });
     }
 });
 
@@ -2173,5 +2079,404 @@ router.get('/superadmin/basic-stats', verifyToken, isSuperAdmin, async (req, res
         res.status(500).json({ message: 'Erreur lors de la récupération des statistiques de base' });
     }
 });
+
+// ============================================================================
+// APPROVAL SYSTEM ENDPOINTS
+// ============================================================================
+
+// Test endpoint for superadmin debugging
+router.get('/superadmin/test', verifyToken, isSuperAdmin, (req, res) => {
+    console.log('🔍 [DEBUG] GET /superadmin/test endpoint hit successfully');
+    console.log('🔍 [DEBUG] User:', req.user);
+    res.json({ 
+        message: 'SuperAdmin test endpoint working',
+        user: {
+            id: req.user.id,
+            role: req.user.role,
+            nom_utilisateur: req.user.nom_utilisateur
+        },
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Get SuperAdmin Notifications
+router.get('/superadmin/notifications', verifyToken, isSuperAdmin, async (req, res) => {
+    console.log('🔍 [DEBUG] GET /superadmin/notifications endpoint hit');
+    console.log('🔍 [DEBUG] User from token:', {
+        id: req.user.id,
+        role: req.user.role,
+        nom_utilisateur: req.user.nom_utilisateur
+    });
+    
+    try {
+        const db = require('../config/db');
+        
+        console.log('🔍 [DEBUG] Executing notifications query for user ID:', req.user.id);
+        
+        const [notifications] = await db.execute(`
+            SELECT 
+                n.*,
+                u.nom_utilisateur as sender_name
+            FROM notifications n
+            LEFT JOIN utilisateurs u ON n.utilisateur_id = u.id
+            WHERE n.utilisateur_id = ?
+            ORDER BY n.date_creation DESC
+            LIMIT 50
+        `, [req.user.id]);
+
+        console.log('🔍 [DEBUG] Notifications query result count:', notifications.length);
+        console.log('🔍 [DEBUG] First few notifications:', notifications.slice(0, 3));
+
+        res.json({ notifications });
+    } catch (error) {
+        console.error('❌ [ERROR] Error fetching notifications:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des notifications' });
+    }
+});
+
+// Get Pending Institution Requests
+router.get('/superadmin/institution-requests', verifyToken, isSuperAdmin, async (req, res) => {
+    console.log('🔍 [DEBUG] GET /superadmin/institution-requests endpoint hit');
+    console.log('🔍 [DEBUG] User from token:', {
+        id: req.user.id,
+        role: req.user.role,
+        nom_utilisateur: req.user.nom_utilisateur
+    });
+    
+    try {
+        const db = require('../config/db');
+        
+        console.log('🔍 [DEBUG] Executing institution requests query');
+        
+        const [requests] = await db.execute(`
+            SELECT 
+                icr.*,
+                u.nom_utilisateur as requester_name,
+                u.email as requester_email,
+                i.nom as institution_name
+            FROM institution_change_requests icr
+            LEFT JOIN utilisateurs u ON icr.requested_by_user_id = u.id
+            LEFT JOIN institutions i ON icr.institution_id = i.id
+            WHERE icr.status = 'pending'
+            ORDER BY icr.date_requested DESC
+        `);
+
+        console.log('🔍 [DEBUG] Institution requests query result count:', requests.length);
+        console.log('🔍 [DEBUG] Institution requests:', requests);
+
+        res.json({ requests });
+    } catch (error) {
+        console.error('❌ [ERROR] Error fetching institution requests:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des demandes d\'institution' });
+    }
+});
+
+// Get Pending Doctor Requests
+router.get('/superadmin/doctor-requests', verifyToken, isSuperAdmin, async (req, res) => {
+    console.log('🔍 [DEBUG] GET /superadmin/doctor-requests endpoint hit');
+    console.log('🔍 [DEBUG] User from token:', {
+        id: req.user.id,
+        role: req.user.role,
+        nom_utilisateur: req.user.nom_utilisateur
+    });
+    
+    try {
+        const db = require('../config/db');
+        
+        console.log('🔍 [DEBUG] Executing doctor requests query');
+        
+        const [requests] = await db.execute(`
+            SELECT 
+                dcr.*,
+                u.nom_utilisateur as requester_name,
+                u.email as requester_email,
+                CONCAT(m.prenom, ' ', m.nom) as doctor_name
+            FROM doctor_change_requests dcr
+            LEFT JOIN utilisateurs u ON dcr.requested_by_user_id = u.id
+            LEFT JOIN medecins m ON dcr.medecin_id = m.id
+            WHERE dcr.status = 'pending'
+            ORDER BY dcr.date_requested DESC
+        `);
+
+        console.log('🔍 [DEBUG] Doctor requests query result count:', requests.length);
+        console.log('🔍 [DEBUG] Doctor requests:', requests);
+
+        res.json({ requests });
+    } catch (error) {
+        console.error('❌ [ERROR] Error fetching doctor requests:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des demandes de médecin' });
+    }
+});
+
+// Review Institution Request
+router.post('/superadmin/review-institution-request', verifyToken, isSuperAdmin, async (req, res) => {
+    try {
+        const db = require('../config/db');
+        const { requestId, action, comment } = req.body;
+
+        if (!requestId || !action || !['approved', 'rejected'].includes(action)) {
+            return res.status(400).json({ message: 'Données de demande invalides' });
+        }
+
+        // Get the request details
+        const [requests] = await db.execute(`
+            SELECT * FROM institution_change_requests WHERE id = ?
+        `, [requestId]);
+
+        if (requests.length === 0) {
+            return res.status(404).json({ message: 'Demande non trouvée' });
+        }
+
+        const request = requests[0];
+
+        // Start transaction
+        await db.query('START TRANSACTION');
+
+        try {
+            // Update the request status
+            await db.execute(`
+                UPDATE institution_change_requests 
+                SET status = ?, reviewed_by_user_id = ?, review_comment = ?, date_reviewed = NOW()
+                WHERE id = ?
+            `, [action, req.user.id, comment, requestId]);
+
+            // If approved, execute the actual change
+            if (action === 'approved') {
+                const requestData = JSON.parse(request.request_data);
+                
+                if (request.request_type === 'create') {
+                    await db.execute(`
+                        INSERT INTO institutions (nom, type, adresse, ville, telephone, email, est_actif, date_creation)
+                        VALUES (?, ?, ?, ?, ?, ?, TRUE, NOW())
+                    `, [
+                        requestData.nom,
+                        requestData.type,
+                        requestData.adresse,
+                        requestData.ville,
+                        requestData.telephone,
+                        requestData.email
+                    ]);
+                } else if (request.request_type === 'modify' && request.institution_id) {
+                    const updateFields = [];
+                    const updateValues = [];
+                    
+                    Object.keys(requestData).forEach(key => {
+                        if (requestData[key] !== null && requestData[key] !== undefined) {
+                            updateFields.push(`${key} = ?`);
+                            updateValues.push(requestData[key]);
+                        }
+                    });
+                    
+                    if (updateFields.length > 0) {
+                        updateValues.push(request.institution_id);
+                        await db.execute(`
+                            UPDATE institutions SET ${updateFields.join(', ')} WHERE id = ?
+                        `, updateValues);
+                    }
+                } else if (request.request_type === 'delete' && request.institution_id) {
+                    await db.execute(`
+                        UPDATE institutions SET est_actif = FALSE WHERE id = ?
+                    `, [request.institution_id]);
+                }
+            }
+
+            // Create notification for the requester
+            await db.execute(`
+                INSERT INTO notifications (utilisateur_id, titre, message, type, related_request_id, related_request_type)
+                VALUES (?, ?, ?, 'approval_response', ?, 'institution')
+            `, [
+                request.requested_by_user_id,
+                `Demande d'institution ${action === 'approved' ? 'approuvée' : 'rejetée'}`,
+                `Votre demande d'institution a été ${action === 'approved' ? 'approuvée' : 'rejetée'}${comment ? '. Commentaire: ' + comment : '.'}`,
+                requestId
+            ]);
+
+            await db.query('COMMIT');
+            res.json({ message: `Demande ${action === 'approved' ? 'approuvée' : 'rejetée'} avec succès` });
+
+        } catch (error) {
+            await db.query('ROLLBACK');
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Error reviewing institution request:', error);
+        res.status(500).json({ message: 'Erreur lors de la révision de la demande' });
+    }
+});
+
+// Review Doctor Request
+router.post('/superadmin/review-doctor-request', verifyToken, isSuperAdmin, async (req, res) => {
+    try {
+        const db = require('../config/db');
+        const { requestId, action, comment } = req.body;
+
+        if (!requestId || !action || !['approved', 'rejected'].includes(action)) {
+            return res.status(400).json({ message: 'Données de demande invalides' });
+        }
+
+        // Get the request details
+        const [requests] = await db.execute(`
+            SELECT * FROM doctor_change_requests WHERE id = ?
+        `, [requestId]);
+
+        if (requests.length === 0) {
+            return res.status(404).json({ message: 'Demande non trouvée' });
+        }
+
+        const request = requests[0];
+
+        // Start transaction
+        await db.query('START TRANSACTION');
+
+        try {
+            // Update the request status
+            await db.execute(`
+                UPDATE doctor_change_requests 
+                SET status = ?, reviewed_by_user_id = ?, review_comment = ?, date_reviewed = NOW()
+                WHERE id = ?
+            `, [action, req.user.id, comment, requestId]);
+
+            // If approved, execute the actual change
+            if (action === 'approved') {
+                const requestData = JSON.parse(request.request_data);
+                
+                if (request.request_type === 'create') {
+                    // Create doctor record directly (no user table dependency based on schema)
+                    await db.execute(`
+                        INSERT INTO medecins (
+                            prenom, nom, specialite_id, numero_ordre, telephone, 
+                            email_professionnel, institution_id, est_actif, 
+                            adresse, ville, code_postal, tarif_consultation,
+                            biographie, accepte_nouveaux_patients, accepte_patients_walk_in
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE, ?, ?, ?, ?, ?, ?, ?)
+                    `, [
+                        requestData.prenom,
+                        requestData.nom,
+                        requestData.specialite_id,
+                        requestData.numero_ordre,
+                        requestData.telephone,
+                        requestData.email_professionnel,
+                        requestData.institution_id,
+                        requestData.adresse,
+                        requestData.ville,
+                        requestData.code_postal,
+                        requestData.tarif_consultation,
+                        requestData.biographie,
+                        requestData.accepte_nouveaux_patients || true,
+                        requestData.accepte_patients_walk_in || true
+                    ]);
+                } else if (request.request_type === 'modify' && request.medecin_id) {
+                    const updateFields = [];
+                    const updateValues = [];
+                    
+                    Object.keys(requestData).forEach(key => {
+                        if (requestData[key] !== null && requestData[key] !== undefined) {
+                            updateFields.push(`${key} = ?`);
+                            updateValues.push(requestData[key]);
+                        }
+                    });
+                    
+                    if (updateFields.length > 0) {
+                        updateValues.push(request.medecin_id);
+                        await db.execute(`
+                            UPDATE medecins SET ${updateFields.join(', ')} WHERE id = ?
+                        `, updateValues);
+                    }
+                } else if (request.request_type === 'delete' && request.medecin_id) {
+                    await db.execute(`
+                        UPDATE medecins SET est_actif = FALSE WHERE id = ?
+                    `, [request.medecin_id]);
+                }
+            }
+
+            // Create notification for the requester
+            await db.execute(`
+                INSERT INTO notifications (utilisateur_id, titre, message, type, related_request_id, related_request_type)
+                VALUES (?, ?, ?, 'approval_response', ?, 'doctor')
+            `, [
+                request.requested_by_user_id,
+                `Demande de médecin ${action === 'approved' ? 'approuvée' : 'rejetée'}`,
+                `Votre demande de médecin a été ${action === 'approved' ? 'approuvée' : 'rejetée'}${comment ? '. Commentaire: ' + comment : '.'}`,
+                requestId
+            ]);
+
+            await db.query('COMMIT');
+            res.json({ message: `Demande ${action === 'approved' ? 'approuvée' : 'rejetée'} avec succès` });
+
+        } catch (error) {
+            await db.query('ROLLBACK');
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Error reviewing doctor request:', error);
+        res.status(500).json({ message: 'Erreur lors de la révision de la demande' });
+    }
+});
+
+// Mark notification as read
+router.post('/superadmin/notifications/:id/read', verifyToken, isSuperAdmin, async (req, res) => {
+    try {
+        const db = require('../config/db');
+        const notificationId = req.params.id;
+
+        await db.execute(`
+            UPDATE notifications 
+            SET est_lue = TRUE, date_lecture = NOW()
+            WHERE id = ?
+        `, [notificationId]);
+
+        res.json({ message: 'Notification marquée comme lue' });
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+        res.status(500).json({ message: 'Erreur lors de la mise à jour de la notification' });
+    }
+});
+
+// Helper function to create approval request (used by admin controllers)
+const createApprovalRequest = async (type, entityId, requestType, requestData, currentData, requestedByUserId) => {
+    try {
+        const db = require('../config/db');
+        
+        const tableName = type === 'institution' ? 'institution_change_requests' : 'doctor_change_requests';
+        const entityIdField = type === 'institution' ? 'institution_id' : 'medecin_id';
+        
+        const [result] = await db.execute(`
+            INSERT INTO ${tableName} (${entityIdField}, request_type, requested_by_user_id, request_data, current_data, status, date_requested)
+            VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+        `, [
+            entityId,
+            requestType,
+            requestedByUserId,
+            JSON.stringify(requestData),
+            currentData ? JSON.stringify(currentData) : null
+        ]);
+
+        // Get all superadmin users
+        const [superAdmins] = await db.execute(`
+            SELECT id FROM utilisateurs WHERE role = 'super_admin' AND est_actif = TRUE
+        `);
+
+        // Create notification for all superadmins
+        for (const admin of superAdmins) {
+            await db.execute(`
+                INSERT INTO notifications (utilisateur_id, titre, message, type, related_request_id, related_request_type)
+                VALUES (?, ?, ?, 'approval_request', ?, ?)
+            `, [
+                admin.id,
+                `Nouvelle demande ${type === 'institution' ? 'd\'institution' : 'de médecin'}`,
+                `Une nouvelle demande de ${requestType} ${type === 'institution' ? 'd\'institution' : 'de médecin'} nécessite votre approbation.`,
+                result.insertId,
+                type
+            ]);
+        }
+
+        return result.insertId;
+    } catch (error) {
+        console.error('Error creating approval request:', error);
+        throw error;
+    }
+};
 
 module.exports = router;
