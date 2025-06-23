@@ -17,7 +17,7 @@ const initTransporter = () => {
   }
 
   // Create Gmail transporter with settings that worked in our test
-  const gmailTransporter = nodemailer.createTransporter({
+  const gmailTransporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true, // use SSL
