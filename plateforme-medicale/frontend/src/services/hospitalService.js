@@ -156,6 +156,26 @@ export const hospitalService = {
     } catch (error) {
       throw error.response?.data || error;
     }
+  },
+
+  // Get patient admission details with assigned doctors
+  getPatientAdmissionDetails: async (admissionId) => {
+    try {
+      const response = await axios.get(`/hospital/admissions/${admissionId}/details`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Remove doctor from patient admission
+  removeDoctorFromAdmission: async (admissionId, doctorId) => {
+    try {
+      const response = await axios.delete(`/hospital/admissions/${admissionId}/doctors/${doctorId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
   }
 };
 

@@ -37,7 +37,8 @@ import {
   Visibility as ViewIcon,
   LocalHospital as HospitalIcon,
   Person as PersonIcon,
-  PersonAdd as PersonAddIcon
+  PersonAdd as PersonAddIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -290,6 +291,15 @@ const HospitalAdmissionsTab = ({ onStatsUpdate }) => {
   const [selectedAdmission, setSelectedAdmission] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
+  // Patient details dialog states
+  const [patientDetailsDialogOpen, setPatientDetailsDialogOpen] = useState(false);
+  const [patientDetails, setPatientDetails] = useState(null);
+  const [loadingPatientDetails, setLoadingPatientDetails] = useState(false);
+
+  // Doctor removal states
+  const [doctorRemovalDialog, setDoctorRemovalDialog] = useState({ open: false, doctor: null, admissionId: null });
+  const [removingDoctor, setRemovingDoctor] = useState(false);
+
   // Doctor assignment states
   const [doctorAssignmentDialogOpen, setDoctorAssignmentDialogOpen] = useState(false);
   const [selectedAdmissionForDoctor, setSelectedAdmissionForDoctor] = useState(null);
@@ -442,6 +452,76 @@ const HospitalAdmissionsTab = ({ onStatsUpdate }) => {
     }
   };
 
+  const handlePatientClick = async (admission) => {
+    try {
+      setLoadingPatientDetails(true);
+      setPatientDetailsDialogOpen(true);
+      
+      const response = await hospitalService.getPatientAdmissionDetails(admission.id);
+      setPatientDetails(response.data);
+    } catch (error) {
+      console.error('Error loading patient details:', error);
+      setSnackbar({ 
+        open: true, 
+        message: 'Erreur lors du chargement des détails du patient', 
+        severity: 'error' 
+      });
+      setPatientDetailsDialogOpen(false);
+    } finally {
+      setLoadingPatientDetails(false);
+    }
+  };
+
+  const handleClosePatientDetailsDialog = () => {
+    setPatientDetailsDialogOpen(false);
+    setPatientDetails(null);
+  };
+
+  const handleRemoveDoctorClick = (doctor, admissionId) => {
+    setDoctorRemovalDialog({
+      open: true,
+      doctor,
+      admissionId
+    });
+  };
+
+  const handleConfirmRemoveDoctor = async () => {
+    if (!doctorRemovalDialog.doctor || !doctorRemovalDialog.admissionId) return;
+
+    try {
+      setRemovingDoctor(true);
+      await hospitalService.removeDoctorFromAdmission(
+        doctorRemovalDialog.admissionId, 
+        doctorRemovalDialog.doctor.id
+      );
+
+      setSnackbar({ 
+        open: true, 
+        message: 'Médecin retiré de l\'assignation avec succès', 
+        severity: 'success' 
+      });
+
+      // Refresh patient details
+      const response = await hospitalService.getPatientAdmissionDetails(doctorRemovalDialog.admissionId);
+      setPatientDetails(response.data);
+
+      setDoctorRemovalDialog({ open: false, doctor: null, admissionId: null });
+    } catch (error) {
+      console.error('Error removing doctor:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.message || 'Erreur lors de la suppression du médecin', 
+        severity: 'error' 
+      });
+    } finally {
+      setRemovingDoctor(false);
+    }
+  };
+
+  const handleCancelRemoveDoctor = () => {
+    setDoctorRemovalDialog({ open: false, doctor: null, admissionId: null });
+  };
+
   const handleOpenDoctorAssignmentDialog = (admission) => {
     setSelectedAdmissionForDoctor(admission);
     setDoctorAssignmentForm({
@@ -563,8 +643,20 @@ const HospitalAdmissionsTab = ({ onStatsUpdate }) => {
                   admissions.map((admission) => (
                     <TableRow key={admission.id} hover>
                       <TableCell>
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        <Box 
+                          sx={{ 
+                            cursor: 'pointer',
+                            '&:hover': {
+                              backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                              borderRadius: 1
+                            },
+                            p: 1,
+                            borderRadius: 1,
+                            transition: 'background-color 0.2s'
+                          }}
+                          onClick={() => handlePatientClick(admission)}
+                        >
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                             {admission.patient_prenom} {admission.patient_nom}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
@@ -876,6 +968,414 @@ const HospitalAdmissionsTab = ({ onStatsUpdate }) => {
             <Button onClick={() => setDoctorAssignmentDialogOpen(false)}>Annuler</Button>
             <Button variant="contained" color="primary" onClick={handleAssignDoctorToAdmission}>
               Assigner le Médecin
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Patient Details Dialog */}
+        <Dialog 
+          open={patientDetailsDialogOpen} 
+          onClose={handleClosePatientDetailsDialog} 
+          maxWidth="lg" 
+          fullWidth
+        >
+          <DialogTitle>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+              <ViewIcon sx={{ mr: 1 }} />
+              Détails du Patient
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            {loadingPatientDetails ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : patientDetails ? (
+              <Grid container spacing={3} sx={{ mt: 1 }}>
+                {/* Patient Information */}
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                        <PersonIcon sx={{ mr: 1 }} />
+                        Informations Patient
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                          <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                            {patientDetails.admission.patient_prenom} {patientDetails.admission.patient_nom}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="body2" color="text.secondary">CIN</Typography>
+                          <Typography variant="body1">{patientDetails.admission.patient_cne}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="body2" color="text.secondary">Sexe</Typography>
+                          <Typography variant="body1">{patientDetails.admission.sexe}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="body2" color="text.secondary">Date de naissance</Typography>
+                          <Typography variant="body1">
+                            {new Date(patientDetails.admission.date_naissance).toLocaleDateString('fr-FR')}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="body2" color="text.secondary">Groupe sanguin</Typography>
+                          <Typography variant="body1">{patientDetails.admission.groupe_sanguin || 'Non renseigné'}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="body2" color="text.secondary">Téléphone</Typography>
+                          <Typography variant="body1">{patientDetails.admission.patient_telephone || 'Non renseigné'}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="body2" color="text.secondary">Email</Typography>
+                          <Typography variant="body1">{patientDetails.admission.patient_email || 'Non renseigné'}</Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="body2" color="text.secondary">Adresse</Typography>
+                          <Typography variant="body1">
+                            {patientDetails.admission.adresse ? 
+                              `${patientDetails.admission.adresse}, ${patientDetails.admission.ville || ''}` : 
+                              'Non renseignée'
+                            }
+                          </Typography>
+                        </Grid>
+                        {patientDetails.admission.contact_urgence_nom && (
+                          <>
+                            <Grid item xs={12}>
+                              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold', mt: 1 }}>
+                                Contact d'urgence
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <Typography variant="body2" color="text.secondary">Nom</Typography>
+                              <Typography variant="body1">{patientDetails.admission.contact_urgence_nom}</Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <Typography variant="body2" color="text.secondary">Téléphone</Typography>
+                              <Typography variant="body1">{patientDetails.admission.contact_urgence_telephone}</Typography>
+                            </Grid>
+                          </>
+                        )}
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Admission Information */}
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                        <HospitalIcon sx={{ mr: 1 }} />
+                        Détails de l'Admission
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                          <Typography variant="body2" color="text.secondary">Date d'admission</Typography>
+                          <Typography variant="body1">
+                            {new Date(patientDetails.admission.admission_date).toLocaleDateString('fr-FR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="body2" color="text.secondary">Motif d'admission</Typography>
+                          <Typography variant="body1">{patientDetails.admission.admission_reason}</Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="body2" color="text.secondary">Département</Typography>
+                          <Typography variant="body1">{patientDetails.admission.ward_name || 'Non spécifié'}</Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="body2" color="text.secondary">Statut</Typography>
+                          <Chip 
+                            label={patientDetails.admission.status === 'active' ? 'Hospitalisé' : 'Sorti'} 
+                            color={patientDetails.admission.status === 'active' ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </Grid>
+                        {patientDetails.admission.discharge_date && (
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">Date de sortie</Typography>
+                            <Typography variant="body1">
+                              {new Date(patientDetails.admission.discharge_date).toLocaleDateString('fr-FR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </Typography>
+                          </Grid>
+                        )}
+                        {patientDetails.admission.discharge_reason && (
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">Motif de sortie</Typography>
+                            <Typography variant="body1">{patientDetails.admission.discharge_reason}</Typography>
+                          </Grid>
+                        )}
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Assigned Doctors */}
+                <Grid item xs={12}>
+                  <Card sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                        <PersonAddIcon sx={{ mr: 1 }} />
+                        Médecins Assignés au Patient ({patientDetails.assignedDoctors.length})
+                      </Typography>
+                      {patientDetails.assignedDoctors.length > 0 ? (
+                        <Grid container spacing={2}>
+                          {patientDetails.assignedDoctors.map((doctor, index) => (
+                            <Grid item xs={12} sm={6} md={4} key={doctor.id || index}>
+                              <Card 
+                                variant="outlined" 
+                                sx={{ 
+                                  p: 2,
+                                  border: doctor.is_primary ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                                  backgroundColor: doctor.is_primary ? 'rgba(25, 118, 210, 0.04)' : 'inherit'
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                  <Box sx={{ flex: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                                        Dr. {doctor.nom_complet}
+                                      </Typography>
+                                      {doctor.is_primary && (
+                                        <Chip 
+                                          label="Médecin principal" 
+                                          size="small" 
+                                          color="primary" 
+                                          sx={{ ml: 1 }}
+                                        />
+                                      )}
+                                    </Box>
+                                  </Box>
+                                  {!doctor.is_primary && (
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={() => handleRemoveDoctorClick(doctor, patientDetails.admission.id)}
+                                      title="Retirer ce médecin de l'assignation"
+                                      sx={{ ml: 1 }}
+                                    >
+                                      <DeleteIcon />
+                                    </IconButton>
+                                  )}
+                                </Box>
+                                <Typography variant="body2" color="text.secondary">
+                                  {doctor.specialite || 'Spécialité non renseignée'}
+                                </Typography>
+                                {doctor.numero_ordre && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                    N° Ordre: {doctor.numero_ordre}
+                                  </Typography>
+                                )}
+                                {doctor.role_assignment && (
+                                  <Chip 
+                                    label={doctor.role_assignment} 
+                                    size="small" 
+                                    color="secondary" 
+                                    sx={{ mt: 1 }}
+                                  />
+                                )}
+                                {doctor.assignment_date && !doctor.is_primary && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                                    Assigné le: {new Date(doctor.assignment_date).toLocaleDateString('fr-FR')}
+                                  </Typography>
+                                )}
+                              </Card>
+                            </Grid>
+                          ))}
+                        </Grid>
+                      ) : (
+                        <Alert severity="info" sx={{ mt: 1 }}>
+                          Seul le médecin principal de l'admission est assigné à ce patient. 
+                          Aucun médecin supplémentaire n'a été spécifiquement assigné.
+                        </Alert>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Medical Information */}
+                <Grid item xs={12} md={6}>
+                  {patientDetails.allergies.length > 0 && (
+                    <Card sx={{ mb: 2 }}>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom color="error">
+                          ⚠️ Allergies
+                        </Typography>
+                        {patientDetails.allergies.map((allergy, index) => (
+                          <Box key={index} sx={{ mb: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                              {allergy.allergie_nom}
+                            </Typography>
+                            {allergy.severite && (
+                              <Chip 
+                                label={allergy.severite} 
+                                size="small" 
+                                color="error" 
+                                sx={{ mr: 1 }}
+                              />
+                            )}
+                            {allergy.notes && (
+                              <Typography variant="caption" color="text.secondary">
+                                {allergy.notes}
+                              </Typography>
+                            )}
+                          </Box>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  {patientDetails.medications.length > 0 && (
+                    <Card sx={{ mb: 2 }}>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom color="primary">
+                          💊 Traitements Actuels
+                        </Typography>
+                        {patientDetails.medications.map((medication, index) => (
+                          <Box key={index} sx={{ mb: 2, p: 1, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                              {medication.medicament_nom}
+                            </Typography>
+                                                         <Typography variant="caption" color="text.secondary">
+                               Posologie: {medication.dosage}
+                             </Typography>
+                            {medication.instructions && (
+                              <Typography variant="caption" sx={{ display: 'block' }}>
+                                Instructions: {medication.instructions}
+                              </Typography>
+                            )}
+                          </Box>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </Grid>
+
+                {/* Recent Medical Notes */}
+                {patientDetails.recentNotes.length > 0 && (
+                  <Grid item xs={12}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                          📝 Notes Médicales Récentes
+                        </Typography>
+                        {patientDetails.recentNotes.slice(0, 5).map((note, index) => (
+                          <Box key={index} sx={{ mb: 2, p: 2, backgroundColor: '#f8f9fa', borderRadius: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                              <Typography variant="caption" color="text.secondary">
+                                {new Date(note.date_creation).toLocaleDateString('fr-FR', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </Typography>
+                              <Chip 
+                                label={note.categorie || 'Note'} 
+                                size="small" 
+                                color={note.est_important ? 'error' : 'default'}
+                              />
+                            </Box>
+                            <Typography variant="body2">
+                              {note.contenu}
+                            </Typography>
+                            {note.medecin_nom && (
+                              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                - Dr. {note.medecin_nom}
+                              </Typography>
+                            )}
+                          </Box>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )}
+              </Grid>
+            ) : (
+              <Typography>Aucune donnée disponible</Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClosePatientDetailsDialog}>
+              Fermer
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Doctor Removal Confirmation Dialog */}
+        <Dialog 
+          open={doctorRemovalDialog.open} 
+          onClose={handleCancelRemoveDoctor}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+              <DeleteIcon sx={{ mr: 1, color: 'error.main' }} />
+              Confirmer la suppression
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            {doctorRemovalDialog.doctor && (
+              <Box>
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  Êtes-vous sûr de vouloir retirer ce médecin de l'assignation du patient ?
+                </Alert>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  <strong>Médecin à retirer :</strong>
+                </Typography>
+                <Box sx={{ p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
+                  <Typography variant="h6">
+                    Dr. {doctorRemovalDialog.doctor.nom_complet}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {doctorRemovalDialog.doctor.specialite || 'Spécialité non renseignée'}
+                  </Typography>
+                  {doctorRemovalDialog.doctor.numero_ordre && (
+                    <Typography variant="caption" color="text.secondary">
+                      N° Ordre: {doctorRemovalDialog.doctor.numero_ordre}
+                    </Typography>
+                  )}
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Cette action sera enregistrée dans le dossier médical du patient.
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={handleCancelRemoveDoctor}
+              disabled={removingDoctor}
+            >
+              Annuler
+            </Button>
+            <Button 
+              variant="contained"
+              color="error"
+              onClick={handleConfirmRemoveDoctor}
+              disabled={removingDoctor}
+              startIcon={removingDoctor ? <CircularProgress size={20} /> : <DeleteIcon />}
+            >
+              {removingDoctor ? 'Suppression...' : 'Retirer le médecin'}
             </Button>
           </DialogActions>
         </Dialog>

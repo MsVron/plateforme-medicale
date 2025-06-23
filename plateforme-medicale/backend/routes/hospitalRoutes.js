@@ -49,6 +49,8 @@ router.delete('/doctors/:doctorId/remove', verifyToken, isHospital, hospitalCont
 
 // Hospital admissions routes
 router.get('/admissions', verifyToken, isHospital, hospitalController.getHospitalAdmissions);
+router.get('/admissions/:admissionId/details', verifyToken, isHospital, hospitalController.getPatientAdmissionDetails);
+router.delete('/admissions/:admissionId/doctors/:doctorId', verifyToken, isHospital, hospitalController.removeDoctorFromAdmission);
 router.post('/patients/:patient_id/admit', verifyToken, isHospital, hospitalController.admitPatient);
 router.put('/admissions/:admissionId/discharge', verifyToken, isHospital, hospitalController.dischargePatient);
 

@@ -1206,6 +1206,223 @@ exports.getHospitalAdmissions = async (req, res) => {
   }
 };
 
+// Remove doctor assignment from patient admission
+exports.removeDoctorFromAdmission = async (req, res) => {
+  try {
+    const hospitalId = req.user.institution_id || req.user.id_specifique_role;
+    const { admissionId, doctorId } = req.params;
+
+    // Verify the admission belongs to this hospital
+    const [admissionCheck] = await db.execute(
+      'SELECT id, patient_id, medecin_id FROM hospital_assignments WHERE id = ? AND hospital_id = ?',
+      [admissionId, hospitalId]
+    );
+
+    if (admissionCheck.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admission non trouvée'
+      });
+    }
+
+    const admission = admissionCheck[0];
+
+    // Prevent removing the primary doctor
+    if (admission.medecin_id === parseInt(doctorId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Impossible de supprimer le médecin principal de l\'admission'
+      });
+    }
+
+    // Remove the doctor assignment
+    const [result] = await db.execute(
+      'UPDATE hospital_patient_doctors SET is_active = 0, removed_date = NOW(), removed_by_user_id = ? WHERE hospital_assignment_id = ? AND medecin_id = ? AND is_active = 1',
+      [req.user.id, admissionId, doctorId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Assignation de médecin non trouvée ou déjà supprimée'
+      });
+    }
+
+    // Add a note to medical record
+    await db.execute(
+      `INSERT INTO notes_patient 
+       (patient_id, medecin_id, contenu, est_important, categorie, date_creation) 
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [
+        admission.patient_id,
+        req.user.id_specifique_role || req.user.id,
+        `Suppression d'assignation - Médecin retiré de l'équipe de soins`,
+        false,
+        'assignment_removal'
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: 'Médecin retiré de l\'assignation avec succès'
+    });
+  } catch (error) {
+    console.error('Error removing doctor from admission:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la suppression de l\'assignation du médecin'
+    });
+  }
+};
+
+// Get patient admission details with assigned doctors
+exports.getPatientAdmissionDetails = async (req, res) => {
+  try {
+    const hospitalId = req.user.institution_id || req.user.id_specifique_role;
+    const { admissionId } = req.params;
+
+    // Get admission details
+    const [admissionDetails] = await db.execute(`
+      SELECT 
+        ha.*,
+        p.id as patient_id,
+        p.prenom as patient_prenom,
+        p.nom as patient_nom,
+        p.CNE as patient_cne,
+        p.date_naissance,
+        p.sexe,
+        p.telephone as patient_telephone,
+        p.email as patient_email,
+        p.adresse,
+        p.ville,
+        p.groupe_sanguin,
+        p.contact_urgence_nom,
+        p.contact_urgence_telephone,
+        p.contact_urgence_relation,
+        CONCAT(primary_med.prenom, ' ', primary_med.nom) as primary_medecin_nom,
+        primary_spec.nom as primary_medecin_specialite,
+        primary_med.numero_ordre as primary_medecin_numero,
+        i.nom as hospital_name
+      FROM hospital_assignments ha
+      JOIN patients p ON ha.patient_id = p.id
+      JOIN institutions i ON ha.hospital_id = i.id
+      LEFT JOIN medecins primary_med ON ha.medecin_id = primary_med.id
+      LEFT JOIN specialites primary_spec ON primary_med.specialite_id = primary_spec.id
+      WHERE ha.id = ? AND ha.hospital_id = ?
+    `, [admissionId, hospitalId]);
+
+    if (admissionDetails.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admission non trouvée'
+      });
+    }
+
+    const admission = admissionDetails[0];
+
+    // Get doctors specifically assigned to this patient/admission
+    // First get the primary doctor
+    const [primaryDoctor] = await db.execute(`
+      SELECT 
+        m.id,
+        CONCAT(m.prenom, ' ', m.nom) as nom_complet,
+        m.prenom,
+        m.nom,
+        m.numero_ordre,
+        s.nom as specialite,
+        NULL as role_assignment,
+        ha.admission_date as assignment_date,
+        NULL as assignment_notes,
+        1 as is_primary
+      FROM medecins m
+      LEFT JOIN specialites s ON m.specialite_id = s.id
+      JOIN hospital_assignments ha ON m.id = ha.medecin_id
+      WHERE ha.id = ? AND m.id = ?
+    `, [admissionId, admission.medecin_id]);
+
+    // Then get additional assigned doctors
+    const [additionalDoctors] = await db.execute(`
+      SELECT DISTINCT
+        m.id,
+        CONCAT(m.prenom, ' ', m.nom) as nom_complet,
+        m.prenom,
+        m.nom,
+        m.numero_ordre,
+        s.nom as specialite,
+        hpd.role as role_assignment,
+        hpd.assignment_date,
+        hpd.notes as assignment_notes,
+        0 as is_primary
+      FROM medecins m
+      LEFT JOIN specialites s ON m.specialite_id = s.id
+      JOIN hospital_patient_doctors hpd ON m.id = hpd.medecin_id
+      WHERE hpd.hospital_assignment_id = ? AND hpd.is_active = 1 AND m.id != ?
+      ORDER BY hpd.assignment_date DESC, m.nom ASC
+    `, [admissionId, admission.medecin_id]);
+
+    // Combine primary and additional doctors
+    const assignedDoctors = [...primaryDoctor, ...additionalDoctors];
+
+    // Get recent medical notes for this patient
+    const [recentNotes] = await db.execute(`
+      SELECT 
+        np.contenu,
+        np.date_creation,
+        np.categorie,
+        np.est_important,
+        CONCAT(m.prenom, ' ', m.nom) as medecin_nom
+      FROM notes_patient np
+      LEFT JOIN medecins m ON np.medecin_id = m.id
+      WHERE np.patient_id = ?
+      ORDER BY np.date_creation DESC
+      LIMIT 10
+    `, [admission.patient_id]);
+
+    // Get patient allergies
+    const [allergies] = await db.execute(`
+      SELECT 
+        a.nom as allergie_nom,
+        pa.severite,
+        pa.notes
+      FROM patient_allergies pa
+      JOIN allergies a ON pa.allergie_id = a.id
+      WHERE pa.patient_id = ?
+    `, [admission.patient_id]);
+
+    // Get current medications
+    const [medications] = await db.execute(`
+      SELECT 
+        m.nom_commercial as medicament_nom,
+        t.posologie as dosage,
+        t.date_debut,
+        t.date_fin,
+        t.instructions
+      FROM traitements t
+      JOIN medicaments m ON t.medicament_id = m.id
+      WHERE t.patient_id = ? AND t.status IN ('prescribed', 'dispensed')
+        AND (t.date_fin IS NULL OR t.date_fin > CURDATE())
+      ORDER BY t.date_debut DESC
+    `, [admission.patient_id]);
+
+    res.json({
+      success: true,
+      data: {
+        admission,
+        assignedDoctors,
+        recentNotes,
+        allergies,
+        medications
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching patient admission details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des détails de l\'admission'
+    });
+  }
+};
+
 // Get doctor statistics
 exports.getDoctorStats = async (req, res) => {
   try {

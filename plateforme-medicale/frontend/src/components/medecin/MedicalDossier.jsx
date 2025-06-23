@@ -59,7 +59,8 @@ const MedicalDossier = () => {
     analyses: false,       // Recent test results
     measurements: false,   // Vital signs tracking
     notes: false,          // Clinical observations
-    appointments: false    // Scheduling information
+    appointments: false,   // Scheduling information
+    hospitalAdmissions: false // Hospital admissions history
   });
   
   // Dialog states
@@ -509,12 +510,15 @@ const MedicalDossier = () => {
     analyses = [], 
     imageries = [], 
     documents = [], 
+    hospitalAdmissions = [],
     summary 
   } = dossier;
 
   // Debug logging
   console.log('Notes data:', notes);
   console.log('Notes length:', notes ? notes.length : 'undefined');
+  console.log('Hospital admissions data:', hospitalAdmissions);
+  console.log('Hospital admissions count:', hospitalAdmissions ? hospitalAdmissions.length : 'undefined');
   console.log('Summary data:', summary);
   console.log('Appointments count:', summary?.appointmentsPastYear, summary?.totalAppointments);
 
@@ -1275,6 +1279,102 @@ const MedicalDossier = () => {
                           {appointment.institution_nom && (
                             <Typography variant="caption" display="block">
                               {appointment.institution_nom}
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* 8. Hospital Admissions Section - Hospital admission history */}
+        <Accordion 
+          expanded={expandedSections.hospitalAdmissions} 
+          onChange={() => handleSectionToggle('hospitalAdmissions')}
+          sx={{ mb: 2 }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <HospitalIcon sx={{ mr: 2, color: 'primary.main' }} />
+              <Typography variant="h6">Historique Hospitalier</Typography>
+              {hospitalAdmissions && hospitalAdmissions.length > 0 && (
+                <Chip 
+                  label={hospitalAdmissions.length} 
+                  size="small" 
+                  color="warning" 
+                  sx={{ ml: 2 }} 
+                />
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {hospitalAdmissions.length === 0 ? (
+              <Typography color="text.secondary">Aucune hospitalisation enregistrée</Typography>
+            ) : (
+              <List>
+                {hospitalAdmissions.map((admission) => (
+                  <ListItem key={admission.id} divider>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                            {admission.admission_reason}
+                          </Typography>
+                          <Chip 
+                            label={admission.status === 'active' ? 'En cours' : 
+                                  admission.status === 'discharged' ? 'Sortie' : 
+                                  admission.status === 'transferred' ? 'Transféré' : admission.status} 
+                            size="small" 
+                            color={
+                              admission.status === 'active' ? 'warning' :
+                              admission.status === 'discharged' ? 'success' :
+                              admission.status === 'transferred' ? 'info' : 'default'
+                            }
+                          />
+                        </Box>
+                      }
+                      secondary={
+                        <Box sx={{ mt: 1 }}>
+                          <Grid container spacing={2}>
+                            <Grid item xs={12} md={6}>
+                              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                <strong>Admission:</strong> {formatDateTime(admission.admission_date)}
+                              </Typography>
+                              {admission.discharge_date && (
+                                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                  <strong>Sortie:</strong> {formatDateTime(admission.discharge_date)}
+                                </Typography>
+                              )}
+                              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                <strong>Durée:</strong> {admission.duration_days} jour{admission.duration_days > 1 ? 's' : ''}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                <strong>Hôpital:</strong> {admission.hospital_name}
+                                {admission.hospital_city && ` - ${admission.hospital_city}`}
+                              </Typography>
+                              {admission.primary_doctor && (
+                                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                  <strong>Médecin:</strong> Dr. {admission.primary_doctor}
+                                  {admission.primary_doctor_specialty && ` (${admission.primary_doctor_specialty})`}
+                                </Typography>
+                              )}
+                              {admission.ward_name && (
+                                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                  <strong>Service:</strong> {admission.ward_name}
+                                  {admission.bed_number && ` - Lit ${admission.bed_number}`}
+                                </Typography>
+                              )}
+                            </Grid>
+                          </Grid>
+                          {admission.discharge_reason && (
+                            <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic', color: 'text.secondary' }}>
+                              <strong>Motif de sortie:</strong> {admission.discharge_reason}
                             </Typography>
                           )}
                         </Box>

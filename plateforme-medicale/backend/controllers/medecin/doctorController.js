@@ -298,11 +298,15 @@ exports.getMedecinById = async (req, res) => {
 
 exports.getCurrentMedecin = async (req, res) => {
   try {
+    console.log('getCurrentMedecin called for user ID:', req.user.id_specifique_role);
+
+    // First, get basic doctor information (this should work for all doctors)
     const [medecins] = await db.execute(
       `SELECT
         m.id, m.prenom, m.nom, m.specialite_id, s.nom AS specialite_nom,
         m.institution_id, i.nom AS institution_nom, m.tarif_consultation,
-        i.type AS institution_type, i.type_institution
+        i.type AS institution_type, i.type_institution, m.numero_ordre,
+        m.telephone, m.email_professionnel, m.est_actif
       FROM medecins m
       LEFT JOIN specialites s ON m.specialite_id = s.id
       LEFT JOIN institutions i ON m.institution_id = i.id
@@ -311,15 +315,17 @@ exports.getCurrentMedecin = async (req, res) => {
     );
     
     if (medecins.length === 0) {
+      console.log('Doctor not found in medecins table with ID:', req.user.id_specifique_role);
       return res.status(404).json({ message: "Médecin non trouvé" });
     }
 
     const medecin = medecins[0];
+    console.log('Found doctor:', medecin.prenom, medecin.nom);
 
-    // Get all institutions this doctor is affiliated with
+    // Get all institutions this doctor is affiliated with (for hospital doctors)
     const [affiliations] = await db.execute(
       `SELECT 
-        i.id, i.nom, i.type, i.type_institution, 
+        i.id, i.nom, i.type, i.type_institution, i.adresse, i.ville,
         mi.est_principal, mi.departement, mi.date_debut, mi.date_affectation
       FROM medecin_institution mi
       JOIN institutions i ON mi.institution_id = i.id
@@ -327,6 +333,8 @@ exports.getCurrentMedecin = async (req, res) => {
       ORDER BY mi.est_principal DESC, mi.date_debut ASC`,
       [req.user.id_specifique_role]
     );
+
+    console.log('Found affiliations:', affiliations.length);
 
     // Determine doctor type based on affiliations
     let doctorType = 'private'; // default
@@ -342,12 +350,14 @@ exports.getCurrentMedecin = async (req, res) => {
       if (hospitalAffiliation) {
         doctorType = 'hospital';
         primaryInstitution = hospitalAffiliation;
+        console.log('Identified as hospital doctor at:', hospitalAffiliation.nom);
       } else {
         // Check for private cabinet
         const privateAffiliation = affiliations.find(aff => aff.type === 'cabinet privé');
         if (privateAffiliation) {
           doctorType = 'private';
           primaryInstitution = privateAffiliation;
+          console.log('Identified as private doctor at:', privateAffiliation.nom);
         }
       }
     } else if (medecin.institution_type === 'cabinet privé') {
@@ -357,19 +367,47 @@ exports.getCurrentMedecin = async (req, res) => {
         nom: medecin.institution_nom,
         type: medecin.institution_type
       };
+      console.log('Identified as private doctor (from main institution):', medecin.institution_nom);
     }
 
-    return res.status(200).json({ 
+    // For hospital doctors, get assigned patient count
+    let assignedPatientCount = 0;
+    if (doctorType === 'hospital') {
+      try {
+        const [patientCount] = await db.execute(
+          `SELECT COUNT(DISTINCT ap.patient_id) as patient_count
+          FROM affectations_patients ap
+          JOIN medecin_institution mi ON ap.institution_id = mi.institution_id
+          WHERE mi.medecin_id = ? AND ap.est_active = 1`,
+          [req.user.id_specifique_role]
+        );
+        assignedPatientCount = patientCount[0]?.patient_count || 0;
+        console.log('Hospital doctor has', assignedPatientCount, 'assigned patients');
+      } catch (patientError) {
+        console.log('Could not get patient count:', patientError.message);
+        // Don't fail the request if patient count fails
+      }
+    }
+
+    const response = { 
       medecin: {
         ...medecin,
         doctorType,
         primaryInstitution,
-        affiliations
+        affiliations,
+        assignedPatientCount
       }
-    });
+    };
+
+    console.log('Returning doctor data for type:', doctorType);
+    return res.status(200).json(response);
+
   } catch (error) {
     console.error('Erreur lors de la récupération du médecin:', error);
-    return res.status(500).json({ message: "Erreur serveur", error: error.message });
+    return res.status(500).json({ 
+      message: "Erreur serveur lors de la récupération des informations du médecin", 
+      error: error.message 
+    });
   }
 };
 

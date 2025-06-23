@@ -33,7 +33,8 @@ class DossierService {
       analyses,
       imageries,
       documents,
-      appointmentsSummary
+      appointmentsSummary,
+      hospitalAdmissions
     ] = await Promise.all([
       this.getPatientAllergies(patientId),
       this.getMedicalHistory(patientId),
@@ -45,7 +46,8 @@ class DossierService {
       this.getAnalysisResults(patientId),
       this.getImagingResults(patientId),
       this.getMedicalDocuments(patientId),
-      this.getAppointmentsSummary(patientId)
+      this.getAppointmentsSummary(patientId),
+      this.getHospitalAdmissions(patientId)
     ]);
 
     // Log access for audit
@@ -63,6 +65,7 @@ class DossierService {
       analyses,
       imageries,
       documents,
+      hospitalAdmissions,
       summary: this.generateSummary(consultations, traitements, allergies, appointmentsSummary)
     };
   }
@@ -354,6 +357,32 @@ class DossierService {
     
     console.log('DEBUG: Documents found:', documents.length);
     return documents;
+  }
+
+  /**
+   * Get hospital admissions history
+   */
+  static async getHospitalAdmissions(patientId) {
+    console.log('DEBUG: Fetching hospital admissions...');
+    const [admissions] = await db.execute(`
+      SELECT 
+        ha.id, ha.admission_date, ha.discharge_date, ha.status, ha.admission_reason,
+        ha.bed_number, ha.ward_name, ha.discharge_reason, ha.date_created,
+        CONCAT(m.prenom, ' ', m.nom) as primary_doctor,
+        s.nom as primary_doctor_specialty,
+        i.nom as hospital_name, i.ville as hospital_city,
+        DATEDIFF(COALESCE(ha.discharge_date, NOW()), ha.admission_date) as duration_days
+      FROM hospital_assignments ha
+      JOIN institutions i ON ha.hospital_id = i.id
+      LEFT JOIN medecins m ON ha.medecin_id = m.id
+      LEFT JOIN specialites s ON m.specialite_id = s.id
+      WHERE ha.patient_id = ?
+      ORDER BY ha.admission_date DESC
+      LIMIT 20
+    `, [patientId]);
+    
+    console.log('DEBUG: Hospital admissions found:', admissions.length);
+    return admissions;
   }
 
   /**

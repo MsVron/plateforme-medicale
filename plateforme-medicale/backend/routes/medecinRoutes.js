@@ -5,6 +5,7 @@ const appointmentController = require('../controllers/medecin/appointmentControl
 const medicalRecordController = require('../controllers/medecin/medicalRecordController');
 const medicalDossierController = require('../controllers/medecin/medicalDossierController');
 const patientController = require('../controllers/medecin/patientController');
+const hospitalDoctorController = require('../controllers/medecin/hospitalDoctorController');
 const { verifyToken, isAdmin, isSuperAdmin, isMedecin } = require('../middlewares/auth');
 
 // Public routes (no authentication required)
@@ -119,5 +120,16 @@ router.post('/medecin/patients/:patientId/follow-up-appointment', verifyToken, i
 router.get('/medecin/patients', verifyToken, isMedecin, patientController.getPatients);
 router.get('/medecin/patients/hospital', verifyToken, isMedecin, patientController.getAssignedHospitalPatients);
 router.get('/medecin/patients/search', verifyToken, isMedecin, medicalRecordController.searchPatients);
+
+// Diagnostic route for hospital doctors
+router.get('/medecin/debug-hospital', verifyToken, isMedecin, patientController.debugHospitalDoctor);
+
+// NEW HOSPITAL DOCTOR SPECIFIC ROUTES
+// Alternative dashboard route for hospital doctors
+router.get('/medecin/hospital/dashboard', verifyToken, isMedecin, hospitalDoctorController.getCurrentHospitalMedecin);
+
+// Hospital doctor patients routes
+router.get('/medecin/hospital/assigned-patients', verifyToken, isMedecin, hospitalDoctorController.getAssignedHospitalPatients);
+router.get('/medecin/hospital/patients/:patientId/medical-record', verifyToken, isMedecin, hospitalDoctorController.getHospitalPatientMedicalRecord);
 
 module.exports = router;
